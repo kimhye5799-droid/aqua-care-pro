@@ -1,5 +1,4 @@
 import streamlit as st
-import random
 
 # 1. 페이지 기본 설정
 st.set_page_config(page_title="AquaCare Pro", page_icon="🐠", layout="wide")
@@ -35,13 +34,13 @@ st.sidebar.header("🌊 어항 생태계 설정")
 selected_fishes = st.sidebar.multiselect(
     "어항에 넣을 어종을 선택하세요 (여러 개 선택 가능):",
     list(FISH_DATABASE.keys()),
-    default=["구피"]
+    default=["엔젤피쉬", "네온테트라"]
 )
 
 # 세부 환경 입력
-count = st.sidebar.number_input("총 개체 수 (마리)", min_value=1, value=5, step=1)
-tank_volume_l = st.sidebar.number_input("어항/수조 용량 (L)", min_value=1, value=30, step=5)
-current_temp = st.sidebar.slider("현재 사육 수온 (°C)", min_value=5.0, max_value=35.0, value=25.0, step=0.5)
+count = st.sidebar.number_input("총 개체 수 (마리)", min_value=1, value=7, step=1)
+tank_volume_l = st.sidebar.number_input("어항/수조 용량 (L)", min_value=1, value=50, step=5)
+current_temp = st.sidebar.slider("현재 사육 수온 (°C)", min_value=5.0, max_value=35.0, value=23.0, step=0.5)
 
 # 4. 동적 배경 및 테마 자동 판별
 current_env = "기본"
@@ -63,13 +62,38 @@ BACKGROUND_STYLES = {
 
 style = BACKGROUND_STYLES[current_env]
 
-# Custom CSS 주입으로 배경 전환
+# Custom CSS 주입 (동적 배경 및 둥둥 떠다니는 애니메이션 정의)
 st.markdown(
     f"""
     <style>
     .stApp {{
         background: {style['bg_color']};
         transition: background 0.8s ease-in-out;
+    }}
+    
+    /* 둥둥 Floating 애니메이션 정의 */
+    @keyframes floatEven {{
+        0% {{ transform: translateY(0px) translateX(0px); }}
+        50% {{ transform: translateY(-12px) translateX(6px); }}
+        100% {{ transform: translateY(0px) translateX(0px); }}
+    }}
+    
+    @keyframes floatOdd {{
+        0% {{ transform: translateY(0px) translateX(0px); }}
+        50% {{ transform: translateY(10px) translateX(-8px); }}
+        100% {{ transform: translateY(0px) translateX(0px); }}
+    }}
+
+    .floating-fish-even {{
+        display: inline-block;
+        animation: floatEven 3s ease-in-out infinite;
+        margin: 0 8px;
+    }}
+    
+    .floating-fish-odd {{
+        display: inline-block;
+        animation: floatOdd 3.5s ease-in-out infinite;
+        margin: 0 8px;
     }}
     </style>
     """,
@@ -80,23 +104,31 @@ st.title("🐠 AquaCare Pro - 고민 맞춤형 수산/어항 진단 플랫폼")
 st.caption(f"현재 테마: **{style['title']}**")
 st.markdown("---")
 
-# 5. 가상 어항 시각화 영역
+# 5. 가상 어항 시각화 영역 (이모지 둥둥 애니메이션)
 if selected_fishes:
-    tank_icons = [FISH_DATABASE[fish]["emoji"] for fish in selected_fishes]
-    fish_display = " ".join(tank_icons * max(1, count // len(selected_fishes)))
+    raw_icons = [FISH_DATABASE[fish]["emoji"] for fish in selected_fishes]
+    # 전체 개체 수에 맞게 이모지 배열 생성
+    tank_icons = (raw_icons * (count // len(selected_fishes) + 1))[:count]
+
+    # 각 물고기 이모지에 float 클래스를 짝수/홀수번 나누어 지정
+    animated_fish_html = ""
+    for idx, emoji in enumerate(tank_icons):
+        cls_name = "floating-fish-even" if idx % 2 == 0 else "floating-fish-odd"
+        animated_fish_html += f'<span class="{cls_name}">{emoji}</span>'
 
     st.markdown(
         f"""
         <div style="
             border: 4px solid {style['border_color']}; 
             border-radius: 20px; 
-            padding: 30px; 
+            padding: 35px 20px; 
             text-align: center; 
-            font-size: 35px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);">
+            font-size: 42px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);">
             🌊 {style['title']} 🌊<br><br>
-            {fish_display}<br><br>
+            <div style="line-height: 1.8;">{animated_fish_html}</div><br>
             🪨 🌿 🐚 🪸 🪨
         </div>
         """,
