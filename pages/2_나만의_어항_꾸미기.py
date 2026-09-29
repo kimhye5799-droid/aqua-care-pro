@@ -7,8 +7,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🐠 파우더 피지컬/생태계 어항 시뮬레이터")
-st.caption("바닥재, 장치, 수초, 다양한 생물 간의 실시간 물리/화학적 상호작용 및 수질 변화를 직접 관찰해보세요!")
+st.title("🐠 프리미엄 수조 생태계 시뮬레이터")
+st.caption("새로운 UI 디자인, 펜 크기 조절, 정교해진 생물 AI 및 물리 엔진으로 완벽한 어항을 꾸며보세요!")
 
 aquarium_simulation_html = """
 <!DOCTYPE html>
@@ -18,89 +18,127 @@ aquarium_simulation_html = """
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Pretendard', 'Malgun Gothic', -apple-system, sans-serif;
+            background-color: #0b1120;
+            color: #f1f5f9;
             margin: 0;
-            padding: 10px;
+            padding: 12px;
         }
 
-        .main-container {
+        .app-container {
             display: flex;
             flex-direction: row;
-            gap: 16px;
+            gap: 18px;
             width: 100%;
-            max-width: 1280px;
+            max-width: 1320px;
             margin: 0 auto;
             align-items: flex-start;
         }
 
-        /* 왼쪽 스크롤 가능 사이드 패널 */
+        /* 왼쪽 컨트롤 패널 */
         .sidebar-panel {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            width: 310px;
-            max-height: 660px;
+            width: 320px;
+            max-height: 680px;
             overflow-y: auto;
-            padding-right: 6px;
+            padding-right: 4px;
             flex-shrink: 0;
         }
 
         .sidebar-panel::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .sidebar-panel::-webkit-scrollbar-track {
             background: #1e293b;
             border-radius: 4px;
         }
         .sidebar-panel::-webkit-scrollbar-thumb {
-            background: #475569;
+            background: #38bdf8;
             border-radius: 4px;
         }
 
-        .dashboard {
-            background-color: #1e293b;
-            padding: 12px;
-            border-radius: 12px;
+        /* 상태 현황판 카드 */
+        .dashboard-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 14px;
+            border-radius: 14px;
             border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .stat-box {
+        .stat-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 8px;
         }
 
         .wqi-badge {
-            padding: 5px 10px;
-            border-radius: 16px;
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: -0.3px;
         }
 
         .stat-details {
             font-size: 11px;
-            color: #cbd5e1;
-            display: flex;
-            justify-content: space-around;
-            background-color: #0f172a;
-            padding: 6px;
-            border-radius: 6px;
+            color: #94a3b8;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background-color: rgba(15, 23, 42, 0.6);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
         }
 
+        .stat-details b {
+            color: #38bdf8;
+            display: block;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        /* 도구 상자 */
         .toolbar {
+            background-color: #1e293b;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid #334155;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background-color: #1e293b;
-            padding: 12px;
-            border-radius: 12px;
+            gap: 12px;
+        }
+
+        /* 펜 크기 조절 슬라이더 */
+        .brush-control {
+            background: #0f172a;
+            padding: 10px 12px;
+            border-radius: 10px;
             border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .brush-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            color: #38bdf8;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            accent-color: #38bdf8;
+            cursor: pointer;
         }
 
         .tool-group {
@@ -110,9 +148,11 @@ aquarium_simulation_html = """
         }
 
         .category-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #38bdf8;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             border-bottom: 1px solid #334155;
             padding-bottom: 4px;
         }
@@ -124,51 +164,53 @@ aquarium_simulation_html = """
         }
 
         .btn {
-            background-color: #334155;
-            color: #f8fafc;
-            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
             padding: 8px 6px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 12px;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            text-align: center;
+            gap: 5px;
             user-select: none;
         }
 
         .btn:hover {
-            background-color: #475569;
+            background-color: #334155;
             border-color: #38bdf8;
+            color: #ffffff;
         }
 
         .btn.active {
-            background-color: #0284c7 !important;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
             border-color: #38bdf8 !important;
-            box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
-            font-weight: bold;
+            color: #ffffff !important;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
         }
 
         .btn-action {
-            background-color: #0f766e;
+            background-color: #115e59;
             border-color: #14b8a6;
         }
         .btn-action:hover {
-            background-color: #115e59;
+            background-color: #0f766e;
         }
 
         .btn-danger {
-            background-color: #991b1b;
-            border-color: #ef4444;
+            background-color: #881337;
+            border-color: #f43f5e;
         }
         .btn-danger:hover {
-            background-color: #7f1d1d;
+            background-color: #9f1239;
         }
 
+        /* 오른쪽 어항 화면 */
         .aquarium-container {
             flex-grow: 1;
             display: flex;
@@ -178,11 +220,11 @@ aquarium_simulation_html = """
 
         .canvas-wrapper {
             position: relative;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            border: 3px solid #334155;
-            border-radius: 12px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.7);
+            border: 4px solid #334155;
+            border-radius: 16px;
             overflow: hidden;
-            background-color: #030712;
+            background-color: #020617;
         }
 
         canvas {
@@ -191,64 +233,72 @@ aquarium_simulation_html = """
         }
 
         .guide-text {
-            margin-top: 8px;
+            margin-top: 10px;
             font-size: 12px;
-            color: #94a3b8;
+            color: #64748b;
             text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="main-container">
-        <!-- 1. 왼쪽 사이드바 -->
+    <div class="app-container">
+        <!-- 1. 왼쪽 컨트롤 사이드바 -->
         <div class="sidebar-panel">
-            <div class="dashboard">
-                <div class="stat-box">
-                    <span style="font-size: 12px; font-weight: bold;">💧 수질 지수 (WQI)</span>
+            <div class="dashboard-card">
+                <div class="stat-header">
+                    <span style="font-size: 13px; font-weight: 700;">💧 수질 종합 지수</span>
                     <div id="wqi-display" class="wqi-badge">100점 (최상)</div>
                 </div>
                 <div class="stat-details">
-                    <span>💩 오염물: <b id="waste-count">0</b></span>
-                    <span>🌿 수초: <b id="plant-count">0</b></span>
-                    <span>🌀 장치: <b id="equip-count">0</b></span>
+                    <div>💩 오염물<b id="waste-count">0</b></div>
+                    <div>🌿 수초/이끼<b id="plant-count">0</b></div>
+                    <div>🌀 설치 장치<b id="equip-count">0</b></div>
                 </div>
             </div>
 
             <div class="toolbar">
+                <!-- 펜 / 지우개 크기 조절 슬라이더 -->
+                <div class="brush-control">
+                    <div class="brush-label">
+                        <span>✏️ 브러시/지우개 크기</span>
+                        <span id="brush-val">6px</span>
+                    </div>
+                    <input type="range" id="brush-size" min="2" max="24" value="6">
+                </div>
+
                 <div class="tool-group">
-                    <span class="category-label">① 지형 / 바닥재</span>
+                    <span class="category-label">① 지형 & 레이아웃</span>
                     <div class="btn-grid">
                         <button class="btn active" data-tool="sand_gold">🏖️ 금사</button>
                         <button class="btn" data-tool="sand_black">🖤 흑사</button>
                         <button class="btn" data-tool="gravel">🪨 강자갈</button>
                         <button class="btn" data-tool="volcanic_rock">🌋 화산석</button>
-                        <button class="btn" data-tool="driftwood">🪵 유목</button>
+                        <button class="btn" data-tool="driftwood">🪵 유목(선)</button>
                     </div>
                 </div>
 
                 <div class="tool-group">
-                    <span class="category-label">② 수초 / 생장</span>
+                    <span class="category-label">② 수초 & 생장</span>
                     <div class="btn-grid">
                         <button class="btn" data-tool="plant_weed">🌿 기본수초</button>
-                        <button class="btn" data-tool="moss">🟢 이끼</button>
+                        <button class="btn" data-tool="moss">🟢 프리미엄이끼</button>
                         <button class="btn" data-tool="co2_bubble">🫧 CO2 버블</button>
                     </div>
                 </div>
 
                 <div class="tool-group">
-                    <span class="category-label">③ 장치 / 환경</span>
+                    <span class="category-label">③ 생태 장치</span>
                     <div class="btn-grid">
-                        <button class="btn" data-tool="air_bubble">🫧 기포기</button>
-                        <button class="btn" data-tool="co2_diffuser">🫧 CO2 디퓨저</button>
-                        <button class="btn" data-tool="filter">🌀 여과기</button>
-                        <button class="btn" data-tool="wave_maker">💨 수류팬</button>
-                        <button class="btn" data-tool="heater">🔥 히터</button>
+                        <button class="btn" data-tool="air_bubble">🫧 산소기포기</button>
+                        <button class="btn" data-tool="filter">🌀 걸이식여과기</button>
+                        <button class="btn" data-tool="wave_maker">💨 수류생성기</button>
+                        <button class="btn" data-tool="heater">🔥 온도조절히터</button>
                     </div>
                 </div>
 
                 <div class="tool-group">
-                    <span class="category-label">④ 어류 및 생물</span>
+                    <span class="category-label">④ 수중 생물</span>
                     <div class="btn-grid">
                         <button class="btn" data-tool="guppy">🐠 구피</button>
                         <button class="btn" data-tool="neon_tetra">🐟 네온테트라</button>
@@ -259,28 +309,36 @@ aquarium_simulation_html = """
                         <button class="btn" data-tool="snail">🐌 애플스네일</button>
                         <button class="btn" data-tool="turtle">🐢 미니거북이</button>
                         <button class="btn" data-tool="crab">🦀 체리게</button>
-                        <button class="btn" data-tool="fish_food">🟤 물고기먹이</button>
                     </div>
                 </div>
 
                 <div class="tool-group">
-                    <span class="category-label">⑤ 관리 / 도구</span>
+                    <span class="category-label">⑤ 맞춤 먹이</span>
+                    <div class="btn-grid">
+                        <button class="btn" data-tool="food_fish">🟤 물고기사료</button>
+                        <button class="btn" data-tool="food_shrimp">🟡 새우/저서사료</button>
+                        <button class="btn" data-tool="food_green">🟢 영양스틱</button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <span class="category-label">⑥ 어항 관리</span>
                     <div class="btn-grid">
                         <button class="btn btn-action" data-tool="eraser">🧹 지우개</button>
-                        <button class="btn btn-action" id="btn-water-change">🪣 부분환수</button>
-                        <button class="btn btn-action" id="btn-conditioner">💊 수질정화</button>
-                        <button class="btn btn-danger" id="btn-reset">🔄 전체리셋</button>
+                        <button class="btn btn-action" id="btn-water-change">🪣 환수하기</button>
+                        <button class="btn btn-action" id="btn-conditioner">💊 박테리아제</button>
+                        <button class="btn btn-danger" id="btn-reset">🔄 초기화</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 어항 캔버스 -->
+        <!-- 2. 어항 메인 캔버스 -->
         <div class="aquarium-container">
             <div class="canvas-wrapper">
                 <canvas id="aquarium" width="860" height="600"></canvas>
             </div>
-            <div class="guide-text">💡 마우스로 클릭하거나 드래그하여 어항을 꾸미고 먹이를 주어보세요.</div>
+            <div class="guide-text">💡 마우스 클릭 및 드래그로 원하는 지형과 수초를 자유롭게 그려보세요.</div>
         </div>
     </div>
 
@@ -290,6 +348,7 @@ aquarium_simulation_html = """
         const width = canvas.width;
         const height = canvas.height;
 
+        // 입자 종류 정의
         const EMPTY = 0;
         const SAND_GOLD = 1;
         const SAND_BLACK = 2;
@@ -300,21 +359,25 @@ aquarium_simulation_html = """
         const MOSS = 7;
         const CO2 = 8;
         const AIR = 9;
-        const FISH_FOOD = 10;
-        const WASTE = 11;
+        const FOOD_FISH = 10;
+        const FOOD_SHRIMP = 11;
+        const FOOD_GREEN = 12;
+        const WASTE = 13;
 
         const colors = {
-            [SAND_GOLD]: [229, 193, 88],
-            [SAND_BLACK]: [51, 51, 51],
-            [GRAVEL]: [120, 114, 118],
-            [VOLCANIC]: [74, 59, 50],
-            [DRIFTWOOD]: [92, 64, 51],
-            [PLANT]: [76, 175, 80],
-            [MOSS]: [46, 125, 50],
-            [CO2]: [129, 212, 250],
-            [AIR]: [224, 247, 250],
-            [FISH_FOOD]: [160, 82, 45],
-            [WASTE]: [101, 67, 33]
+            [SAND_GOLD]: [234, 179, 8],
+            [SAND_BLACK]: [30, 41, 59],
+            [GRAVEL]: [148, 163, 184],
+            [VOLCANIC]: [120, 53, 15],
+            [DRIFTWOOD]: [146, 64, 14],
+            [PLANT]: [34, 197, 94],
+            [MOSS]: [22, 101, 52],
+            [CO2]: [186, 230, 253],
+            [AIR]: [224, 242, 254],
+            [FOOD_FISH]: [180, 83, 9],
+            [FOOD_SHRIMP]: [234, 179, 8],
+            [FOOD_GREEN]: [34, 197, 94],
+            [WASTE]: [115, 115, 115]
         };
 
         const grid = new Uint8Array(width * height);
@@ -323,27 +386,35 @@ aquarium_simulation_html = """
         let creatures = [];
         let equipments = [];
         let currentTool = 'sand_gold';
+        let brushSize = 6;
         let isMouseDown = false;
+        let lastX = null;
+        let lastY = null;
 
         let currentWQI = 100;
-        let targetWaterColor = [30, 136, 229, 0.2];
-        let currentWaterColor = [30, 136, 229, 0.2];
+        let targetWaterColor = [14, 165, 233, 0.15];
+        let currentWaterColor = [14, 165, 233, 0.15];
 
-        // 지형 충돌 여부 체크 (단단한 지형)
+        // 슬라이더 이벤트
+        const brushSlider = document.getElementById('brush-size');
+        const brushValDisp = document.getElementById('brush-val');
+        brushSlider.addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            brushValDisp.innerText = brushSize + 'px';
+        });
+
         function isSolidTile(x, y) {
             if (x < 0 || x >= width || y < 0 || y >= height) return true;
             const type = grid[Math.floor(y) * width + Math.floor(x)];
             return (type === SAND_GOLD || type === SAND_BLACK || type === GRAVEL || type === VOLCANIC || type === DRIFTWOOD);
         }
 
-        // 수초/이끼/지형 상단 착지 가능 여부 체크
         function isLandableTile(x, y) {
             if (x < 0 || x >= width || y < 0 || y >= height) return true;
             const type = grid[Math.floor(y) * width + Math.floor(x)];
             return (type === SAND_GOLD || type === SAND_BLACK || type === GRAVEL || type === VOLCANIC || type === DRIFTWOOD || type === MOSS || type === PLANT);
         }
 
-        // 버튼 클릭 이벤트 처리
         document.querySelectorAll('.btn[data-tool]').forEach(btn => {
             btn.addEventListener('click', () => {
                 currentTool = btn.getAttribute('data-tool');
@@ -354,7 +425,7 @@ aquarium_simulation_html = """
 
         document.getElementById('btn-water-change').addEventListener('click', () => {
             for (let i = 0; i < grid.length; i++) {
-                if (grid[i] === WASTE && Math.random() < 0.8) grid[i] = EMPTY;
+                if (grid[i] === WASTE && Math.random() < 0.85) grid[i] = EMPTY;
             }
         });
 
@@ -371,64 +442,18 @@ aquarium_simulation_html = """
             equipments = [];
         });
 
-        function handlePointer(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
-            const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
-
-            if (x < 0 || x >= width || y < 0 || y >= height) return;
-
-            // 생물 스폰 설정
-            const creatureConfig = {
-                'guppy': { type: 'swim', emoji: '🐠' },
-                'neon_tetra': { type: 'swim', emoji: '🐟' },
-                'puffer': { type: 'swim', emoji: '🐡' },
-                'angelfish': { type: 'swim', emoji: '🐠' },
-                'turtle': { type: 'swim', emoji: '🐢' },
-                'corydoras': { type: 'land', emoji: '🐟' },
-                'shrimp': { type: 'land_climb', emoji: '🦐' },
-                'snail': { type: 'land_climb', emoji: '🐌' },
-                'crab': { type: 'land', emoji: '🦀' }
-            };
-
-            if (creatureConfig[currentTool]) {
-                if (isMouseDown && Math.random() < 0.2) {
-                    const cfg = creatureConfig[currentTool];
-                    creatures.push({
-                        id: Date.now() + Math.random(),
-                        category: cfg.type,
-                        x: x,
-                        y: y,
-                        vx: (Math.random() - 0.5) * 1.5,
-                        vy: (Math.random() - 0.5) * 1.2,
-                        emoji: cfg.emoji
-                    });
-                }
-                return;
-            }
-
-            // 고정 장치 설치
-            if (['filter', 'air_bubble', 'co2_diffuser', 'wave_maker', 'heater'].includes(currentTool)) {
-                if (isMouseDown && Math.random() < 0.1) {
-                    const emojiMap = { filter: '🌀', air_bubble: '🫧', co2_diffuser: '🫧', wave_maker: '💨', heater: '🔥' };
-                    equipments.push({ type: currentTool, x, y, emoji: emojiMap[currentTool] });
-                }
-                return;
-            }
-
-            const radius = (currentTool === 'volcanic_rock' || currentTool === 'driftwood') ? 9 : 5;
-            const toolId = getToolId(currentTool);
-
-            for (let dx = -radius; dx <= radius; dx++) {
-                for (let dy = -radius; dy <= radius; dy++) {
-                    const px = x + dx;
-                    const py = y + dy;
+        function applyBrushAt(cx, cy, toolId) {
+            const r = brushSize;
+            for (let dx = -r; dx <= r; dx++) {
+                for (let dy = -r; dy <= r; dy++) {
+                    const px = cx + dx;
+                    const py = cy + dy;
                     if (px >= 0 && px < width && py >= 0 && py < height) {
-                        if (dx*dx + dy*dy <= radius*radius) {
-                            if (currentTool === 'eraser') {
+                        if (dx*dx + dy*dy <= r*r) {
+                            if (toolId === EMPTY) {
                                 grid[py * width + px] = EMPTY;
                                 foodAge[py * width + px] = 0;
-                            } else if (Math.random() > 0.15 || currentTool === 'volcanic_rock' || currentTool === 'driftwood') {
+                            } else {
                                 grid[py * width + px] = toolId;
                                 foodAge[py * width + px] = 0;
                             }
@@ -436,6 +461,79 @@ aquarium_simulation_html = """
                     }
                 }
             }
+        }
+
+        // 연속 브러시 (유목 선 그리기 지원)
+        function drawLine(x0, y0, x1, y1, toolId) {
+            const dx = Math.abs(x1 - x0);
+            const dy = Math.abs(y1 - y0);
+            const steps = Math.max(dx, dy, 1);
+            for (let i = 0; i <= steps; i++) {
+                const px = Math.round(x0 + (x1 - x0) * (i / steps));
+                const py = Math.round(y0 + (y1 - y0) * (i / steps));
+                applyBrushAt(px, py, toolId);
+            }
+        }
+
+        function handlePointer(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+            const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+
+            if (x < 0 || x >= width || y < 0 || y >= height) return;
+
+            // 생물 스폰
+            const creatureConfig = {
+                'guppy': { type: 'swim', emoji: '🐠', size: 24 },
+                'neon_tetra': { type: 'swim', emoji: '🐟', size: 22 },
+                'puffer': { type: 'swim', emoji: '🐡', size: 24 },
+                'angelfish': { type: 'swim', emoji: '🐠', size: 28 },
+                'turtle': { type: 'swim', emoji: '🐢', size: 28 },
+                'corydoras': { type: 'bottom', emoji: '🐟', size: 22 },
+                'shrimp': { type: 'bottom_climb', emoji: '🦐', size: 15 }, // 작은 크기
+                'snail': { type: 'bottom_climb', emoji: '🐌', size: 17 },
+                'crab': { type: 'bottom', emoji: '🦀', size: 20 }
+            };
+
+            if (creatureConfig[currentTool]) {
+                if (isMouseDown && Math.random() < 0.15) {
+                    const cfg = creatureConfig[currentTool];
+                    creatures.push({
+                        id: Date.now() + Math.random(),
+                        category: cfg.type,
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: (Math.random() - 0.5) * 1.0,
+                        facing: 'right',
+                        emoji: cfg.emoji,
+                        size: cfg.size,
+                        targetX: x,
+                        targetY: y
+                    });
+                }
+                return;
+            }
+
+            // 고정 장치 설치
+            if (['filter', 'air_bubble', 'wave_maker', 'heater'].includes(currentTool)) {
+                if (isMouseDown && Math.random() < 0.08) {
+                    const emojiMap = { filter: '🌀', air_bubble: '🫧', wave_maker: '💨', heater: '🔥' };
+                    equipments.push({ type: currentTool, x, y, emoji: emojiMap[currentTool] });
+                }
+                return;
+            }
+
+            const toolId = getToolId(currentTool);
+
+            if (lastX !== null && lastY !== null) {
+                drawLine(lastX, lastY, x, y, toolId);
+            } else {
+                applyBrushAt(x, y, toolId);
+            }
+
+            lastX = x;
+            lastY = y;
         }
 
         function getToolId(tool) {
@@ -448,27 +546,38 @@ aquarium_simulation_html = """
                 case 'plant_weed': return PLANT;
                 case 'moss': return MOSS;
                 case 'co2_bubble': return CO2;
-                case 'fish_food': return FISH_FOOD;
+                case 'food_fish': return FOOD_FISH;
+                case 'food_shrimp': return FOOD_SHRIMP;
+                case 'food_green': return FOOD_GREEN;
                 default: return EMPTY;
             }
         }
 
-        canvas.addEventListener('mousedown', (e) => { isMouseDown = true; handlePointer(e); });
-        canvas.addEventListener('mousemove', (e) => { if (isMouseDown) handlePointer(e); });
-        window.addEventListener('mouseup', () => isMouseDown = false);
+        canvas.addEventListener('mousedown', (e) => { 
+            isMouseDown = true; 
+            lastX = null; 
+            lastY = null; 
+            handlePointer(e); 
+        });
 
-        // 오토 생성 기포 및 디퓨저 동작
+        canvas.addEventListener('mousemove', (e) => { 
+            if (isMouseDown) handlePointer(e); 
+        });
+
+        window.addEventListener('mouseup', () => { 
+            isMouseDown = false; 
+            lastX = null; 
+            lastY = null; 
+        });
+
         let deviceTimer = 0;
         function updateDevices() {
             deviceTimer++;
-            if (deviceTimer % 8 === 0) {
+            if (deviceTimer % 6 === 0) {
                 equipments.forEach(eq => {
                     if (eq.type === 'air_bubble') {
-                        const idx = (eq.y - 12) * width + eq.x;
-                        if (eq.y - 12 > 0) grid[idx] = AIR;
-                    } else if (eq.type === 'co2_diffuser') {
-                        const idx = (eq.y - 12) * width + eq.x;
-                        if (eq.y - 12 > 0) grid[idx] = CO2;
+                        const idx = (eq.y - 10) * width + eq.x;
+                        if (eq.y - 10 > 0) grid[idx] = AIR;
                     }
                 });
             }
@@ -482,7 +591,7 @@ aquarium_simulation_html = """
 
                     if (type === EMPTY || type === VOLCANIC || type === DRIFTWOOD) continue;
 
-                    if (type === SAND_GOLD || type === SAND_BLACK || type === GRAVEL || type === FISH_FOOD || type === WASTE) {
+                    if ([SAND_GOLD, SAND_BLACK, GRAVEL, FOOD_FISH, FOOD_SHRIMP, FOOD_GREEN, WASTE].includes(type)) {
                         const below = (y + 1) * width + x;
                         const belowLeft = (y + 1) * width + (x - 1);
                         const belowRight = (y + 1) * width + (x + 1);
@@ -504,9 +613,9 @@ aquarium_simulation_html = """
                             foodAge[idx] = 0;
                         }
 
-                        if (type === FISH_FOOD) {
+                        if ([FOOD_FISH, FOOD_SHRIMP, FOOD_GREEN].includes(type)) {
                             foodAge[idx]++;
-                            if (foodAge[idx] > 600) {
+                            if (foodAge[idx] > 800) {
                                 grid[idx] = WASTE;
                                 foodAge[idx] = 0;
                             }
@@ -528,9 +637,10 @@ aquarium_simulation_html = """
             let closestDist = 999999;
             let target = null;
 
-            for (let py = 10; py < height; py += 10) {
-                for (let px = 10; px < width; px += 10) {
-                    if (grid[py * width + px] === FISH_FOOD) {
+            for (let py = 10; py < height; py += 12) {
+                for (let px = 10; px < width; px += 12) {
+                    const type = grid[py * width + px];
+                    if (type === FOOD_FISH || type === FOOD_SHRIMP || type === FOOD_GREEN) {
                         const dist = (px - x)**2 + (py - y)**2;
                         if (dist < closestDist) {
                             closestDist = dist;
@@ -555,7 +665,7 @@ aquarium_simulation_html = """
             }
 
             const filterBonus = equipments.filter(e => e.type === 'filter').length * 15;
-            const plantBonus = Math.floor(plantCount * 0.04);
+            const plantBonus = Math.floor(plantCount * 0.05);
             const wastePenalty = wasteCount * 2;
 
             let score = 100 - wastePenalty + filterBonus + plantBonus;
@@ -567,27 +677,31 @@ aquarium_simulation_html = """
             document.getElementById('equip-count').innerText = equipments.length;
 
             if (currentWQI >= 85) {
-                targetWaterColor = [30, 136, 229, 0.2];
+                targetWaterColor = [14, 165, 233, 0.15];
                 display.style.backgroundColor = '#0284c7';
+                display.style.color = '#ffffff';
                 display.innerText = `${currentWQI}점 (최상)`;
             } else if (currentWQI >= 60) {
-                targetWaterColor = [76, 175, 80, 0.3];
-                display.style.backgroundColor = '#15803d';
-                display.innerText = `${currentWQI}점 (주의)`;
+                targetWaterColor = [34, 197, 94, 0.25];
+                display.style.backgroundColor = '#16a34a';
+                display.style.color = '#ffffff';
+                display.innerText = `${currentWQI}점 (보통)`;
             } else if (currentWQI >= 30) {
-                targetWaterColor = [85, 139, 47, 0.45];
-                display.style.backgroundColor = '#a16207';
-                display.innerText = `${currentWQI}점 (경고)`;
+                targetWaterColor = [234, 179, 8, 0.35];
+                display.style.backgroundColor = '#ca8a04';
+                display.style.color = '#ffffff';
+                display.innerText = `${currentWQI}점 (주의)`;
             } else {
-                targetWaterColor = [62, 39, 35, 0.6];
-                display.style.backgroundColor = '#b91c1c';
-                display.innerText = `${currentWQI}점 (최악)`;
+                targetWaterColor = [185, 28, 28, 0.5];
+                display.style.backgroundColor = '#dc2626';
+                display.style.color = '#ffffff';
+                display.innerText = `${currentWQI}점 (위험)`;
             }
 
             equipments.forEach(eq => {
                 if (eq.type === 'filter') {
-                    for (let dy = -25; dy <= 25; dy++) {
-                        for (let dx = -25; dx <= 25; dx++) {
+                    for (let dy = -30; dy <= 30; dy++) {
+                        for (let dx = -30; dx <= 30; dx++) {
                             const fx = eq.x + dx;
                             const fy = eq.y + dy;
                             if (fx >= 0 && fx < width && fy >= 0 && fy < height) {
@@ -600,13 +714,12 @@ aquarium_simulation_html = """
             });
         }
 
-        // 지형 통과 방지 및 고유 행동 알고리즘
+        // 생물 이동 및 절대 뒤로 헤엄치지 않는 AI
         function updateCreatures() {
             creatures.forEach(c => {
                 const food = findClosestFood(c.x, c.y);
 
                 if (c.category === 'swim') {
-                    // 유영 어류 AI (구피, 테트라, 복어, 엔젤피쉬, 거북이)
                     if (food) {
                         const dx = food.x - c.x;
                         const dy = food.y - c.y;
@@ -622,69 +735,74 @@ aquarium_simulation_html = """
                         }
                     }
 
-                    c.vx = Math.max(-2.0, Math.min(2.0, c.vx));
-                    c.vy = Math.max(-1.2, Math.min(1.2, c.vy));
+                    c.vx = Math.max(-2.2, Math.min(2.2, c.vx));
+                    c.vy = Math.max(-1.4, Math.min(1.4, c.vy));
 
-                    let nextX = c.x + c.vx;
-                    let nextY = c.y + c.vy;
+                } else if (c.category === 'bottom' || c.category === 'bottom_climb') {
+                    // 바닥 생물 활발한 이동 및 정체 방지 AI
+                    const onSolid = isLandableTile(c.x, c.y + 10) || c.y >= height - 20;
 
-                    // 지형지물 충돌 반사 (통과 금지)
-                    if (isSolidTile(nextX, nextY)) {
-                        c.vx *= -0.8;
-                        c.vy *= -0.8;
-                    } else {
-                        c.x = nextX;
-                        c.y = nextY;
+                    // 정체 방지 - 주기적으로 새로운 목적지 생성
+                    if (Math.random() < 0.03 || Math.abs(c.vx) < 0.1) {
+                        c.targetX = Math.max(30, Math.min(width - 30, c.x + (Math.random() - 0.5) * 220));
+                        c.targetY = Math.max(40, Math.min(height - 30, c.y + (Math.random() - 0.5) * 120));
                     }
 
-                } else if (c.category === 'land' || c.category === 'land_climb') {
-                    // 저서 생물 AI (코리도라스, 게, 새우, 애플스네일)
-                    // 바닥/공중 돌/이끼 위에 서있는지 감지
-                    const onSolid = isLandableTile(c.x, c.y + 12) || c.y >= height - 25;
+                    const tDx = (food ? food.x : c.targetX) - c.x;
+                    const tDy = (food ? food.y : c.targetY) - c.y;
+                    const tDist = Math.sqrt(tDx*tDx + tDy*tDy);
 
-                    if (!onSolid) {
-                        c.vy += 0.25; // 중력 낙하 (공중 돌이나 바닥으로 착지)
-                    } else {
-                        c.vy = 0;
-                        if (Math.random() < 0.08) {
-                            c.vx = (Math.random() - 0.5) * 1.5;
+                    if (tDist > 4) {
+                        c.vx += (tDx / tDist) * 0.15;
+                        if (c.category === 'bottom_climb' || !onSolid) {
+                            c.vy += (tDy / tDist) * 0.1;
                         }
                     }
 
-                    if (food && c.category === 'land_climb') {
-                        const dx = food.x - c.x;
-                        const dy = food.y - c.y;
-                        if (Math.abs(dx) > 3) c.vx = (dx > 0 ? 1 : -1) * 1.2;
-                        if (dy < -5) c.vy = -1.0; // 수초/이끼 타고 위로 이동
+                    if (!onSolid && c.category === 'bottom') {
+                        c.vy += 0.2; // 중력 낙하
                     }
 
-                    let nextX = c.x + c.vx;
-                    let nextY = c.y + c.vy;
+                    c.vx = Math.max(-1.6, Math.min(1.6, c.vx));
+                    c.vy = Math.max(-1.2, Math.min(1.2, c.vy));
+                }
 
-                    if (isSolidTile(nextX, nextY)) {
-                        c.vx *= -1;
-                    } else {
-                        c.x = nextX;
-                        c.y = nextY;
-                    }
+                // 이동 방향에 따라 바라보는 정면 설정 (뒤로 가지 않음!)
+                if (c.vx > 0.15) {
+                    c.facing = 'right';
+                } else if (c.vx < -0.15) {
+                    c.facing = 'left';
+                }
+
+                let nextX = c.x + c.vx;
+                let nextY = c.y + c.vy;
+
+                // 지형 충돌 박스 (통과 금지)
+                if (isSolidTile(nextX, nextY)) {
+                    c.vx *= -0.7;
+                    c.vy *= -0.7;
+                } else {
+                    c.x = nextX;
+                    c.y = nextY;
                 }
 
                 // 벽 충돌
-                if (c.x < 25) { c.x = 25; c.vx *= -1; }
-                if (c.x > width - 25) { c.x = width - 25; c.vx *= -1; }
-                if (c.y < 25) { c.y = 25; c.vy *= -1; }
-                if (c.y > height - 25) { c.y = height - 25; c.vy = 0; }
+                if (c.x < 20) { c.x = 20; c.vx *= -1; c.facing = 'right'; }
+                if (c.x > width - 20) { c.x = width - 20; c.vx *= -1; c.facing = 'left'; }
+                if (c.y < 20) { c.y = 20; c.vy *= -1; }
+                if (c.y > height - 20) { c.y = height - 20; c.vy = 0; }
 
-                // 먹이 섭취
+                // 먹이 먹기
                 const cx = Math.floor(c.x);
                 const cy = Math.floor(c.y);
-                for (let dy = -15; dy <= 15; dy++) {
-                    for (let dx = -15; dx <= 15; dx++) {
+                for (let dy = -12; dy <= 12; dy++) {
+                    for (let dx = -12; dx <= 12; dx++) {
                         const px = cx + dx;
                         const py = cy + dy;
                         if (px >= 0 && px < width && py >= 0 && py < height) {
                             const idx = py * width + px;
-                            if (grid[idx] === FISH_FOOD) {
+                            const type = grid[idx];
+                            if (type === FOOD_FISH || type === FOOD_SHRIMP || type === FOOD_GREEN) {
                                 grid[idx] = EMPTY;
                                 foodAge[idx] = 0;
                             }
@@ -707,7 +825,7 @@ aquarium_simulation_html = """
         function render() {
             ctx.clearRect(0, 0, width, height);
 
-            // 1. 파우더 입자 렌더링
+            // 1. 입자 렌더링
             const imgData = ctx.createImageData(width, height);
             const data = imgData.data;
 
@@ -724,33 +842,44 @@ aquarium_simulation_html = """
             }
             ctx.putImageData(imgData, 0, 0);
 
-            // 2. 수질 물 색상 덮어씌우기 (어항 물의 투명도 느낌 표현)
+            // 2. 수질 물 레이어
             ctx.fillStyle = `rgba(${Math.round(currentWaterColor[0])}, ${Math.round(currentWaterColor[1])}, ${Math.round(currentWaterColor[2])}, ${currentWaterColor[3]})`;
             ctx.fillRect(0, 0, width, height);
 
-            // 3. 고정 장치 렌더링
+            // 3. 설치된 장치
             equipments.forEach(eq => {
                 ctx.font = '22px serif';
                 ctx.fillText(eq.emoji, eq.x - 11, eq.y + 8);
             });
 
-            // 4. 생물 렌더링 (물 색상 레이어 위에 그려 선명하고 흐리지 않음!)
+            // 4. 선명한 물고기 & 생물 렌더링 (투명도 0%, 또렷한 아웃라인 그림자)
+            ctx.save();
             ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = 'source-over';
+
             creatures.forEach(c => {
                 ctx.save();
                 ctx.translate(c.x, c.y);
 
-                // 좌우 이동에 따른 자연스러운 반전
-                if (c.vx < 0) {
+                // 뒤로 헤엄치지 않고 정확히 바라보는 방향으로 좌우 반전
+                if (c.facing === 'right') {
                     ctx.scale(-1, 1);
                 }
 
-                ctx.font = '28px serif';
+                ctx.font = `${c.size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
+
+                // 선명함을 높이는 드롭 섀도우
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+
                 ctx.fillText(c.emoji, 0, 0);
                 ctx.restore();
             });
+            ctx.restore();
         }
 
         let frameCount = 0;
@@ -760,7 +889,7 @@ aquarium_simulation_html = """
             updateCreatures();
 
             frameCount++;
-            if (frameCount % 15 === 0) {
+            if (frameCount % 12 === 0) {
                 updateEcosystem();
             }
 
