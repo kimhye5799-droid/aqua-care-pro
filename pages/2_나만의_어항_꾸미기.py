@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="나만의 어항 꾸미기",
-    page_icon="🎨",
+    page_icon="🐠",
     layout="wide"
 )
 
@@ -23,9 +23,6 @@ aquarium_simulation_html = """
             color: #f8fafc;
             margin: 0;
             padding: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
         }
 
         .main-container {
@@ -34,23 +31,42 @@ aquarium_simulation_html = """
             gap: 16px;
             width: 100%;
             max-width: 1280px;
+            margin: 0 auto;
             align-items: flex-start;
         }
 
-        /* 왼쪽 도구 & 정보 패널 */
+        /* 왼쪽 스크롤 가능 사이드 패널 */
         .sidebar-panel {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            width: 320px;
+            width: 300px;
+            max-height: 660px;
+            overflow-y: auto;
+            padding-right: 6px;
             flex-shrink: 0;
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-panel::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        .sidebar-panel::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        .sidebar-panel::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
         }
 
         .dashboard {
             background-color: #1e293b;
-            padding: 12px 14px;
+            padding: 12px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             border: 1px solid #334155;
             display: flex;
             flex-direction: column;
@@ -64,22 +80,22 @@ aquarium_simulation_html = """
         }
 
         .wqi-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 5px 10px;
+            border-radius: 16px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
             transition: all 0.3s;
         }
 
         .stat-details {
-            font-size: 12px;
+            font-size: 11px;
             color: #cbd5e1;
             display: flex;
             justify-content: space-around;
             background-color: #0f172a;
-            padding: 8px;
-            border-radius: 8px;
+            padding: 6px;
+            border-radius: 6px;
         }
 
         .toolbar {
@@ -87,9 +103,8 @@ aquarium_simulation_html = """
             flex-direction: column;
             gap: 10px;
             background-color: #1e293b;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             border: 1px solid #334155;
         }
 
@@ -104,7 +119,7 @@ aquarium_simulation_html = """
             font-weight: bold;
             color: #38bdf8;
             border-bottom: 1px solid #334155;
-            padding-bottom: 3px;
+            padding-bottom: 4px;
         }
 
         .btn-grid {
@@ -117,7 +132,7 @@ aquarium_simulation_html = """
             background-color: #334155;
             color: #f8fafc;
             border: 1px solid #475569;
-            padding: 7px 8px;
+            padding: 8px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
@@ -138,7 +153,7 @@ aquarium_simulation_html = """
         .btn.active {
             background-color: #0284c7;
             border-color: #38bdf8;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
             font-weight: bold;
         }
 
@@ -169,7 +184,7 @@ aquarium_simulation_html = """
         .canvas-wrapper {
             position: relative;
             box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            border: 4px solid #334155;
+            border: 3px solid #334155;
             border-radius: 12px;
             overflow: hidden;
             background-color: #000;
@@ -191,12 +206,12 @@ aquarium_simulation_html = """
 <body>
 
     <div class="main-container">
-        <!-- 1. 왼쪽 컨트롤 사이드바 -->
+        <!-- 1. 왼쪽 스크롤 컨트롤 사이드바 -->
         <div class="sidebar-panel">
             <!-- 수질 대시보드 -->
             <div class="dashboard">
                 <div class="stat-box">
-                    <span style="font-size: 13px; font-weight: bold;">💧 수질 지수 (WQI)</span>
+                    <span style="font-size: 12px; font-weight: bold;">💧 수질 지수 (WQI)</span>
                     <div id="wqi-display" class="wqi-badge">100점 (최상)</div>
                 </div>
                 <div class="stat-details">
@@ -241,11 +256,11 @@ aquarium_simulation_html = """
                     </div>
                 </div>
 
-                <!-- ④ CREATURE -->
+                <!-- ④ CREATURE & FOOD -->
                 <div class="tool-group">
                     <span class="category-label">④ 생물 / 먹이</span>
                     <div class="btn-grid">
-                        <button class="btn" onclick="setTool(this, 'fish_top')">🐠 상층열대어</button>
+                        <button class="btn" onclick="setTool(this, 'fish_top')">🐠 열대어</button>
                         <button class="btn" onclick="setTool(this, 'fish_bottom')">🐟 코리도라스</button>
                         <button class="btn" onclick="setTool(this, 'shrimp')">🦐 체리새우</button>
                         <button class="btn" onclick="setTool(this, 'fish_food')">🟤 물고기먹이</button>
@@ -268,9 +283,9 @@ aquarium_simulation_html = """
         <!-- 2. 오른쪽 크고 선명한 어항 캔버스 -->
         <div class="aquarium-container">
             <div class="canvas-wrapper">
-                <canvas id="aquarium" width="840" height="560"></canvas>
+                <canvas id="aquarium" width="860" height="600"></canvas>
             </div>
-            <div class="guide-text">💡 마우스로 클릭하거나 드래그하여 어항을 자유롭게 꾸며보세요.</div>
+            <div class="guide-text">💡 마우스로 클릭하거나 드래그하여 어항을 꾸미고 먹이를 주어보세요.</div>
         </div>
     </div>
 
@@ -280,7 +295,6 @@ aquarium_simulation_html = """
         const width = canvas.width;
         const height = canvas.height;
 
-        // ID 매핑 테이블
         const EMPTY = 0;
         const SAND_GOLD = 1;
         const SAND_BLACK = 2;
@@ -294,7 +308,6 @@ aquarium_simulation_html = """
         const FISH_FOOD = 10;
         const WASTE = 11;
 
-        // 색상 정의
         const colors = {
             [SAND_GOLD]: [229, 193, 88],
             [SAND_BLACK]: [51, 51, 51],
@@ -318,8 +331,8 @@ aquarium_simulation_html = """
         let isMouseDown = false;
 
         let currentWQI = 100;
-        let targetWaterColor = [30, 136, 229, 0.25];
-        let currentWaterColor = [30, 136, 229, 0.25];
+        let targetWaterColor = [30, 136, 229, 0.2];
+        let currentWaterColor = [30, 136, 229, 0.2];
 
         function setTool(btnElem, tool) {
             currentTool = tool;
@@ -338,22 +351,22 @@ aquarium_simulation_html = """
 
             if (x < 0 || x >= width || y < 0 || y >= height) return;
 
-            // 생물 직접 클릭 생성
+            // 생물 생성
             if (currentTool === 'fish_top') {
-                if (isMouseDown && Math.random() < 0.15) {
-                    creatures.push({ id: Date.now() + Math.random(), type: 'top', x, y, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*1, emoji: '🐠' });
+                if (isMouseDown && Math.random() < 0.2) {
+                    creatures.push({ id: Date.now() + Math.random(), type: 'top', x, y, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*1.5, angle: 0, targetAngle: 0, emoji: '🐠' });
                 }
                 return;
             }
             if (currentTool === 'fish_bottom') {
-                if (isMouseDown && Math.random() < 0.15) {
-                    creatures.push({ id: Date.now() + Math.random(), type: 'bottom', x, y: height - 30, vx: (Math.random()-0.5)*1.5, vy: 0, emoji: '🐟' });
+                if (isMouseDown && Math.random() < 0.2) {
+                    creatures.push({ id: Date.now() + Math.random(), type: 'bottom', x, y: height - 35, vx: (Math.random()-0.5)*1.5, vy: 0, angle: 0, targetAngle: 0, emoji: '🐟' });
                 }
                 return;
             }
             if (currentTool === 'shrimp') {
-                if (isMouseDown && Math.random() < 0.15) {
-                    creatures.push({ id: Date.now() + Math.random(), type: 'shrimp', x, y: height - 20, vx: (Math.random()-0.5)*1.2, vy: 0, emoji: '🦐' });
+                if (isMouseDown && Math.random() < 0.2) {
+                    creatures.push({ id: Date.now() + Math.random(), type: 'shrimp', x, y: height - 25, vx: (Math.random()-0.5)*1.2, vy: 0, angle: 0, targetAngle: 0, emoji: '🦐' });
                 }
                 return;
             }
@@ -367,7 +380,7 @@ aquarium_simulation_html = """
                 return;
             }
 
-            // 일반 입자 브러시
+            // 일반 브러시
             const radius = (currentTool === 'volcanic_rock' || currentTool === 'driftwood') ? 9 : 5;
             const toolId = getToolId(currentTool);
 
@@ -409,7 +422,7 @@ aquarium_simulation_html = """
         canvas.addEventListener('mousemove', (e) => { if (isMouseDown) handlePointer(e); });
         window.addEventListener('mouseup', () => isMouseDown = false);
 
-        // 물리 엔진 루프
+        // 물리 엔진
         function updatePhysics() {
             for (let y = height - 2; y >= 0; y--) {
                 for (let x = 0; x < width; x++) {
@@ -442,7 +455,7 @@ aquarium_simulation_html = """
 
                         if (type === FISH_FOOD) {
                             foodAge[idx]++;
-                            if (foodAge[idx] > 400) {
+                            if (foodAge[idx] > 500) {
                                 grid[idx] = WASTE;
                                 foodAge[idx] = 0;
                             }
@@ -460,7 +473,27 @@ aquarium_simulation_html = """
             }
         }
 
-        // 수질 및 생태계 업데이트
+        // 어항 내 먹이 위치 찾기
+        function findClosestFood(x, y) {
+            let closestDist = 999999;
+            let target = null;
+
+            // 속도를 위해 정교한 샘플링
+            for (let py = 10; py < height; py += 8) {
+                for (let px = 10; px < width; px += 8) {
+                    if (grid[py * width + px] === FISH_FOOD) {
+                        const dist = (px - x)**2 + (py - y)**2;
+                        if (dist < closestDist) {
+                            closestDist = dist;
+                            target = { x: px, y: py };
+                        }
+                    }
+                }
+            }
+            return target;
+        }
+
+        // 수질 시스템
         let wasteCount = 0;
         let plantCount = 0;
 
@@ -474,7 +507,7 @@ aquarium_simulation_html = """
             }
 
             const filterBonus = equipments.filter(e => e.type === 'filter').length * 15;
-            const plantBonus = Math.floor(plantCount * 0.05);
+            const plantBonus = Math.floor(plantCount * 0.04);
             const wastePenalty = wasteCount * 2;
 
             let score = 100 - wastePenalty + filterBonus + plantBonus;
@@ -486,35 +519,33 @@ aquarium_simulation_html = """
             document.getElementById('equip-count').innerText = equipments.length;
 
             if (currentWQI >= 85) {
-                targetWaterColor = [30, 136, 229, 0.25];
+                targetWaterColor = [30, 136, 229, 0.2];
                 display.style.backgroundColor = '#0284c7';
                 display.innerText = `${currentWQI}점 (최상)`;
             } else if (currentWQI >= 60) {
-                targetWaterColor = [76, 175, 80, 0.35];
+                targetWaterColor = [76, 175, 80, 0.3];
                 display.style.backgroundColor = '#15803d';
                 display.innerText = `${currentWQI}점 (주의)`;
             } else if (currentWQI >= 30) {
-                targetWaterColor = [85, 139, 47, 0.5];
+                targetWaterColor = [85, 139, 47, 0.45];
                 display.style.backgroundColor = '#a16207';
                 display.innerText = `${currentWQI}점 (경고)`;
             } else {
-                targetWaterColor = [62, 39, 35, 0.65];
+                targetWaterColor = [62, 39, 35, 0.6];
                 display.style.backgroundColor = '#b91c1c';
                 display.innerText = `${currentWQI}점 (최악)`;
             }
 
-            // 여과기 흡입 작용
+            // 여과기 주변 오염 제거
             equipments.forEach(eq => {
                 if (eq.type === 'filter') {
-                    for (let dy = -30; dy <= 30; dy++) {
-                        for (let dx = -30; dx <= 30; dx++) {
+                    for (let dy = -25; dy <= 25; dy++) {
+                        for (let dx = -25; dx <= 25; dx++) {
                             const fx = eq.x + dx;
                             const fy = eq.y + dy;
                             if (fx >= 0 && fx < width && fy >= 0 && fy < height) {
                                 const fIdx = fy * width + fx;
-                                if (grid[fIdx] === WASTE) {
-                                    grid[fIdx] = EMPTY;
-                                }
+                                if (grid[fIdx] === WASTE) grid[fIdx] = EMPTY;
                             }
                         }
                     }
@@ -522,21 +553,52 @@ aquarium_simulation_html = """
             });
         }
 
-        // 생물 움직임
+        // 물고기 자유 유영 & 먹이 반응 AI
         function updateCreatures() {
             creatures.forEach(c => {
-                const speedFactor = currentWQI < 30 ? 0.4 : 1.0;
-                c.x += c.vx * speedFactor;
-                c.y += c.vy * speedFactor;
+                const food = findClosestFood(c.x, c.y);
 
-                if (c.x < 15 || c.x > width - 15) c.vx *= -1;
-                if (c.y < 25 || c.y > height - 25) c.vy *= -1;
+                if (food) {
+                    // 먹이 추적 이동
+                    const dx = food.x - c.x;
+                    const dy = food.y - c.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
 
+                    if (dist > 5) {
+                        c.vx += (dx / dist) * 0.12;
+                        if (c.type === 'top') {
+                            c.vy += (dy / dist) * 0.12;
+                        }
+                    }
+                } else {
+                    // 자유 유영 (랜덤 가속)
+                    if (Math.random() < 0.05) {
+                        c.vx += (Math.random() - 0.5) * 0.6;
+                        if (c.type === 'top') {
+                            c.vy += (Math.random() - 0.5) * 0.4;
+                        }
+                    }
+                }
+
+                // 속도 제한
+                const maxSpeed = food ? 2.5 : 1.5;
+                c.vx = Math.max(-maxSpeed, Math.min(maxSpeed, c.vx));
+                c.vy = Math.max(-maxSpeed * 0.5, Math.min(maxSpeed * 0.5, c.vy));
+
+                c.x += c.vx;
+                c.y += c.vy;
+
+                // 벽 충돌 반사
+                if (c.x < 25) { c.x = 25; c.vx *= -1; }
+                if (c.x > width - 25) { c.x = width - 25; c.vx *= -1; }
+                if (c.y < 30) { c.y = 30; c.vy *= -1; }
+                if (c.y > height - 30) { c.y = height - 30; c.vy *= -1; }
+
+                // 먹기 판정
                 const cx = Math.floor(c.x);
                 const cy = Math.floor(c.y);
-
-                for (let dy = -12; dy <= 12; dy++) {
-                    for (let dx = -12; dx <= 12; dx++) {
+                for (let dy = -14; dy <= 14; dy++) {
+                    for (let dx = -14; dx <= 14; dx++) {
                         const px = cx + dx;
                         const py = cy + dy;
                         if (px >= 0 && px < width && py >= 0 && py < height) {
@@ -561,7 +623,7 @@ aquarium_simulation_html = """
             }
         }
 
-        // 캔버스 그려주기
+        // Render Canvas
         function render() {
             ctx.clearRect(0, 0, width, height);
 
@@ -581,28 +643,37 @@ aquarium_simulation_html = """
             }
             ctx.putImageData(imgData, 0, 0);
 
-            // 장치 그리기
+            // 장치 렌더링
             equipments.forEach(eq => {
-                ctx.font = '20px serif';
-                ctx.fillText(eq.emoji, eq.x - 10, eq.y + 7);
+                ctx.font = '22px serif';
+                ctx.fillText(eq.emoji, eq.x - 11, eq.y + 8);
             });
 
-            // 생물 그리기
+            // 물고기/생물 렌더링 (이동 방향 회전 및 좌우 반전)
             creatures.forEach(c => {
-                ctx.font = '24px serif';
-                ctx.fillText(c.emoji, c.x - 12, c.y + 8);
+                ctx.save();
+                ctx.translate(c.x, c.y);
+
+                // 왼쪽 수영시 Flip
+                if (c.vx < 0) {
+                    ctx.scale(-1, 1);
+                }
+
+                ctx.font = '26px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(c.emoji, 0, 0);
+                ctx.restore();
             });
 
-            // 물 색상
+            // 수질 물 색상 덮어씌우기
             ctx.fillStyle = `rgba(${Math.round(currentWaterColor[0])}, ${Math.round(currentWaterColor[1])}, ${Math.round(currentWaterColor[2])}, ${currentWaterColor[3]})`;
             ctx.fillRect(0, 0, width, height);
         }
 
         function waterChange() {
             for (let i = 0; i < grid.length; i++) {
-                if (grid[i] === WASTE && Math.random() < 0.8) {
-                    grid[i] = EMPTY;
-                }
+                if (grid[i] === WASTE && Math.random() < 0.8) grid[i] = EMPTY;
             }
         }
 
@@ -641,4 +712,4 @@ aquarium_simulation_html = """
 </html>
 """
 
-components.html(aquarium_simulation_html, height=680)
+components.html(aquarium_simulation_html, height=720)
