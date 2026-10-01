@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="투명 유리 어항 시뮬레이터", layout="wide")
+st.set_page_config(page_title="샌드박스 어항 시뮬레이터", layout="wide")
 
 html_code = """
 <!DOCTYPE html>
@@ -9,7 +9,7 @@ html_code = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>투명 유리 어항 시뮬레이터</title>
+  <title>샌드박스 어항 시뮬레이터</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -28,9 +28,8 @@ html_code = """
       overflow: hidden;
     }
 
-    /* Side Control Panel */
     .sidebar {
-      width: 300px;
+      width: 320px;
       background-color: #1e293b;
       border-right: 1px solid #334155;
       display: flex;
@@ -65,7 +64,7 @@ html_code = """
       padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .section-title {
@@ -74,7 +73,7 @@ html_code = """
       color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -92,7 +91,7 @@ html_code = """
       border: 1px solid #475569;
       border-radius: 8px;
       padding: 8px 10px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
@@ -112,13 +111,13 @@ html_code = """
       background-color: #0284c7;
       color: #ffffff;
       border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
     }
 
     .tool-btn i {
-      font-size: 13px;
+      font-size: 12px;
       color: #38bdf8;
-      width: 16px;
+      width: 14px;
       text-align: center;
     }
 
@@ -126,7 +125,6 @@ html_code = """
       color: #ffffff;
     }
 
-    /* Main Aquarium Container */
     .aquarium-container {
       flex: 1;
       position: relative;
@@ -138,7 +136,6 @@ html_code = """
       background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
     }
 
-    /* Crystal Clear Glass Tank Design */
     .glass-tank-frame {
       position: relative;
       width: 100%;
@@ -151,6 +148,7 @@ html_code = """
       border: 4px solid rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(2px);
       overflow: hidden;
+      transition: background 0.5s ease;
       background: linear-gradient(180deg, 
         rgba(224, 242, 254, 0.85) 0%, 
         rgba(186, 230, 253, 0.75) 40%, 
@@ -158,7 +156,21 @@ html_code = """
         rgba(56, 189, 248, 0.8) 100%);
     }
 
-    /* Light Rays Effect */
+    /* Lighting Modes */
+    .glass-tank-frame.night-mode {
+      background: linear-gradient(180deg, 
+        rgba(15, 23, 42, 0.95) 0%, 
+        rgba(30, 58, 138, 0.85) 50%, 
+        rgba(10, 30, 80, 0.9) 100%);
+    }
+
+    .glass-tank-frame.sunset-mode {
+      background: linear-gradient(180deg, 
+        rgba(254, 215, 170, 0.85) 0%, 
+        rgba(251, 146, 60, 0.7) 50%, 
+        rgba(186, 230, 253, 0.6) 100%);
+    }
+
     .light-rays {
       position: absolute;
       top: 0;
@@ -191,7 +203,7 @@ html_code = """
       width: 100%;
       height: 100%;
       display: block;
-      cursor: crosshair;
+      cursor: default;
     }
 
     .tank-banner {
@@ -204,7 +216,7 @@ html_code = """
       border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 6px 16px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       color: #e2e8f0;
       pointer-events: none;
       display: flex;
@@ -230,7 +242,7 @@ html_code = """
       border-radius: 6px;
       border: none;
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -248,11 +260,29 @@ html_code = """
 
   <aside class="sidebar">
     <div class="sidebar-header">
-      <i class="fa-solid fa-fish-fins"></i>
-      <h1>투명 수조 커스텀</h1>
+      <i class="fa-solid fa-cubes"></i>
+      <h1>샌드박스 어항 커스텀</h1>
     </div>
 
     <div class="sidebar-content">
+      <div>
+        <div class="section-title"><i class="fa-solid fa-hand-pointer"></i> 상호작용 모드</div>
+        <div class="btn-grid">
+          <button class="tool-btn active" id="mode-feed" onclick="setInteractionMode('feed')"><i class="fa-solid fa-cookie"></i> 먹이 주기</button>
+          <button class="tool-btn" id="mode-drag" onclick="setInteractionMode('drag')"><i class="fa-solid fa-up-down-left-right"></i> 드래그 이동</button>
+          <button class="tool-btn" id="mode-delete" onclick="setInteractionMode('delete')"><i class="fa-solid fa-trash"></i> 개체 삭제</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><i class="fa-solid fa-lightbulb"></i> 수조 조명</div>
+        <div class="btn-grid">
+          <button class="tool-btn active" id="light-day" onclick="setLighting('day')"><i class="fa-solid fa-sun"></i> 주간</button>
+          <button class="tool-btn" id="light-night" onclick="setLighting('night')"><i class="fa-solid fa-moon"></i> 야간 네온</button>
+          <button class="tool-btn" id="light-sunset" onclick="setLighting('sunset')"><i class="fa-solid fa-cloud-sun"></i> 석양</button>
+        </div>
+      </div>
+
       <div>
         <div class="section-title"><i class="fa-solid fa-mountain-sun"></i> 바닥재 선택</div>
         <div class="btn-grid">
@@ -268,13 +298,20 @@ html_code = """
         <div class="btn-grid">
           <button class="tool-btn active" id="btn-air" onclick="toggleEquipment('air')"><i class="fa-solid fa-wind"></i> 기포기</button>
           <button class="tool-btn active" id="btn-filter" onclick="toggleEquipment('filter')"><i class="fa-solid fa-filter"></i> 여과기</button>
-          <button class="tool-btn" id="btn-heater" onclick="toggleEquipment('heater')"><i class="fa-solid fa-temperature-high"></i> 히터기</button>
-          <button class="tool-btn active" id="btn-moss" onclick="togglePlant()"><i class="fa-solid fa-seedling"></i> 마디 수초</button>
+          <button class="tool-btn active" id="btn-heater" onclick="toggleEquipment('heater')"><i class="fa-solid fa-temperature-high"></i> 히터기</button>
         </div>
       </div>
 
       <div>
-        <div class="section-title"><i class="fa-solid fa-shrimp"></i> 생물 추가</div>
+        <div class="section-title"><i class="fa-solid fa-seedling"></i> 장식물/수초 생성 (샌드박스)</div>
+        <div class="btn-grid">
+          <button class="tool-btn" onclick="addPlant()"><i class="fa-solid fa-seedling"></i> 수초 추가</button>
+          <button class="tool-btn" onclick="addRock()"><i class="fa-solid fa-gem"></i> 수조 장식석</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><i class="fa-solid fa-fish"></i> 생물 추가</div>
         <div class="btn-grid">
           <button class="tool-btn" onclick="addCreature('neon')"><i class="fa-solid fa-fish"></i> 네온테트라</button>
           <button class="tool-btn" onclick="addCreature('angel')"><i class="fa-solid fa-fish-fins"></i> 엔젤피쉬</button>
@@ -286,17 +323,17 @@ html_code = """
       </div>
 
       <div>
-        <div class="section-title"><i class="fa-solid fa-bowl-food"></i> 먹이 선택</div>
+        <div class="section-title"><i class="fa-solid fa-bowl-food"></i> 먹이 타입</div>
         <div class="btn-grid">
-          <button class="tool-btn active" id="food-floating" onclick="selectFood('floating')"><i class="fa-solid fa-cookie"></i> 열대어 먹이</button>
+          <button class="tool-btn active" id="food-floating" onclick="selectFood('floating')"><i class="fa-solid fa-cookie"></i> 부유성 먹이</button>
           <button class="tool-btn" id="food-bottom" onclick="selectFood('bottom')"><i class="fa-solid fa-dharmachakra"></i> 침강성 먹이</button>
         </div>
       </div>
     </div>
 
     <div class="sidebar-footer">
-      <button class="action-btn btn-clean" onclick="cleanFood()"><i class="fa-solid fa-broom"></i> 청소</button>
-      <button class="action-btn btn-reset" onclick="resetTank()"><i class="fa-solid fa-rotate-right"></i> 리셋</button>
+      <button class="action-btn btn-clean" onclick="cleanFood()"><i class="fa-solid fa-broom"></i> 먹이 청소</button>
+      <button class="action-btn btn-reset" onclick="resetTank()"><i class="fa-solid fa-rotate-right"></i> 전체 리셋</button>
     </div>
   </aside>
 
@@ -307,8 +344,8 @@ html_code = """
       <canvas id="aquariumCanvas"></canvas>
     </div>
     <div class="tank-banner">
-      <i class="fa-solid fa-lightbulb"></i>
-      <span>수조 안을 클릭해 먹이를 주세요. 체인 형태 마디 수초가 살랑살랑 움직입니다.</span>
+      <i class="fa-solid fa-circle-info"></i>
+      <span id="banner-text">먹이 주기 모드입니다. 수조 안을 클릭하면 먹이가 내려옵니다.</span>
     </div>
   </main>
 
@@ -316,6 +353,7 @@ html_code = """
     const canvas = document.getElementById('aquariumCanvas');
     const ctx = canvas.getContext('2d');
     const tankFrame = document.getElementById('tank-frame');
+    const bannerText = document.getElementById('banner-text');
 
     function resizeCanvas() {
       canvas.width = tankFrame.clientWidth;
@@ -324,15 +362,25 @@ html_code = """
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    let interactionMode = 'feed'; // 'feed', 'drag', 'delete'
     let currentGravel = 'gravel';
     let selectedFoodType = 'floating';
-    let equipment = { air: true, filter: true, heater: false };
-    let hasPlant = true;
+    let equipment = { air: true, filter: true, heater: true };
 
     let creatures = [];
     let foods = [];
     let bubbles = [];
+    let plants = [
+      { x: 80, height: 180, phase: 0 },
+      { x: 120, height: 210, phase: 0.8 },
+      { x: canvas.width - 150, height: 190, phase: 1.5 }
+    ];
+    let rocks = [
+      { x: 180, size: 28 },
+      { x: canvas.width - 220, size: 36 }
+    ];
 
+    let draggedCreature = null;
     const GRAVEL_HEIGHT = 45;
 
     const FOOD_TYPES = {
@@ -347,35 +395,26 @@ html_code = """
     class Creature {
       constructor(type, x, y) {
         this.type = type;
-        this.x = x || random(50, canvas.width - 50);
-        this.y = y || random(100, canvas.height - GRAVEL_HEIGHT - 50);
+        this.x = x || random(60, canvas.width - 60);
+        this.y = y || random(100, canvas.height - GRAVEL_HEIGHT - 60);
         this.vx = random(-1.5, 1.5);
         this.vy = random(-0.5, 0.5);
         this.size = 20;
         this.facingRight = this.vx > 0;
         this.isBottomDweller = false;
-        this.tailAngle = 0;
+        this.isBeingDragged = false;
 
-        if (type === 'neon') {
-          this.size = 16;
-        } else if (type === 'angel') {
-          this.size = 26;
-        } else if (type === 'shrimp') {
-          this.size = 14;
-          this.isBottomDweller = true;
-          this.y = canvas.height - GRAVEL_HEIGHT - 10;
-        } else if (type === 'turtle') {
-          this.size = 24;
-        } else if (type === 'crab') {
-          this.size = 20;
-          this.isBottomDweller = true;
-          this.y = canvas.height - GRAVEL_HEIGHT - 12;
-        } else if (type === 'puffer') {
-          this.size = 20;
-        }
+        if (type === 'neon') this.size = 16;
+        else if (type === 'angel') this.size = 26;
+        else if (type === 'shrimp') { this.size = 14; this.isBottomDweller = true; this.y = canvas.height - GRAVEL_HEIGHT - 10; }
+        else if (type === 'turtle') this.size = 24;
+        else if (type === 'crab') { this.size = 20; this.isBottomDweller = true; this.y = canvas.height - GRAVEL_HEIGHT - 12; }
+        else if (type === 'puffer') this.size = 20;
       }
 
       update() {
+        if (this.isBeingDragged) return;
+
         const floorY = canvas.height - GRAVEL_HEIGHT - this.size / 2;
 
         let nearestFood = null;
@@ -429,7 +468,6 @@ html_code = """
         if (this.x > canvas.width - 30) { this.x = canvas.width - 30; this.vx *= -1; }
 
         if (Math.abs(this.vx) > 0.1) this.facingRight = this.vx > 0;
-        this.tailAngle += 0.15;
       }
 
       draw() {
@@ -578,15 +616,84 @@ html_code = """
     }
     initTank();
 
-    canvas.addEventListener('click', (e) => {
+    /* Mouse Interaction logic */
+    canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
 
-      for (let i = 0; i < 3; i++) {
-        foods.push(new Food(clickX + random(-10, 10), clickY + random(-10, 10), selectedFoodType));
+      if (interactionMode === 'feed') {
+        for (let i = 0; i < 3; i++) {
+          foods.push(new Food(mx + random(-10, 10), my + random(-10, 10), selectedFoodType));
+        }
+      } else if (interactionMode === 'drag') {
+        for (let c of creatures) {
+          if (Math.hypot(c.x - mx, c.y - my) < c.size + 10) {
+            draggedCreature = c;
+            c.isBeingDragged = true;
+            break;
+          }
+        }
+      } else if (interactionMode === 'delete') {
+        for (let i = creatures.length - 1; i >= 0; i--) {
+          let c = creatures[i];
+          if (Math.hypot(c.x - mx, c.y - my) < c.size + 10) {
+            creatures.splice(i, 1);
+            break;
+          }
+        }
       }
     });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (draggedCreature) {
+        const rect = canvas.getBoundingClientRect();
+        draggedCreature.x = e.clientX - rect.left;
+        draggedCreature.y = e.clientY - rect.top;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (draggedCreature) {
+        draggedCreature.isBeingDragged = false;
+        draggedCreature = null;
+      }
+    });
+
+    function setInteractionMode(mode) {
+      interactionMode = mode;
+      document.getElementById('mode-feed').classList.toggle('active', mode === 'feed');
+      document.getElementById('mode-drag').classList.toggle('active', mode === 'drag');
+      document.getElementById('mode-delete').classList.toggle('active', mode === 'delete');
+
+      if (mode === 'feed') {
+        canvas.style.cursor = 'crosshair';
+        bannerText.innerText = '먹이 주기 모드입니다. 수조 안을 클릭하면 먹이가 내려옵니다.';
+      } else if (mode === 'drag') {
+        canvas.style.cursor = 'grab';
+        bannerText.innerText = '드래그 이동 모드입니다. 원하는 물고기/생물을 마우스로 잡아 옮겨보세요.';
+      } else if (mode === 'delete') {
+        canvas.style.cursor = 'pointer';
+        bannerText.innerText = '개체 삭제 모드입니다. 클릭하는 물고기나 생물이 수조에서 지워집니다.';
+      }
+    }
+
+    function setLighting(mode) {
+      tankFrame.classList.remove('night-mode', 'sunset-mode');
+      document.getElementById('light-day').classList.remove('active');
+      document.getElementById('light-night').classList.remove('active');
+      document.getElementById('light-sunset').classList.remove('active');
+
+      if (mode === 'night') {
+        tankFrame.classList.add('night-mode');
+        document.getElementById('light-night').classList.add('active');
+      } else if (mode === 'sunset') {
+        tankFrame.classList.add('sunset-mode');
+        document.getElementById('light-sunset').classList.add('active');
+      } else {
+        document.getElementById('light-day').classList.add('active');
+      }
+    }
 
     function setGravel(type, btn) {
       currentGravel = type;
@@ -606,9 +713,12 @@ html_code = """
       if (btn) btn.classList.toggle('active', equipment[eq]);
     }
 
-    function togglePlant() {
-      hasPlant = !hasPlant;
-      document.getElementById('btn-moss').classList.toggle('active', hasPlant);
+    function addPlant() {
+      plants.push({ x: random(50, canvas.width - 50), height: random(140, 220), phase: random(0, 3) });
+    }
+
+    function addRock() {
+      rocks.push({ x: random(50, canvas.width - 50), size: random(20, 40) });
     }
 
     function addCreature(type) {
@@ -640,30 +750,35 @@ html_code = """
         ctx.fillStyle = '#e0f2fe';
         ctx.fillRect(0, yStart, canvas.width, gHeight);
       }
+
+      /* Draw Rocks */
+      for (let r of rocks) {
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.arc(r.x, canvas.height - GRAVEL_HEIGHT + 10, r.size, Math.PI, 0);
+        ctx.fill();
+      }
     }
 
-    /* SEGMENTED CHAIN PLANTS (마디마디 잎 수초) */
     function drawPlants() {
-      if (!hasPlant) return;
-
       ctx.save();
       const plantY = canvas.height - GRAVEL_HEIGHT + 8;
       const time = Date.now() * 0.0025;
 
-      function drawStemPlant(baseX, totalHeight, leafColor, stemColor, phaseOffset) {
-        const segments = 15;
-        const segHeight = totalHeight / segments;
+      for (let p of plants) {
+        const segments = 12;
+        const segHeight = p.height / segments;
 
-        let prevX = baseX;
+        let prevX = p.x;
         let prevY = plantY;
 
         for (let i = 1; i <= segments; i++) {
           const progress = i / segments;
-          const sway = Math.sin(time + phaseOffset + progress * 2.2) * (progress * 20);
-          const currentX = baseX + sway;
+          const sway = Math.sin(time + p.phase + progress * 2.2) * (progress * 18);
+          const currentX = p.x + sway;
           const currentY = plantY - (i * segHeight);
 
-          ctx.strokeStyle = stemColor;
+          ctx.strokeStyle = '#15803d';
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.moveTo(prevX, prevY);
@@ -673,11 +788,8 @@ html_code = """
           ctx.save();
           ctx.translate(currentX, currentY);
 
-          const angle = Math.atan2(currentY - prevY, currentX - prevX) + Math.PI / 2;
-          ctx.rotate(angle);
-
           const leafSize = 8 + (1 - progress) * 4;
-          ctx.fillStyle = leafColor;
+          ctx.fillStyle = '#22c55e';
 
           ctx.beginPath();
           ctx.ellipse(-leafSize * 0.8, -2, leafSize, leafSize * 0.45, -0.3, 0, Math.PI * 2);
@@ -694,35 +806,35 @@ html_code = """
         }
       }
 
-      drawStemPlant(70, 180, '#16a34a', '#15803d', 0);
-      drawStemPlant(95, 210, '#22c55e', '#166534', 0.8);
-      drawStemPlant(120, 160, '#4ade80', '#15803d', 1.5);
-
-      drawStemPlant(canvas.width - 240, 170, '#15803d', '#166534', 2.1);
-      drawStemPlant(canvas.width - 215, 220, '#22c55e', '#15803d', 2.8);
-
-      drawStemPlant(canvas.width - 100, 160, '#16a34a', '#15803d', 1.2);
-      drawStemPlant(canvas.width - 75, 190, '#4ade80', '#166534', 0.4);
-
       ctx.restore();
     }
 
     function drawEquipmentVisuals() {
+      /* Air Bubbler Unit */
       if (equipment.air) {
-        if (Math.random() < 0.4) bubbles.push(new Bubble(100, canvas.height - GRAVEL_HEIGHT));
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(80, canvas.height - GRAVEL_HEIGHT - 10, 30, 10);
+        if (Math.random() < 0.4) bubbles.push(new Bubble(95, canvas.height - GRAVEL_HEIGHT - 10));
         if (Math.random() < 0.4) bubbles.push(new Bubble(canvas.width - 100, canvas.height - GRAVEL_HEIGHT));
       }
 
+      /* Water Filter Unit */
       if (equipment.filter) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(canvas.width - 70, 0, 50, 100);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(canvas.width - 70, 0, 50, 120);
+        ctx.fillStyle = '#0ea5e9';
+        ctx.fillRect(canvas.width - 65, 110, 40, 8);
       }
 
+      /* Heater Unit */
       if (equipment.heater) {
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(30, 60, 10, 160);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(30, 40, 10, 180);
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(32, 160, 6, 40);
+        ctx.fillRect(32, 180, 6, 35);
+        ctx.beginPath();
+        ctx.arc(35, 220, 8, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -758,5 +870,4 @@ html_code = """
 </html>
 """
 
-# Streamlit HTML 컴포넌트 렌더링 (높이 지정)
 components.html(html_code, height=750, scrolling=False)
