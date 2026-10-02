@@ -212,9 +212,9 @@ html_code = """
       overflow: hidden;
     }
 
-    /* 사이드 쓰레기통 UI 스타일 */
+    /* 쓰레기통 UI */
     .trash-zone {
-      width: 90px;
+      width: 100px;
       height: 86vh;
       background: rgba(30, 41, 59, 0.6);
       border: 2px dashed #475569;
@@ -226,38 +226,39 @@ html_code = """
       gap: 12px;
       color: #94a3b8;
       transition: all 0.2s ease;
-      position: relative;
+      cursor: pointer;
     }
 
-    .trash-zone.drag-over {
-      background: rgba(239, 68, 68, 0.2);
+    .trash-zone:hover {
+      background: rgba(239, 68, 68, 0.15);
       border-color: #ef4444;
-      color: #ef4444;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+      color: #f8fafc;
     }
 
     .trash-icon {
-      font-size: 32px;
+      font-size: 36px;
       transition: transform 0.2s ease;
     }
 
-    .trash-zone.drag-over .trash-icon {
-      transform: scale(1.2) rotate(-10deg);
+    .trash-zone:hover .trash-icon {
+      transform: scale(1.15) rotate(-10deg);
+      color: #ef4444;
     }
 
     .trash-label {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
       text-align: center;
       line-height: 1.4;
     }
 
     .trash-count {
-      font-size: 10px;
+      font-size: 11px;
       background: #334155;
-      padding: 2px 8px;
-      border-radius: 10px;
+      padding: 3px 10px;
+      border-radius: 12px;
       color: #38bdf8;
+      font-weight: 600;
     }
 
     canvas {
@@ -265,6 +266,10 @@ html_code = """
       height: 100%;
       display: block;
       image-rendering: pixelated;
+    }
+
+    canvas.net-active {
+      cursor: none;
     }
 
     .status-overlay {
@@ -452,10 +457,10 @@ html_code = """
       </div>
     </div>
 
-    <!-- 어항 옆에 위치하는 쓰레기통 UI -->
+    <!-- 쓰레기통 UI -->
     <div class="trash-zone" id="trash-zone" onclick="emptyNetToTrash()">
       <i class="fa-solid fa-trash-can trash-icon" id="trash-icon"></i>
-      <div class="trash-label">뜰채 버리기<br><span style="font-size:9px; color:#64748b; font-weight:400;">(클릭/드래그)</span></div>
+      <div class="trash-label">뜰채 비우기<br><span style="font-size:10px; color:#64748b; font-weight:normal;">(클릭)</span></div>
       <div class="trash-count" id="net-count-badge">담김: 0</div>
     </div>
   </main>
@@ -506,11 +511,11 @@ html_code = """
     let bubbles = [];
     let plants = [];
 
-    // 뜰채 바구니 보관함
+    // 뜰채 보관함
     let netInventory = { creatures: [], foods: [] };
 
-    // 뜰채 모션 관련 상태 변수
-    let netCursor = { x: -100, y: -100, isScooping: false, scoopProgress: 0, angle: 0 };
+    // 뜰채 위치 및 모션 상태
+    let netCursor = { x: -100, y: -100, isScooping: false, scoopProgress: 0 };
 
     let draggedCreature = null;
     let selectedCreature = null;
@@ -521,7 +526,7 @@ html_code = """
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    /* 자연스러운 줄기와 잎을 갖춘 수초 클래스 */
+    /* 자연 수초 클래스 */
     class NaturalPlant {
       constructor(x, y) {
         this.x = x;
@@ -544,24 +549,14 @@ html_code = """
           this.stemSegments.push({ x: currX, y: currY });
 
           if (currY < this.maxHeight - 15) {
-            this.leaves.push({
-              y: currY,
-              side: 1,
-              length: random(12, 22)
-            });
-            this.leaves.push({
-              y: currY + random(-3, 3),
-              side: -1,
-              length: random(12, 22)
-            });
+            this.leaves.push({ y: currY, side: 1, length: random(12, 22) });
+            this.leaves.push({ y: currY + random(-3, 3), side: -1, length: random(12, 22) });
           }
         }
       }
 
       update() {
-        if (this.currentHeight < this.maxHeight) {
-          this.currentHeight += 0.3;
-        }
+        if (this.currentHeight < this.maxHeight) this.currentHeight += 0.3;
         this.swayOffset += 0.02;
       }
 
@@ -570,7 +565,6 @@ html_code = """
         ctx.translate(this.x, this.y);
 
         let sway = Math.sin(this.swayOffset) * 6;
-
         ctx.beginPath();
         ctx.moveTo(0, 0);
 
@@ -856,18 +850,18 @@ html_code = """
       }
     }
 
-    /* 뜰채 업데이트 및 렌더링 함수 */
+    /* 뜰채 커서 및 뜰채 휘두르는 회전 애니메이션 렌더링 */
     function drawFishNetCursor() {
       if (interactionMode !== 'net' || netCursor.x < 0) return;
 
       ctx.save();
       ctx.translate(netCursor.x, netCursor.y);
 
-      // 떠내는 애니메이션 각도 및 회전 처리
-      let currentAngle = netCursor.angle;
+      let currentAngle = -Math.PI / 4;
+
       if (netCursor.isScooping) {
-        netCursor.scoopProgress += 0.12;
-        currentAngle += Math.sin(netCursor.scoopProgress) * 0.8;
+        netCursor.scoopProgress += 0.18;
+        currentAngle += Math.sin(netCursor.scoopProgress) * 0.9;
         if (netCursor.scoopProgress >= Math.PI) {
           netCursor.isScooping = false;
           netCursor.scoopProgress = 0;
@@ -876,50 +870,51 @@ html_code = """
 
       ctx.rotate(currentAngle);
 
-      let netR = penSize * 8 + 12;
+      let netR = penSize * 10 + 15;
 
-      // 1. 손잡이 (그립)
+      // 손잡이
       ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(40, -40);
+      ctx.lineTo(45, -45);
       ctx.stroke();
 
-      // 2. 뜰채 프레임
+      // 뜰채 금속 원형 프레임
       ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.ellipse(0, 0, netR, netR * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, netR, netR * 0.65, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // 3. 뜰채 그물망 (격자)
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.lineWidth = 1;
+      // 뜰채 내부 그물망
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       for (let i = -netR + 4; i < netR; i += 6) {
-        ctx.moveTo(i, -Math.sqrt(Math.max(0, netR*netR - i*i)) * 0.6);
-        ctx.lineTo(i, Math.sqrt(Math.max(0, netR*netR - i*i)) * 0.6);
+        let h = Math.sqrt(Math.max(0, netR*netR - i*i)) * 0.65;
+        ctx.moveTo(i, -h); ctx.lineTo(i, h);
       }
-      for (let j = -netR * 0.6 + 4; j < netR * 0.6; j += 4) {
-        ctx.moveTo(-Math.sqrt(Math.max(0, (netR*netR)*(1 - (j*j)/(netR*0.6*netR*0.6)))), j);
-        ctx.lineTo(Math.sqrt(Math.max(0, (netR*netR)*(1 - (j*j)/(netR*0.6*netR*0.6)))), j);
+      for (let j = -netR * 0.65 + 4; j < netR * 0.65; j += 5) {
+        let w = Math.sqrt(Math.max(0, (netR*netR)*(1 - (j*j)/(netR*0.65*netR*0.65))));
+        ctx.moveTo(-w, j); ctx.lineTo(w, j);
       }
       ctx.stroke();
 
-      // 4. 뜰채 안에 수집된 개체 수 표시
+      // 수집된 수 표시 빨간 알림 뱃지
       let totalCaptured = netInventory.creatures.length + netInventory.foods.length;
       if (totalCaptured > 0) {
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(0, -netR * 0.6 - 6, 8, 0, Math.PI * 2);
+        ctx.arc(0, -netR * 0.65 - 8, 9, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 10px sans-serif';
+        ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(totalCaptured, 0, -netR * 0.6 - 5);
+        ctx.fillText(totalCaptured, 0, -netR * 0.65 - 7);
       }
 
       ctx.restore();
@@ -928,25 +923,23 @@ html_code = """
     function updateNetBadge() {
       let count = netInventory.creatures.length + netInventory.foods.length;
       netBadge.innerText = `담김: ${count}`;
-      if (count > 0) {
-        trashZone.classList.add('drag-over');
-      } else {
-        trashZone.classList.remove('drag-over');
-      }
     }
 
     function emptyNetToTrash() {
       let count = netInventory.creatures.length + netInventory.foods.length;
-      if (count === 0) return;
+      if (count === 0) {
+        bannerText.innerText = '뜰채가 비어 있습니다!';
+        return;
+      }
 
       netInventory.creatures = [];
       netInventory.foods = [];
       updateNetBadge();
 
-      bannerText.innerText = '뜰채의 모든 내용물을 쓰레기통에 비웠습니다!';
+      bannerText.innerText = `뜰채에 담긴 개체 ${count}개를 쓰레기통에 버렸습니다!`;
     }
 
-    /* 마우스 이동 및 인터랙션 처리 */
+    /* 마우스 및 터치 이벤트 */
     canvas.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
       netCursor.x = e.clientX - rect.left;
@@ -991,20 +984,20 @@ html_code = """
         if (!found) { selectedCreature = null; infoCard.style.display = 'none'; }
 
       } else if (interactionMode === 'net') {
-        // 뜰채 휘두르는 서핑 모션 활성화
+        // 휘두르는 모션 트리거
         netCursor.isScooping = true;
         netCursor.scoopProgress = 0;
 
-        let netRadius = penSize * 8 + 10;
+        let netRadius = penSize * 10 + 15;
 
-        // 물고기/생물 떠서 뜰채에 보관
+        // 뜰채 내부 생물 떠내기
         for (let i = creatures.length - 1; i >= 0; i--) {
           if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < netRadius) {
             let removed = creatures.splice(i, 1)[0];
             netInventory.creatures.push(removed);
           }
         }
-        // 먹이 떠서 뜰채에 보관
+        // 먹이 떠내기
         for (let i = foods.length - 1; i >= 0; i--) {
           if (Math.hypot(foods[i].x - mx, foods[i].y - my) < netRadius) {
             let removed = foods.splice(i, 1)[0];
@@ -1017,7 +1010,7 @@ html_code = """
             plants.splice(i, 1);
           }
         }
-        // 픽셀 지우기
+        // 픽셀 삭제
         let pRadius = Math.floor(netRadius / PIXEL_SIZE);
         for (let dy = -pRadius; dy <= pRadius; dy++) {
           for (let dx = -pRadius; dx <= pRadius; dx++) {
@@ -1106,18 +1099,24 @@ html_code = """
       const activeBtn = document.getElementById(`mode-${mode}`);
       if (activeBtn) activeBtn.classList.add('active');
 
+      if (mode === 'net') {
+        canvas.classList.add('net-active');
+        bannerText.innerText = '만능 뜰채: 클릭하여 물고기를 뜬 후 우측 쓰레기통을 클릭해 비우세요!';
+      } else {
+        canvas.classList.remove('net-active');
+      }
+
       if (mode !== 'select') {
         selectedCreature = null;
         infoCard.style.display = 'none';
       }
 
       if (mode === 'select') bannerText.innerText = '개체 선택펜: 물고기를 클릭해 상태 정보를 조회하세요.';
-      else if (mode === 'net') bannerText.innerText = '만능 뜰채: 어항 안을 떠내어 담은 후 우측 쓰레기통을 클릭해 비우세요!';
       else if (mode === 'eraser') bannerText.innerText = '픽셀 삭제펜: 지정 영역의 픽셀과 생물을 지웁니다.';
       else if (mode === 'drag') bannerText.innerText = '개체 이동펜: 원하는 생물을 집어 이동시킵니다.';
-      else if (mode === 'powder-stone') bannerText.innerText = '고정 암석: 물고기 뒤쪽 레이어에 배치되는 입체 고정 구조물입니다.';
+      else if (mode === 'powder-stone') bannerText.innerText = '고정 암석: 입체 구조물을 만들어 레이어를 연출합니다.';
       else if (mode === 'powder-wood') bannerText.innerText = '유목: 물고기가 통과할 수 있는 통나무 구조물입니다.';
-      else if (mode === 'powder-seed') bannerText.innerText = '수초: 풍성한 잎과 곡선 줄기가 오가며 자라는 자연 수초를 생성합니다.';
+      else if (mode === 'powder-seed') bannerText.innerText = '수초: 풍성하게 오가며 자라는 자연 수초를 생성합니다.';
       else if (mode.startsWith('powder-')) bannerText.innerText = '픽셀 파우더: 입자를 떨어뜨려 바닥재를 채웁니다.';
     }
 
@@ -1163,7 +1162,7 @@ html_code = """
       const a = document.createElement('a'); a.href = img; a.download = 'pixel_aquarium.png'; a.click();
     }
 
-    /* 메인 렌더링 루프 */
+    /* 메인 애니메이션 루프 */
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1204,7 +1203,7 @@ html_code = """
         c.draw();
       }
 
-      /* LAYER 5. 커스텀 뜰채 오버레이 렌더링 */
+      /* LAYER 5. 커스텀 뜰채 오버레이 */
       drawFishNetCursor();
 
       document.getElementById('disp-count').innerText = creatures.length;
