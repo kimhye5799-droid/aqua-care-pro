@@ -211,7 +211,6 @@ html_code = """
       overflow: hidden;
     }
 
-    /* Pixel crisp rendering canvas */
     canvas {
       width: 100%;
       height: 100%;
@@ -316,21 +315,28 @@ html_code = """
       <button class="tab-btn" onclick="switchTab('tab-equip')"><i class="fa-solid fa-plug"></i>장비 설정</button>
     </nav>
 
-    <!-- TAB 1: Pixel Powder Modes -->
+    <!-- TAB 1: Pixel Powder Modes & Brush Settings -->
     <div class="tab-content active" id="tab-powder">
+      <div class="section-title"><i class="fa-solid fa-sliders"></i> 브러시 크기 설정</div>
+      <div class="slider-group">
+        <div class="slider-header"><span>펜 크기</span><span id="pen-size-val">3 px</span></div>
+        <input type="range" id="pen-size-slider" min="1" max="10" value="3" oninput="updatePenSize(this.value)">
+      </div>
+
       <div class="section-title"><i class="fa-solid fa-hand-pointer"></i> 특수 도구 펜</div>
       <div class="btn-grid">
         <button class="tool-btn active" id="mode-select" onclick="setInteractionMode('select')"><i class="fa-solid fa-magnifying-glass"></i> 개체 선택펜</button>
+        <button class="tool-btn" id="mode-net" onclick="setInteractionMode('net')"><i class="fa-solid fa-network-wired"></i> 만능 뜰채</button>
         <button class="tool-btn" id="mode-eraser" onclick="setInteractionMode('eraser')"><i class="fa-solid fa-eraser"></i> 픽셀 삭제펜</button>
         <button class="tool-btn" id="mode-drag" onclick="setInteractionMode('drag')"><i class="fa-solid fa-hand"></i> 개체 이동펜</button>
       </div>
 
-      <div class="section-title"><i class="fa-solid fa-border-all"></i> 바닥재 & 픽셀 파우더</div>
+      <div class="section-title"><i class="fa-solid fa-border-all"></i> 바닥재 & 고정 구조물</div>
       <div class="btn-grid">
         <button class="tool-btn" id="mode-powder-sand" onclick="setInteractionMode('powder-sand')"><i class="fa-solid fa-square" style="color:#fde047"></i> 금사 모래</button>
         <button class="tool-btn" id="mode-powder-gravel" onclick="setInteractionMode('powder-gravel')"><i class="fa-solid fa-square" style="color:#d97706"></i> 갈색 자갈</button>
-        <button class="tool-btn" id="mode-powder-soil" onclick="setInteractionMode('powder-soil')"><i class="fa-solid fa-square" style="color:#451a03"></i> 영양 소일(흙)</button>
-        <button class="tool-btn" id="mode-powder-volcano" onclick="setInteractionMode('powder-volcano')"><i class="fa-solid fa-square" style="color:#475569"></i> 화산석 픽셀</button>
+        <button class="tool-btn" id="mode-powder-stone" onclick="setInteractionMode('powder-stone')"><i class="fa-solid fa-cubes" style="color:#94a3b8"></i> 고정 암석(돌)</button>
+        <button class="tool-btn" id="mode-powder-wood" onclick="setInteractionMode('powder-wood')"><i class="fa-solid fa-tree" style="color:#78350f"></i> 유목(나무)</button>
         <button class="tool-btn" id="mode-powder-seed" onclick="setInteractionMode('powder-seed')"><i class="fa-solid fa-seedling" style="color:#22c55e"></i> 수초 씨앗</button>
         <button class="tool-btn" id="mode-powder-food" onclick="setInteractionMode('powder-food')"><i class="fa-solid fa-cookie" style="color:#f59e0b"></i> 먹이 픽셀</button>
       </div>
@@ -397,7 +403,7 @@ html_code = """
 
     <div class="tank-banner">
       <i class="fa-solid fa-info-circle"></i>
-      <span id="banner-text">초기 바닥이 완전히 비어있습니다. 원하는 픽셀 파우더(모래, 자갈, 소일 등)를 흩뿌려 바닥을 꾸며보세요!</span>
+      <span id="banner-text">원하는 도구를 선택하고 어항 안에서 자유롭게 표현해 보세요!</span>
     </div>
   </main>
 
@@ -414,11 +420,11 @@ html_code = """
     const infoHunger = document.getElementById('info-hunger');
     const infoTempStatus = document.getElementById('info-temp-status');
 
-    const PIXEL_SIZE = 4; // Square Pixel Size like Powder Game
+    const PIXEL_SIZE = 4;
 
     let gridCols = 0;
     let gridRows = 0;
-    let pixelGrid = []; // Grid storing pixel types & colors
+    let pixelGrid = [];
 
     function resizeCanvas() {
       canvas.width = Math.floor(tankFrame.clientWidth);
@@ -433,6 +439,7 @@ html_code = """
     }
 
     let interactionMode = 'select';
+    let penSize = 3;
     let temperature = 24;
     let waterQuality = 100;
     let customLightColor = '#e0f2fe';
@@ -453,77 +460,100 @@ html_code = """
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    /* Creature Class */
+    /* Detailed Creature Class */
     class Creature {
       constructor(type, x, y) {
         this.id = Math.random().toString(36).substr(2, 9);
         this.type = type;
         this.x = x || random(80, canvas.width - 80);
         this.y = y || random(100, canvas.height - 120);
-        this.vx = random(-1.5, 1.5);
-        this.vy = random(-0.5, 0.5);
-        this.size = 22;
+        this.vx = random(-1.2, 1.2) || 0.8;
+        this.vy = random(-0.4, 0.4);
         this.facingRight = this.vx > 0;
-        this.isBottomDweller = (type === 'shrimp');
-        this.hunger = random(60, 90);
-        this.tailAngle = 0;
+        this.hunger = random(50, 80); // 100% is full
+        this.tailAngle = random(0, Math.PI * 2);
+        this.climbingPlant = null; // Plant reference for shrimp
 
         if (type === 'neon') { this.name = '네온테트라'; this.size = 20; }
         else if (type === 'angel') { this.name = '엔젤피쉬'; this.size = 28; }
         else if (type === 'shrimp') { this.name = '체리새우'; this.size = 18; }
-        else if (type === 'turtle') { this.name = '거북이'; this.size = 26; }
-        else if (type === 'puffer') { this.name = '복어'; this.size = 24; }
+        else if (type === 'turtle') { this.name = '거북이'; this.size = 48; } // Turtle size scaled up
+        else if (type === 'puffer') { this.name = '복어'; this.size = 26; }
       }
 
       update() {
         if (this === draggedCreature) return;
 
-        this.tailAngle += 0.15;
-        this.hunger = Math.max(0, this.hunger - 0.005);
+        this.tailAngle += 0.12;
+        // Slow down hunger depletion
+        this.hunger = Math.max(0, this.hunger - 0.0015);
         let speedMult = (temperature < 20) ? 0.6 : (temperature > 28 ? 1.3 : 1.0);
 
-        let groundY = canvas.height - 30;
+        // Special behavior: Shrimp climbing plant
+        if (this.type === 'shrimp') {
+          if (!this.climbingPlant && plantSeeds.length > 0 && Math.random() < 0.03) {
+            for (let p of plantSeeds) {
+              if (Math.abs(p.x - this.x) < 30 && p.height > 10) {
+                this.climbingPlant = p;
+                break;
+              }
+            }
+          }
 
+          if (this.climbingPlant) {
+            let p = this.climbingPlant;
+            this.x += (p.x - this.x) * 0.05;
+            this.y += (p.y - p.height * 0.5 - this.y) * 0.05;
+
+            if (Math.random() < 0.01 || Math.abs(p.x - this.x) > 50) {
+              this.climbingPlant = null;
+            }
+            return;
+          }
+        }
+
+        // Search food ONLY when hunger is below 85%
         let nearestFood = null;
-        let minDist = 180;
-        for (let f of foods) {
-          let d = Math.hypot(f.x - this.x, f.y - this.y);
-          if (d < minDist) { minDist = d; nearestFood = f; }
+        if (this.hunger < 85) {
+          let minDist = 200;
+          for (let f of foods) {
+            let d = Math.hypot(f.x - this.x, f.y - this.y);
+            if (d < minDist) { minDist = d; nearestFood = f; }
+          }
         }
 
         if (nearestFood) {
           let angle = Math.atan2(nearestFood.y - this.y, nearestFood.x - this.x);
-          this.vx = Math.cos(angle) * 2.0 * speedMult;
-          if (!this.isBottomDweller) this.vy = Math.sin(angle) * 2.0 * speedMult;
+          this.vx = Math.cos(angle) * 1.5 * speedMult;
+          this.vy = Math.sin(angle) * 1.5 * speedMult;
 
-          if (minDist < this.size / 2 + 6) {
+          if (Math.hypot(nearestFood.x - this.x, nearestFood.y - this.y) < this.size / 2 + 6) {
             let idx = foods.indexOf(nearestFood);
             if (idx > -1) {
               foods.splice(idx, 1);
-              this.hunger = Math.min(100, this.hunger + 25);
+              this.hunger = Math.min(100, this.hunger + 30);
               for (let i = 0; i < 3; i++) bubbles.push(new Bubble(this.x, this.y, random(2, 4), random(0.5, 1.5)));
             }
           }
         } else {
-          if (Math.random() < 0.02) {
-            this.vx = random(-1.5, 1.5) * speedMult;
-            if (!this.isBottomDweller) this.vy = random(-0.8, 0.8) * speedMult;
+          if (Math.random() < 0.015) {
+            this.vx = random(-1.2, 1.2) * speedMult;
+            this.vy = random(-0.5, 0.5) * speedMult;
           }
         }
 
         this.x += this.vx;
-        if (this.isBottomDweller) {
-          this.y = groundY;
-          this.vy = 0;
-        } else {
-          this.y += this.vy;
-          if (this.y < 40) { this.y = 40; this.vy *= -1; }
-          if (this.y > groundY) { this.y = groundY; this.vy *= -1; }
-        }
+        this.y += this.vy;
 
+        // Tank Boundaries
+        if (this.y < 40) { this.y = 40; this.vy *= -1; }
+        if (this.y > canvas.height - 35) { this.y = canvas.height - 35; this.vy *= -1; }
         if (this.x < 30) { this.x = 30; this.vx *= -1; }
         if (this.x > canvas.width - 30) { this.x = canvas.width - 30; this.vx *= -1; }
-        if (Math.abs(this.vx) > 0.1) this.facingRight = this.vx > 0;
+
+        // Fix backwards swimming bug: Facing direction matches movement vector
+        if (this.vx > 0.05) this.facingRight = true;
+        else if (this.vx < -0.05) this.facingRight = false;
       }
 
       draw() {
@@ -535,48 +565,82 @@ html_code = """
           ctx.lineWidth = 2;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
-          ctx.arc(0, 0, this.size + 12, 0, Math.PI * 2);
+          ctx.arc(0, 0, this.size + 10, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
         }
 
+        // Correct Scale Orientation (facingRight standard)
         if (!this.facingRight) ctx.scale(-1, 1);
-        const tailWag = Math.sin(this.tailAngle) * 4;
+        const tailWag = Math.sin(this.tailAngle) * 3;
 
         if (this.type === 'neon') {
-          ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(0, 0, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#00f0ff'; ctx.beginPath(); ctx.fillRect(-12, -3, 20, 2.5); ctx.fill();
-          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.ellipse(4, 1, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
-          ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(24, -6 + tailWag); ctx.lineTo(22, 0); ctx.lineTo(24, 6 + tailWag); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-10, -2, 2.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(-10, -2, 1.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(0, 0, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#00f0ff'; ctx.beginPath(); ctx.fillRect(-10, -3, 18, 2); ctx.fill();
+          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.ellipse(4, 1, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+          ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(-20, -5 + tailWag); ctx.lineTo(-18, 0); ctx.lineTo(-20, 5 + tailWag); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(8, -2, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(8, -2, 1, 0, Math.PI * 2); ctx.fill();
 
         } else if (this.type === 'angel') {
-          ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-10, -14); ctx.lineTo(-14, 0); ctx.lineTo(-10, 14); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.fillRect(-4, -12, 3, 24); ctx.fillRect(2, -8, 2.5, 16);
+          ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-10, -12); ctx.lineTo(-12, 0); ctx.lineTo(-10, 12); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.fillRect(-4, -10, 3, 20); ctx.fillRect(2, -6, 2, 12);
           ctx.fillStyle = '#cbd5e1';
-          ctx.beginPath(); ctx.moveTo(-6, -10); ctx.lineTo(-16, -28); ctx.lineTo(-2, -10); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-6, 10); ctx.lineTo(-18, 30); ctx.lineTo(-2, 10); ctx.fill();
-          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(6, -3, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(-16, -26); ctx.lineTo(-2, -8); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(-18, 26); ctx.lineTo(-2, 8); ctx.fill();
+          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(5, -2, 2, 0, Math.PI * 2); ctx.fill();
 
         } else if (this.type === 'shrimp') {
+          // Highly detailed Cherry Shrimp
           ctx.fillStyle = '#dc2626';
-          ctx.beginPath(); ctx.ellipse(-6, -2, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(0, 0, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(5, 2, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(-11, -3); ctx.lineTo(-22, -10); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(4, -1, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); // Head
+          ctx.beginPath(); ctx.ellipse(-2, 0, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill(); // Body 1
+          ctx.beginPath(); ctx.ellipse(-7, 1, 4, 3, 0, 0, Math.PI * 2); ctx.fill(); // Body 2
+          ctx.beginPath(); ctx.ellipse(-11, 2, 3, 2, 0, 0, Math.PI * 2); ctx.fill(); // Tail base
+          // Tail Fan
+          ctx.beginPath(); ctx.moveTo(-13, 2); ctx.lineTo(-18, -1 + tailWag); ctx.lineTo(-18, 5 + tailWag); ctx.closePath(); ctx.fill();
+          // Legs
+          ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(0, 8); ctx.moveTo(-1, 3); ctx.lineTo(-4, 8); ctx.moveTo(-4, 3); ctx.lineTo(-7, 8); ctx.stroke();
+          // Antenna
+          ctx.beginPath(); ctx.moveTo(8, -2); ctx.lineTo(18, -8); ctx.moveTo(8, -1); ctx.lineTo(16, -2); ctx.stroke();
+          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(6, -2, 1, 0, Math.PI * 2); ctx.fill();
 
         } else if (this.type === 'turtle') {
-          ctx.fillStyle = '#15803d'; ctx.beginPath(); ctx.ellipse(0, -3, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#4ade80'; ctx.beginPath(); ctx.arc(-14, -3, 5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(-15, -4, 1, 0, Math.PI * 2); ctx.fill();
+          // Large Turtle (Angel + Neon size combination)
+          ctx.fillStyle = '#15803d'; // Shell
+          ctx.beginPath(); ctx.ellipse(-2, 0, 22, 16, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#166534'; ctx.lineWidth = 2; ctx.stroke();
+          // Shell pattern
+          ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.rect(-12, -8, 10, 8); ctx.rect(-2, -8, 10, 8); ctx.rect(-7, 0, 10, 8); ctx.stroke();
+          // Head
+          ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.ellipse(22, 0, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(24, -2, 1.5, 0, Math.PI * 2); ctx.fill();
+          // Flippers
+          ctx.fillStyle = '#16a34a';
+          ctx.beginPath(); ctx.ellipse(10, -14 + tailWag*0.5, 10, 5, Math.PI/4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(10, 14 - tailWag*0.5, 10, 5, -Math.PI/4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-14, -12, 6, 3, Math.PI/6, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-14, 12, 6, 3, -Math.PI/6, 0, Math.PI * 2); ctx.fill();
 
         } else if (this.type === 'puffer') {
+          // Detailed Puffer Fish with spikes
           ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-7, -4, 3.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(-8, -4, 1.8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.arc(0, 4, 10, 0, Math.PI); ctx.fill(); // Belly
+          // Spikes
+          ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
+          for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+            let sx = Math.cos(a) * 13; let sy = Math.sin(a) * 13;
+            let ex = Math.cos(a) * 16; let ey = Math.sin(a) * 16;
+            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+          }
+          // Face & Fins
+          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(5, -4, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(6, -4, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath(); ctx.moveTo(-13, 0); ctx.lineTo(-19, -5 + tailWag); ctx.lineTo(-19, 5 + tailWag); ctx.closePath(); ctx.fill();
         }
 
         ctx.restore();
@@ -584,8 +648,8 @@ html_code = """
     }
 
     class Food {
-      constructor(x, y) { this.x = x; this.y = y; this.radius = 3; }
-      update() { if (this.y < canvas.height - 15) this.y += 1.2; }
+      constructor(x, y) { this.x = x; this.y = y; }
+      update() { if (this.y < canvas.height - 15) this.y += 0.8; }
       draw() { ctx.fillStyle = '#f59e0b'; ctx.fillRect(this.x - 2, this.y - 2, 4, 4); }
     }
 
@@ -603,15 +667,15 @@ html_code = """
       }
     }
 
-    /* Pixel Grid Helpers */
+    /* Pixel Grid Logic */
     function getGridIndex(gx, gy) {
       if (gx < 0 || gx >= gridCols || gy < 0 || gy >= gridRows) return -1;
       return gy * gridCols + gx;
     }
 
-    function setPixel(gx, gy, color) {
+    function setPixel(gx, gy, data) {
       let idx = getGridIndex(gx, gy);
-      if (idx !== -1) pixelGrid[idx] = color;
+      if (idx !== -1) pixelGrid[idx] = data;
     }
 
     function getPixel(gx, gy) {
@@ -619,23 +683,21 @@ html_code = """
       return idx !== -1 ? pixelGrid[idx] : 'wall';
     }
 
-    /* Powder Pixel Gravity Simulation */
+    /* Fixed Stone & Wood Physics vs Falling Powder */
     function updatePixelPhysics() {
       for (let gy = gridRows - 2; gy >= 0; gy--) {
         for (let gx = 0; gx < gridCols; gx++) {
           let current = getPixel(gx, gy);
-          if (current && current !== 'wall') {
+          if (current && typeof current === 'object' && current.falling) {
             // Check directly below
             if (!getPixel(gx, gy + 1)) {
               setPixel(gx, gy, null);
               setPixel(gx, gy + 1, current);
             } 
-            // Check diagonal left
             else if (!getPixel(gx - 1, gy + 1) && Math.random() < 0.5) {
               setPixel(gx, gy, null);
               setPixel(gx - 1, gy + 1, current);
             } 
-            // Check diagonal right
             else if (!getPixel(gx + 1, gy + 1) && Math.random() < 0.5) {
               setPixel(gx, gy, null);
               setPixel(gx + 1, gy + 1, current);
@@ -645,7 +707,7 @@ html_code = """
       }
     }
 
-    /* User Interaction Events */
+    /* Mouse Interaction Handler */
     canvas.addEventListener('mousedown', (e) => {
       isMouseDown = true;
       handleMouseAction(e);
@@ -680,18 +742,32 @@ html_code = """
         }
         if (!found) { selectedCreature = null; infoCard.style.display = 'none'; }
 
+      } else if (interactionMode === 'net') {
+        // Universal Fish Net: Scope out creatures, foods, sand, stone, wood
+        let netRadius = penSize * 4;
+        for (let i = creatures.length - 1; i >= 0; i--) {
+          if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < netRadius + 15) creatures.splice(i, 1);
+        }
+        for (let i = foods.length - 1; i >= 0; i--) {
+          if (Math.hypot(foods[i].x - mx, foods[i].y - my) < netRadius + 10) foods.splice(i, 1);
+        }
+        for (let dy = -netRadius; dy <= netRadius; dy++) {
+          for (let dx = -netRadius; dx <= netRadius; dx++) {
+            setPixel(gx + dx, gy + dy, null);
+          }
+        }
+
       } else if (interactionMode === 'eraser') {
-        let radius = 4;
-        for (let dy = -radius; dy <= radius; dy++) {
-          for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -penSize; dy <= penSize; dy++) {
+          for (let dx = -penSize; dx <= penSize; dx++) {
             setPixel(gx + dx, gy + dy, null);
           }
         }
         for (let i = foods.length - 1; i >= 0; i--) {
-          if (Math.hypot(foods[i].x - mx, foods[i].y - my) < 20) foods.splice(i, 1);
+          if (Math.hypot(foods[i].x - mx, foods[i].y - my) < penSize * 4) foods.splice(i, 1);
         }
         for (let i = creatures.length - 1; i >= 0; i--) {
-          if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < creatures[i].size + 10) creatures.splice(i, 1);
+          if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < creatures[i].size) creatures.splice(i, 1);
         }
 
       } else if (interactionMode === 'drag') {
@@ -705,23 +781,23 @@ html_code = """
 
       } else if (interactionMode.startsWith('powder-')) {
         let type = interactionMode.replace('powder-', '');
-        let colorMap = {
-          sand: '#fde047',
-          gravel: '#d97706',
-          soil: '#451a03',
-          volcano: '#475569'
-        };
 
-        if (type in colorMap) {
-          for (let i = 0; i < 6; i++) {
-            let rx = gx + Math.floor(random(-2, 3));
-            let ry = gy + Math.floor(random(-2, 3));
-            if (!getPixel(rx, ry)) setPixel(rx, ry, colorMap[type]);
+        for (let dy = -penSize + 1; dy < penSize; dy++) {
+          for (let dx = -penSize + 1; dx < penSize; dx++) {
+            let targetGx = gx + dx;
+            let targetGy = gy + dy;
+
+            if (type === 'sand') setPixel(targetGx, targetGy, { color: '#fde047', falling: true });
+            else if (type === 'gravel') setPixel(targetGx, targetGy, { color: '#d97706', falling: true });
+            else if (type === 'stone') setPixel(targetGx, targetGy, { color: '#94a3b8', falling: false }); // Fixed Stone
+            else if (type === 'wood') setPixel(targetGx, targetGy, { color: '#78350f', falling: false }); // Fixed Wood
           }
-        } else if (type === 'seed') {
+        }
+
+        if (type === 'seed' && Math.random() < 0.2) {
           plantSeeds.push({ x: mx, y: my, height: 0, maxH: random(30, 80) });
-        } else if (type === 'food') {
-          foods.push(new Food(mx + random(-6, 6), my));
+        } else if (type === 'food' && Math.random() < 0.3) {
+          foods.push(new Food(mx + random(-4, 4), my));
         }
       }
     }
@@ -736,12 +812,17 @@ html_code = """
       else if (temperature < 18 || temperature > 30) moodText = '스트레스 😰';
       infoMood.innerText = moodText;
 
-      infoHunger.innerText = `${Math.round(c.hunger)}% (${c.hunger > 60 ? '배부름' : '출출함'})`;
+      infoHunger.innerText = `${Math.round(c.hunger)}% (${c.hunger > 80 ? '배부름' : (c.hunger > 40 ? '보통' : '배고픔')})`;
 
       let tempText = '최적 (24°C)';
       if (temperature < 20) tempText = '추움 ❄️';
       else if (temperature > 28) tempText = '더움 ☀️';
       infoTempStatus.innerText = tempText;
+    }
+
+    function updatePenSize(val) {
+      penSize = parseInt(val);
+      document.getElementById('pen-size-val').innerText = val + ' px';
     }
 
     function addCreature(type) { creatures.push(new Creature(type)); }
@@ -752,10 +833,19 @@ html_code = """
       const activeBtn = document.getElementById(`mode-${mode}`);
       if (activeBtn) activeBtn.classList.add('active');
 
+      // Hide Inspector Card automatically when switching to non-select modes
+      if (mode !== 'select') {
+        selectedCreature = null;
+        infoCard.style.display = 'none';
+      }
+
       if (mode === 'select') bannerText.innerText = '개체 선택펜: 물고기를 클릭해 상세 종/상태 정보를 조회하세요.';
-      else if (mode === 'eraser') bannerText.innerText = '픽셀 삭제펜: 마우스 주변 픽셀 및 개체를 깨끗하게 지웁니다.';
+      else if (mode === 'net') bannerText.innerText = '만능 뜰채: 남은 밥, 물고기, 바닥재, 암석을 뜰채로 떠서 건져냅니다.';
+      else if (mode === 'eraser') bannerText.innerText = '픽셀 삭제펜: 지정 크기 영역 내 픽셀 및 생물을 지웁니다.';
       else if (mode === 'drag') bannerText.innerText = '개체 이동펜: 원하는 생물을 마우스로 집어 이동시킵니다.';
-      else if (mode.startsWith('powder-')) bannerText.innerText = '픽셀 파우더: 네모난 픽셀 알갱이 입자를 떨어뜨려 바닥재를 쌓으세요!';
+      else if (mode === 'powder-stone') bannerText.innerText = '고정 암석: 떨어지지 않고 공중에 고정되는 돌 구조물을 설치합니다.';
+      else if (mode === 'powder-wood') bannerText.innerText = '유목: 떨어지지 않고 공중에 고정되는 나무 구조물을 배치합니다.';
+      else if (mode.startsWith('powder-')) bannerText.innerText = '픽셀 파우더: 입자를 떨어뜨려 수조를 채웁니다.';
     }
 
     function toggleEquipment(item) {
@@ -802,14 +892,14 @@ html_code = """
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      /* 1. Update & Render Pixel Grid (Powder Physics) */
+      /* 1. Update & Render Pixel Grid */
       updatePixelPhysics();
 
       for (let gy = 0; gy < gridRows; gy++) {
         for (let gx = 0; gx < gridCols; gx++) {
-          let color = getPixel(gx, gy);
-          if (color && color !== 'wall') {
-            ctx.fillStyle = color;
+          let cell = getPixel(gx, gy);
+          if (cell && typeof cell === 'object') {
+            ctx.fillStyle = cell.color;
             ctx.fillRect(gx * PIXEL_SIZE, gy * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
           }
         }
