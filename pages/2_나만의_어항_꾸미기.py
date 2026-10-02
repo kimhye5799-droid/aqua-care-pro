@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="파우더 샌드박스 어항 Pro", layout="wide")
+st.set_page_config(page_title="픽셀 파우더 샌드박스 어항 Pro", layout="wide")
 
 html_code = """
 <!DOCTYPE html>
@@ -9,7 +9,7 @@ html_code = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>파우더 샌드박스 어항 Pro</title>
+  <title>픽셀 파우더 샌드박스 어항 Pro</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -22,7 +22,6 @@ html_code = """
       overflow: hidden;
     }
 
-    /* Sidebar Layout */
     .sidebar {
       width: 340px;
       background-color: #151d2a;
@@ -67,7 +66,6 @@ html_code = """
     .sidebar-header i { font-size: 20px; color: #38bdf8; }
     .sidebar-header h1 { font-size: 15px; font-weight: 700; color: #f1f5f9; }
 
-    /* Category Tabs */
     .tab-bar {
       display: flex;
       background: #0f172a;
@@ -191,7 +189,6 @@ html_code = """
       background: none;
     }
 
-    /* Main Canvas Container */
     .aquarium-container {
       flex: 1;
       position: relative;
@@ -214,9 +211,14 @@ html_code = """
       overflow: hidden;
     }
 
-    canvas { width: 100%; height: 100%; display: block; }
+    /* Pixel crisp rendering canvas */
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
 
-    /* Environment Status Overlay */
     .status-overlay {
       position: absolute;
       top: 14px;
@@ -236,7 +238,6 @@ html_code = """
     .status-item { display: flex; align-items: center; gap: 6px; }
     .status-item i { color: #38bdf8; }
 
-    /* Info Inspection Box */
     .info-card {
       position: absolute;
       top: 14px;
@@ -305,32 +306,33 @@ html_code = """
     <button class="sidebar-toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
 
     <div class="sidebar-header">
-      <i class="fa-solid fa-wand-magic-sparkles"></i>
-      <h1>파우더 샌드박스 어항 Pro</h1>
+      <i class="fa-solid fa-border-all"></i>
+      <h1>픽셀 파우더 샌드박스 Pro</h1>
     </div>
 
     <nav class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('tab-powder')"><i class="fa-solid fa-spray-can"></i>파우더 펜</button>
+      <button class="tab-btn active" onclick="switchTab('tab-powder')"><i class="fa-solid fa-spray-can"></i>픽셀 파우더</button>
       <button class="tab-btn" onclick="switchTab('tab-fish')"><i class="fa-solid fa-fish"></i>생물 배치</button>
       <button class="tab-btn" onclick="switchTab('tab-equip')"><i class="fa-solid fa-plug"></i>장비 설정</button>
     </nav>
 
-    <!-- TAB 1: Powder & Pen Mode -->
+    <!-- TAB 1: Pixel Powder Modes -->
     <div class="tab-content active" id="tab-powder">
       <div class="section-title"><i class="fa-solid fa-hand-pointer"></i> 특수 도구 펜</div>
       <div class="btn-grid">
         <button class="tool-btn active" id="mode-select" onclick="setInteractionMode('select')"><i class="fa-solid fa-magnifying-glass"></i> 개체 선택펜</button>
-        <button class="tool-btn" id="mode-eraser" onclick="setInteractionMode('eraser')"><i class="fa-solid fa-eraser"></i> 삭제펜 (지우개)</button>
+        <button class="tool-btn" id="mode-eraser" onclick="setInteractionMode('eraser')"><i class="fa-solid fa-eraser"></i> 픽셀 삭제펜</button>
         <button class="tool-btn" id="mode-drag" onclick="setInteractionMode('drag')"><i class="fa-solid fa-hand"></i> 개체 이동펜</button>
       </div>
 
-      <div class="section-title"><i class="fa-solid fa-spray-can"></i> 파우더 흩뿌리기</div>
+      <div class="section-title"><i class="fa-solid fa-border-all"></i> 바닥재 & 픽셀 파우더</div>
       <div class="btn-grid">
-        <button class="tool-btn" id="mode-powder-sand" onclick="setInteractionMode('powder-sand')"><i class="fa-solid fa-mound"></i> 모래 파우더</button>
-        <button class="tool-btn" id="mode-powder-gravel" onclick="setInteractionMode('powder-gravel')"><i class="fa-solid fa-cubes"></i> 자갈 파우더</button>
-        <button class="tool-btn" id="mode-powder-seed" onclick="setInteractionMode('powder-seed')"><i class="fa-solid fa-seedling"></i> 수초 씨앗</button>
-        <button class="tool-btn" id="mode-powder-food" onclick="setInteractionMode('powder-food')"><i class="fa-solid fa-cookie"></i> 먹이 파우더</button>
-        <button class="tool-btn" id="mode-powder-bubble" onclick="setInteractionMode('powder-bubble')"><i class="fa-solid fa-soap"></i> 버블 파우더</button>
+        <button class="tool-btn" id="mode-powder-sand" onclick="setInteractionMode('powder-sand')"><i class="fa-solid fa-square" style="color:#fde047"></i> 금사 모래</button>
+        <button class="tool-btn" id="mode-powder-gravel" onclick="setInteractionMode('powder-gravel')"><i class="fa-solid fa-square" style="color:#d97706"></i> 갈색 자갈</button>
+        <button class="tool-btn" id="mode-powder-soil" onclick="setInteractionMode('powder-soil')"><i class="fa-solid fa-square" style="color:#451a03"></i> 영양 소일(흙)</button>
+        <button class="tool-btn" id="mode-powder-volcano" onclick="setInteractionMode('powder-volcano')"><i class="fa-solid fa-square" style="color:#475569"></i> 화산석 픽셀</button>
+        <button class="tool-btn" id="mode-powder-seed" onclick="setInteractionMode('powder-seed')"><i class="fa-solid fa-seedling" style="color:#22c55e"></i> 수초 씨앗</button>
+        <button class="tool-btn" id="mode-powder-food" onclick="setInteractionMode('powder-food')"><i class="fa-solid fa-cookie" style="color:#f59e0b"></i> 먹이 픽셀</button>
       </div>
 
       <div class="section-title"><i class="fa-solid fa-sliders"></i> 수온 & 조명</div>
@@ -370,7 +372,7 @@ html_code = """
     <div class="sidebar-footer">
       <button class="action-btn btn-snap" onclick="takeSnapshot()"><i class="fa-solid fa-camera"></i> 캡처</button>
       <button class="action-btn btn-clean" onclick="cleanFood()"><i class="fa-solid fa-broom"></i> 청소</button>
-      <button class="action-btn btn-reset" onclick="resetTank()"><i class="fa-solid fa-rotate-right"></i> 초기화</button>
+      <button class="action-btn btn-reset" onclick="resetTank()"><i class="fa-solid fa-rotate-right"></i> 전체 비우기</button>
     </div>
   </aside>
 
@@ -382,7 +384,6 @@ html_code = """
         <div class="status-item"><i class="fa-solid fa-fish"></i> 생물수: <span id="disp-count">0</span></div>
       </div>
 
-      <!-- Creature Info Inspector Box -->
       <div class="info-card" id="info-card">
         <h3><i class="fa-solid fa-circle-info"></i> <span id="info-name">네온테트라</span></h3>
         <div class="info-line"><span>종류:</span><span class="val" id="info-type">열대어</span></div>
@@ -396,7 +397,7 @@ html_code = """
 
     <div class="tank-banner">
       <i class="fa-solid fa-info-circle"></i>
-      <span id="banner-text">개체 선택펜: 물고기를 클릭하면 종류와 상태 정보를 상세히 확인합니다.</span>
+      <span id="banner-text">초기 바닥이 완전히 비어있습니다. 원하는 픽셀 파우더(모래, 자갈, 소일 등)를 흩뿌려 바닥을 꾸며보세요!</span>
     </div>
   </main>
 
@@ -406,7 +407,6 @@ html_code = """
     const tankFrame = document.getElementById('tank-frame');
     const bannerText = document.getElementById('banner-text');
 
-    /* Inspector Card Elements */
     const infoCard = document.getElementById('info-card');
     const infoName = document.getElementById('info-name');
     const infoType = document.getElementById('info-type');
@@ -414,11 +414,21 @@ html_code = """
     const infoHunger = document.getElementById('info-hunger');
     const infoTempStatus = document.getElementById('info-temp-status');
 
+    const PIXEL_SIZE = 4; // Square Pixel Size like Powder Game
+
+    let gridCols = 0;
+    let gridRows = 0;
+    let pixelGrid = []; // Grid storing pixel types & colors
+
     function resizeCanvas() {
-      canvas.width = tankFrame.clientWidth;
-      canvas.height = tankFrame.clientHeight;
-      if (terrainHeights.length !== canvas.width) {
-        terrainHeights = new Array(canvas.width).fill(40);
+      canvas.width = Math.floor(tankFrame.clientWidth);
+      canvas.height = Math.floor(tankFrame.clientHeight);
+      
+      gridCols = Math.floor(canvas.width / PIXEL_SIZE);
+      gridRows = Math.floor(canvas.height / PIXEL_SIZE);
+
+      if (pixelGrid.length === 0) {
+        pixelGrid = new Array(gridCols * gridRows).fill(null);
       }
     }
 
@@ -432,8 +442,6 @@ html_code = """
     let creatures = [];
     let foods = [];
     let bubbles = [];
-    let powders = []; // Particles for powder mode
-    let terrainHeights = [];
     let plantSeeds = [];
 
     let draggedCreature = null;
@@ -445,7 +453,7 @@ html_code = """
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    /* Creature Logic & Inspector Data */
+    /* Creature Class */
     class Creature {
       constructor(type, x, y) {
         this.id = Math.random().toString(36).substr(2, 9);
@@ -472,11 +480,10 @@ html_code = """
 
         this.tailAngle += 0.15;
         this.hunger = Math.max(0, this.hunger - 0.005);
-
         let speedMult = (temperature < 20) ? 0.6 : (temperature > 28 ? 1.3 : 1.0);
-        let groundY = canvas.height - (terrainHeights[Math.floor(this.x)] || 40) - this.size / 2;
 
-        /* Food Searching */
+        let groundY = canvas.height - 30;
+
         let nearestFood = null;
         let minDist = 180;
         for (let f of foods) {
@@ -576,67 +583,69 @@ html_code = """
       }
     }
 
-    /* Powder Particles Physics */
-    class Powder {
-      constructor(x, y, color, type) {
-        this.x = x; this.y = y; this.color = color; this.type = type;
-        this.vy = random(1.5, 3.5);
-        this.vx = random(-0.5, 0.5);
-        this.radius = random(2, 3.5);
-      }
-
-      update() {
-        let groundY = canvas.height - (terrainHeights[Math.floor(this.x)] || 40);
-        if (this.y < groundY) {
-          this.y += this.vy;
-          this.x += this.vx;
-        } else {
-          if (this.type === 'sand' || this.type === 'gravel') {
-            let ix = Math.floor(this.x);
-            if (ix >= 0 && ix < canvas.width) {
-              terrainHeights[ix] = Math.min(canvas.height - 80, terrainHeights[ix] + 0.8);
-            }
-            return false; // Remove particle after landing on ground
-          } else if (this.type === 'seed') {
-            plantSeeds.push({ x: this.x, y: groundY, height: 0, maxH: random(30, 80) });
-            return false;
-          }
-        }
-        return true;
-      }
-
-      draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
     class Food {
       constructor(x, y) { this.x = x; this.y = y; this.radius = 3; }
-      update() {
-        let groundY = canvas.height - (terrainHeights[Math.floor(this.x)] || 40) - this.radius;
-        if (this.y < groundY) { this.y += 1.2; }
-      }
-      draw() { ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); }
+      update() { if (this.y < canvas.height - 15) this.y += 1.2; }
+      draw() { ctx.fillStyle = '#f59e0b'; ctx.fillRect(this.x - 2, this.y - 2, 4, 4); }
     }
 
     class Bubble {
       constructor(x, y, radius, speed) {
         this.x = x || random(20, canvas.width - 20);
-        this.y = y || canvas.height - 40;
+        this.y = y || canvas.height - 20;
         this.radius = radius || random(2, 4);
         this.speed = speed || random(1, 2);
       }
       update() { this.y -= this.speed; this.x += Math.sin(this.y * 0.05) * 0.4; }
       draw() {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.strokeRect(Math.floor(this.x), Math.floor(this.y), PIXEL_SIZE, PIXEL_SIZE);
       }
     }
 
-    /* Mouse Interaction Handler */
+    /* Pixel Grid Helpers */
+    function getGridIndex(gx, gy) {
+      if (gx < 0 || gx >= gridCols || gy < 0 || gy >= gridRows) return -1;
+      return gy * gridCols + gx;
+    }
+
+    function setPixel(gx, gy, color) {
+      let idx = getGridIndex(gx, gy);
+      if (idx !== -1) pixelGrid[idx] = color;
+    }
+
+    function getPixel(gx, gy) {
+      let idx = getGridIndex(gx, gy);
+      return idx !== -1 ? pixelGrid[idx] : 'wall';
+    }
+
+    /* Powder Pixel Gravity Simulation */
+    function updatePixelPhysics() {
+      for (let gy = gridRows - 2; gy >= 0; gy--) {
+        for (let gx = 0; gx < gridCols; gx++) {
+          let current = getPixel(gx, gy);
+          if (current && current !== 'wall') {
+            // Check directly below
+            if (!getPixel(gx, gy + 1)) {
+              setPixel(gx, gy, null);
+              setPixel(gx, gy + 1, current);
+            } 
+            // Check diagonal left
+            else if (!getPixel(gx - 1, gy + 1) && Math.random() < 0.5) {
+              setPixel(gx, gy, null);
+              setPixel(gx - 1, gy + 1, current);
+            } 
+            // Check diagonal right
+            else if (!getPixel(gx + 1, gy + 1) && Math.random() < 0.5) {
+              setPixel(gx, gy, null);
+              setPixel(gx + 1, gy + 1, current);
+            }
+          }
+        }
+      }
+    }
+
+    /* User Interaction Events */
     canvas.addEventListener('mousedown', (e) => {
       isMouseDown = true;
       handleMouseAction(e);
@@ -656,6 +665,9 @@ html_code = """
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
 
+      let gx = Math.floor(mx / PIXEL_SIZE);
+      let gy = Math.floor(my / PIXEL_SIZE);
+
       if (interactionMode === 'select') {
         let found = false;
         for (let c of creatures) {
@@ -669,18 +681,17 @@ html_code = """
         if (!found) { selectedCreature = null; infoCard.style.display = 'none'; }
 
       } else if (interactionMode === 'eraser') {
-        // Erase particles, plants, foods & decrease sand height
+        let radius = 4;
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            setPixel(gx + dx, gy + dy, null);
+          }
+        }
         for (let i = foods.length - 1; i >= 0; i--) {
           if (Math.hypot(foods[i].x - mx, foods[i].y - my) < 20) foods.splice(i, 1);
         }
-        for (let i = plantSeeds.length - 1; i >= 0; i--) {
-          if (Math.hypot(plantSeeds[i].x - mx, plantSeeds[i].y - my) < 25) plantSeeds.splice(i, 1);
-        }
         for (let i = creatures.length - 1; i >= 0; i--) {
           if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < creatures[i].size + 10) creatures.splice(i, 1);
-        }
-        for (let x = Math.max(0, Math.floor(mx - 20)); x < Math.min(canvas.width, Math.floor(mx + 20)); x++) {
-          terrainHeights[x] = Math.max(10, terrainHeights[x] - 2);
         }
 
       } else if (interactionMode === 'drag') {
@@ -694,15 +705,23 @@ html_code = """
 
       } else if (interactionMode.startsWith('powder-')) {
         let type = interactionMode.replace('powder-', '');
-        for (let i = 0; i < 4; i++) {
-          let px = mx + random(-12, 12);
-          let py = my + random(-12, 12);
+        let colorMap = {
+          sand: '#fde047',
+          gravel: '#d97706',
+          soil: '#451a03',
+          volcano: '#475569'
+        };
 
-          if (type === 'sand') powders.push(new Powder(px, py, '#fde047', 'sand'));
-          else if (type === 'gravel') powders.push(new Powder(px, py, '#d97706', 'gravel'));
-          else if (type === 'seed') powders.push(new Powder(px, py, '#22c55e', 'seed'));
-          else if (type === 'food') foods.push(new Food(px, py));
-          else if (type === 'bubble') bubbles.push(new Bubble(px, py, random(2, 4), random(1, 2.5)));
+        if (type in colorMap) {
+          for (let i = 0; i < 6; i++) {
+            let rx = gx + Math.floor(random(-2, 3));
+            let ry = gy + Math.floor(random(-2, 3));
+            if (!getPixel(rx, ry)) setPixel(rx, ry, colorMap[type]);
+          }
+        } else if (type === 'seed') {
+          plantSeeds.push({ x: mx, y: my, height: 0, maxH: random(30, 80) });
+        } else if (type === 'food') {
+          foods.push(new Food(mx + random(-6, 6), my));
         }
       }
     }
@@ -734,9 +753,9 @@ html_code = """
       if (activeBtn) activeBtn.classList.add('active');
 
       if (mode === 'select') bannerText.innerText = '개체 선택펜: 물고기를 클릭해 상세 종/상태 정보를 조회하세요.';
-      else if (mode === 'eraser') bannerText.innerText = '삭제펜: 마우스 영역 내의 지형, 수초, 생물을 삭제합니다.';
-      else if (mode === 'drag') bannerText.innerText = '이동펜: 원하는 생물을 마우스로 집어 이동시킵니다.';
-      else if (mode.startsWith('powder-')) bannerText.innerText = '파우더 모드: 마우스를 문질러 알갱이 입자를 흩뿌리세요!';
+      else if (mode === 'eraser') bannerText.innerText = '픽셀 삭제펜: 마우스 주변 픽셀 및 개체를 깨끗하게 지웁니다.';
+      else if (mode === 'drag') bannerText.innerText = '개체 이동펜: 원하는 생물을 마우스로 집어 이동시킵니다.';
+      else if (mode.startsWith('powder-')) bannerText.innerText = '픽셀 파우더: 네모난 픽셀 알갱이 입자를 떨어뜨려 바닥재를 쌓으세요!';
     }
 
     function toggleEquipment(item) {
@@ -769,71 +788,60 @@ html_code = """
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
     function cleanFood() { foods = []; waterQuality = 100; }
     function resetTank() {
-      creatures = []; foods = []; powders = []; bubbles = []; plantSeeds = [];
-      terrainHeights = new Array(canvas.width).fill(40);
+      creatures = []; foods = []; bubbles = []; plantSeeds = [];
+      pixelGrid = new Array(gridCols * gridRows).fill(null);
       selectedCreature = null; infoCard.style.display = 'none';
     }
 
     function takeSnapshot() {
       const img = canvas.toDataURL('image/png');
-      const a = document.createElement('a'); a.href = img; a.download = 'powder_aquarium.png'; a.click();
+      const a = document.createElement('a'); a.href = img; a.download = 'pixel_aquarium.png'; a.click();
     }
 
     /* Render Main Loop */
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      /* 1. Draw Sand/Gravel Terrain */
-      ctx.fillStyle = '#d97706';
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height);
-      for (let x = 0; x < canvas.width; x++) {
-        ctx.lineTo(x, canvas.height - terrainHeights[x]);
-      }
-      ctx.lineTo(canvas.width, canvas.height);
-      ctx.closePath();
-      ctx.fill();
+      /* 1. Update & Render Pixel Grid (Powder Physics) */
+      updatePixelPhysics();
 
-      /* 2. Plant Growth Simulation */
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 3;
+      for (let gy = 0; gy < gridRows; gy++) {
+        for (let gx = 0; gx < gridCols; gx++) {
+          let color = getPixel(gx, gy);
+          if (color && color !== 'wall') {
+            ctx.fillStyle = color;
+            ctx.fillRect(gx * PIXEL_SIZE, gy * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+          }
+        }
+      }
+
+      /* 2. Plant Seeds Growth */
+      ctx.fillStyle = '#22c55e';
       for (let plant of plantSeeds) {
-        if (plant.height < plant.maxH) plant.height += 0.1;
-        ctx.beginPath();
-        ctx.moveTo(plant.x, plant.y);
-        ctx.lineTo(plant.x, plant.y - plant.height);
-        ctx.stroke();
-
-        ctx.fillStyle = '#15803d';
-        ctx.beginPath();
-        ctx.arc(plant.x - 3, plant.y - plant.height, 3, 0, Math.PI * 2);
-        ctx.arc(plant.x + 3, plant.y - plant.height * 0.7, 3, 0, Math.PI * 2);
-        ctx.fill();
+        if (plant.height < plant.maxH) plant.height += 0.15;
+        let pGx = Math.floor(plant.x / PIXEL_SIZE);
+        let pGy = Math.floor(plant.y / PIXEL_SIZE);
+        for (let h = 0; h < plant.height; h += 2) {
+          ctx.fillRect(pGx * PIXEL_SIZE, (pGy - h) * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+        }
       }
 
-      /* 3. Equipments */
+      /* 3. Airstone Equipment */
       if (equipState.airstone) {
         let airX = canvas.width * 0.5;
-        if (Math.random() < 0.5) bubbles.push(new Bubble(airX + random(-10, 10), canvas.height - 40, random(2, 4), random(1.5, 2.5)));
+        if (Math.random() < 0.5) bubbles.push(new Bubble(airX + random(-10, 10), canvas.height - 20, random(2, 4), random(1.5, 2.5)));
       }
 
-      /* 4. Powders & Particles */
-      for (let i = powders.length - 1; i >= 0; i--) {
-        if (!powders[i].update()) powders.splice(i, 1);
-        else powders[i].draw();
-      }
-
-      /* 5. Bubbles & Foods */
+      /* 4. Bubbles & Foods */
       for (let i = bubbles.length - 1; i >= 0; i--) {
         bubbles[i].update(); bubbles[i].draw();
         if (bubbles[i].y < 0) bubbles.splice(i, 1);
       }
       for (let f of foods) { f.update(); f.draw(); }
 
-      /* 6. Creatures */
+      /* 5. Creatures */
       for (let c of creatures) { c.update(); c.draw(); }
 
-      /* Update Status */
       document.getElementById('disp-count').innerText = creatures.length;
       document.getElementById('disp-water').innerText = `${Math.round(waterQuality)}%`;
 
