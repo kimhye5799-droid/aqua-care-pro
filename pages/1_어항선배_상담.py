@@ -9,118 +9,95 @@ st.set_page_config(
 
 # 어항선배 PRO v2.0 헤더
 st.markdown("### 🐠 어항선배 <span style='background-color:#0284c7; color:white; padding:2px 8px; border-radius:6px; font-size:12px;'>PRO v2.0</span>", unsafe_allow_html=True)
-st.caption("초보 물집사를 위한 AI 스마트 케어 솔루션")
+st.caption("초보 물집사를 위한 AI 스마트 케어 솔루션 (큐레이션 Q&A 모드)")
 
 # 상단 기능 탭
-tab1, tab2, tab3, tab4 = st.tabs(["💬 AI 1:1 상담", "🔄 어종 합사 진단기", "📐 물용량 & 환수 계산기", "📅 30일 물잡이 스케줄"])
+tab1, tab2, tab3, tab4 = st.tabs(["💬 AI 어항선배 Q&A", "🔄 어종 합사 진단기", "📐 물용량 & 환수 계산기", "📅 30일 물잡이 스케줄"])
 
 with tab1:
-    st.info('하… 무슨 질문을 들고 오려고? 네가 뭘 물어보든 정확한 팩트와 해결책을 찾아줄 테니까 일단 물어봐.')
+    st.info('하… 직접 타이핑하면서 엉뚱한 거 물어볼 생각 말고, 아래 초보들이 제일 많이 하는 질문들 중에서 골라서 눌러봐. 다 팩트로 조져줄 테니까.')
     
-    # 초보 필수 퀵 질문 버튼 영역
-    st.markdown('<div style="font-size: 0.95rem; font-weight: bold; color: #38bdf8; margin-bottom: 8px;">⚡ 초보 필수 퀵 질문</div>', unsafe_allow_html=True)
-    q_cols = st.columns(5)
-    quick_questions = [
-        "물잡이란 무엇인가요?", 
-        "수면 뻐끔거림 해결법", 
-        "올바른 환수 주기 및 방법", 
-        "백탁 현상 대처 가이드", 
-        "구피 x 체리새우 합사 가능 여부"
-    ]
-    
-    selected_quick = None
-    for i, q in enumerate(quick_questions):
-        if q_cols[i].button(q, use_container_width=True):
-            selected_quick = q
-
     st.markdown("---")
-    st.markdown('<div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">💬 어항선배 1:1 상담실</div>', unsafe_allow_html=True)
-    
-    # 세션 스테이트 초기화
-    if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {"role": "assistant", "content": "어머, 반가워라. 🐟 궁금한 거 있으면 아무거나 물어봐. 팩트로 조져줄 테니까."}
+    st.markdown('<div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">📚 초보 물집사 랭킹 TOP Q&A 선택소</div>', unsafe_allow_html=True)
+    st.caption("궁금한 질문을 클릭하면 어항선배의 시크한 답변과 구글 검색 참고 링크가 출력됩니다!")
+
+    # 미리 준비된 인기 질문 리스트 (질문, 답변, 구글 검색 링크)
+    curated_qna = [
+        {
+            "q": "물잡이는 도대체 왜 해야 하고 어떻게 하는 거야?",
+            "ans": "하… 물잡이도 안 하고 생물부터 넣으려고 했니? 물잡이란 어항 속에 여과 박테리아가 살 수 있는 생태계를 미리 만드는 거야. 히터랑 여과기 켜놓고 생물 없이 최소 1~2주는 공회전시켜야지. 안 그러면 물고기들 다 용궁 간다?",
+            "link": "https://www.google.com/search?q=어항+물잡이+방법"
+        },
+        {
+            "q": "거북이가 물고기나 새우를 잡아먹었어, 어떡해?",
+            "ans": "하… 거북이랑 소형 생물을 같이 넣었으니 당연한 결과지! 거북이는 사냥 본능이 강해서 소형 갑각류나 물고기는 그냥 움직이는 간식일 뿐이야. 공존 불가능하니까 어항을 당장 분리해.",
+            "link": "https://www.google.com/search?q=거북이와+물고기+합사"
+        },
+        {
+            "q": "어항에 그냥 일반 돌이나 주운 돌 넣어도 돼?",
+            "ans": "아무 돌이나 주워 넣었다가 물에 녹아 나오는 성분 때문에 수질 알칼리화되거나 물고기 다 죽는다? 백화 현상이나 석회 성분 나오는 돌은 절대 금지야. 안전하게 수족관 전용 돌이나 유목을 써.",
+            "link": "https://www.google.com/search?q=어항에+일반돌+넣어도+되나요"
+        },
+        {
+            "q": "일주일에 환수를 5번이나 해도 되는 거야?",
+            "ans": "미쳤어? 어항을 세탁기에 돌릴 작정이니? 환수를 너무 자주 하면 여과 박테리아가 다 쓸려 나가고 수온/수질 쇼크로 물고기들 기절해. 특별한 비상 상황 아니면 일주일에 딱 1번, 20~30%만 해라.",
+            "link": "https://www.google.com/search?q=어항+환수+주기"
+        },
+        {
+            "q": "물고기가 수면 위로 올라와서 자꾸 뻐끔거려!",
+            "ans": "쯧, 산소가 부족하다는 다급한 SOS잖아. 당장 에어스톤(산소 기포기) 설치하고 여과기 출수구를 수면 위로 올려서 물살이 파도를 치게 만들어. 수온도 체크하고.",
+            "link": "https://www.google.com/search?q=물고기+수면+뻐끔거림"
+        },
+        {
+            "q": "어항 물이 우유처럼 하얗게 변했어 (백탁 현상)",
+            "ans": "백탁 현상인데 세균이 폭발적으로 늘었거나 분진 때문이야. 이때다 싶어서 물 전면 교체한다고 다 갈아엎으면 생태계 박살 난다? 밥 줄이고 여과기 24시간 돌리면서 차분히 기다려.",
+            "link": "https://www.google.com/search?q=어항+백탁현상+해결"
+        },
+        {
+            "q": "구피랑 체리새우 합사해도 정말 괜찮을까?",
+            "ans": "합사 자체는 가능하지만 주의해야 해. 구피는 온순해도 입에 들어가는 아주 작은 치새우는 사냥할 수 있거든. 수초나 은신처를 아주 빽빽하게 만들어줄 거 아니면 추천 안 해.",
+            "link": "https://www.google.com/search?q=구피와+체리새우+합사"
+        }
+    ]
+
+    # 세션 스테이트 초기화 (선택된 Q&A 기록 유지)
+    if "selected_history" not in st.session_state:
+        st.session_state.selected_history = [
+            {"q": "어항선배의 첫인사", "ans": "어머, 반가워라. 🐟 궁금한 질문을 아래에서 골라봐. 팩트로 조져줄 테니까.", "link": ""}
         ]
 
-    # 스마트 답변 생성 함수
-    def generate_reply(user_text):
-        text = user_text.replace(" ", "").lower()
+    # 버튼들을 2열 또는 3열로 예쁘게 배치
+    cols = st.columns(2)
+    for idx, item in enumerate(curated_qna):
+        col_idx = idx % 2
+        if cols[col_idx].button(f"📌 {item['q']}", use_container_width=True):
+            # 중복 추가 방지 및 최신 선택 반영
+            st.session_state.selected_history.append({
+                "q": item["q"],
+                "ans": item["ans"],
+                "link": item["link"]
+            })
+
+    st.markdown("---")
+    st.markdown("### 💬 상담 대화 기록")
+
+    # 대화 기록 출력 (최신순 또는 누적 출력)
+    for chat in st.session_state.selected_history:
+        if chat["q"] != "어항선배의 첫인사":
+            with st.chat_message("user"):
+                st.markdown(chat["q"])
         
-        if "물잡이" in text:
-            return (
-                "하… 물잡이도 모호한 상태로 생물부터 넣으려고 했던 거야?\n\n"
-                "1. **팩트 체크**:\n"
-                "   - 물잡이란 어항 속에 여과 박테리아가 안정적으로 정착할 수 있는 생태 환경을 미리 조성하는 과정이야. 히터와 여과기를 켜놓고 생물 없이 최소 1~2주간 공회전시켜야 해.\n"
-                "2. **선배의 조언**:\n"
-                "   - 성급하게 굴지 말고 진득하게 기다려. 생물 먼저 넣으면 다 용궁 간다?"
-            ), "https://www.google.com/search?q=어항+물잡이+방법"
-
-        elif "환수" in text and ("5번" in text or "자주" in text or "매일" in text or "많이" in text):
-            return (
-                "하… 일주일에 5번? 너 어항을 세탁기에 돌릴 작정이니? 미쳤어?\n\n"
-                "1. **위험성**:\n"
-                "   - 환수를 너무 자주 하면 여과 박테리아가 다 쓸려 나가고 수온/수질 쇼크로 물고기들 다 기절해.\n"
-                "2. **해결책**:\n"
-                "   - 특별한 이유가 없으면 **일주일에 딱 1번, 전체 물의 20~30%**만 부분 환수해라."
-            ), "https://www.google.com/search?q=어항+환수+주기"
-
-        elif "거북" in text and ("새우" in text or "합사" in text):
-            return (
-                "하… 거북이랑 새우를 같이 넣는다고? 거북이한테 뷔페 차려주고 싶은 거 아니면 당장 그 생각 접어.\n\n"
-                "1. **진단**:\n"
-                "   - 거북이는 사냥 본능이 강해서 소형 갑각류는 그냥 움직이는 간식일 뿐이야. 절대 공존 안 돼."
-            ), "https://www.google.com/search?q=거북이와+새우+합사"
-
-        elif "뻐끔" in text or "산소" in text:
-            return (
-                "물고기가 수면 위로 올라와서 뻐끔거린다고? 산소가 부족하다는 SOS잖아.\n\n"
-                "1. **조치**:\n"
-                "   - 당장 에어스톤(산소 기포기) 설치하고 여과기 출수구를 수면 위로 올려서 물살을 일으켜."
-            ), "https://www.google.com/search?q=물고기+수면+뻐끔거림"
-
-        elif "백탁" in text or "하얗" in text:
-            return (
-                "어항 물이 우유처럼 하얗게 변했어? 백탁 현상인데 세균이 늘었거나 분진 때문이야.\n\n"
-                "1. **대처법**:\n"
-                "   - 물 전체 갈아엎지 말고 밥 양 줄이고 여과기 24시간 돌리면서 차분히 기다려."
-            ), "https://www.google.com/search?q=어항+백탁현상+해결"
-
-        else:
-            return (
-                f"하… 네가 물어본 **'{user_text}'**, 그 질문 말이야.\n\n"
-                f"1. **핵심 분석**:\n"
-                f"   - 대개 수질 스펙트럼이 변했거나 여과 사이클, 혹은 온도/먹이 관리에서 문제가 생긴 거야. 어항은 손을 탈수록 망가지니까 가만히 놔두는 게 최선이라네.\n"
-                f"2. **냉미녀 선배의 솔루션**:\n"
-                f"   - **첫째**, 여과기가 멈추지 않고 잘 돌아가는지 확인해.\n"
-                f"   - **둘째**, 온도를 딱 맞춘 깨끗한 물로 30%만 신속하게 부분 환수해.\n"
-                f"   - **셋째**, 당분간 사료 주는 양 절반으로 줄여.\n"
-                f"3. **조언**:\n"
-                f"   - 물생활은 정성과 '기다림'이야. 차분하게 관찰해봐."
-            ), f"https://www.google.com/search?q={user_text.replace(' ', '+')}"
-
-    # 퀵 질문 선택 처리
-    if selected_quick:
-        st.session_state.messages.append({"role": "user", "content": selected_quick})
-        ans, link = generate_reply(selected_quick)
-        full_ans = f"{ans}\n\n🔗 [관련 구글 검색 참고 링크 바로가기]({link})"
-        st.session_state.messages.append({"role": "assistant", "content": full_ans})
-
-    # 대화 내역 출력
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # 사용자 입력 채팅창
-    if prompt := st.chat_input("어항선배에게 무엇이든 물어보세요"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-            
         with st.chat_message("assistant"):
-            ans, link = generate_reply(prompt)
-            full_ans = f"{ans}\n\n🔗 [관련 구글 검색 참고 링크 바로가기]({link})"
-            st.markdown(full_ans)
-            st.session_state.messages.append({"role": "assistant", "content": full_ans})
+            st.markdown(chat["ans"])
+            if chat["link"]:
+                st.markdown(f"🔗 [관련 구글 검색 참고 링크 바로가기]({chat['link']})")
+
+    # 초기화 버튼
+    if st.button("🗑️ 대화 기록 초기화"):
+        st.session_state.selected_history = [
+            {"q": "어항선배의 첫인사", "ans": "어머, 반가워라. 🐟 궁금한 질문을 아래에서 골라봐. 팩트로 조져줄 테니까.", "link": ""}
+        ]
+        st.rerun()
 
 with tab2:
     st.subheader("🔄 어종별 합사 진단기")
