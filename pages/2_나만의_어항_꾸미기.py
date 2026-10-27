@@ -216,9 +216,16 @@ html_code = """
       overflow: hidden;
     }
 
-    .trash-zone {
-      width: 110px;
+    .trash-zone-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       height: 86vh;
+    }
+
+    .trash-zone {
+      width: 120px;
+      flex: 1;
       background: rgba(15, 23, 42, 0.85);
       border: 2px dashed #475569;
       border-radius: 16px;
@@ -226,10 +233,11 @@ html_code = """
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       color: #94a3b8;
       transition: all 0.2s ease;
       cursor: pointer;
+      padding: 10px;
     }
 
     .trash-zone:hover {
@@ -239,8 +247,30 @@ html_code = """
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
     }
 
+    .restore-btn {
+      width: 120px;
+      padding: 10px;
+      background: #0284c7;
+      color: white;
+      border: 1px solid #38bdf8;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .restore-btn:hover {
+      background: #0369a1;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
     .trash-icon {
-      font-size: 36px;
+      font-size: 32px;
       transition: transform 0.2s ease;
     }
 
@@ -465,10 +495,13 @@ html_code = """
       </div>
     </div>
 
-    <div class="trash-zone" id="trash-zone" onclick="emptyNetToTrash()">
-      <i class="fa-solid fa-trash-can trash-icon"></i>
-      <div class="trash-label">뜰채 비우기<br><span style="font-size:9px; color:#64748b; font-weight:normal;">(클릭)</span></div>
-      <div class="trash-count" id="net-count-badge">담김: 0</div>
+    <div class="trash-zone-wrapper">
+      <div class="trash-zone" id="trash-zone" onclick="emptyNetToTrash()">
+        <i class="fa-solid fa-trash-can trash-icon"></i>
+        <div class="trash-label">뜰채 버리기<br><span style="font-size:9px; color:#64748b; font-weight:normal;">(클릭시 삭제)</span></div>
+        <div class="trash-count" id="net-count-badge">담김: 0</div>
+      </div>
+      <button class="restore-btn" onclick="restoreNetToAquarium()"><i class="fa-solid fa-rotate-left"></i> 풀어주기</button>
     </div>
   </main>
 
@@ -528,7 +561,6 @@ html_code = """
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    /* 수초 클래스 */
     class NaturalPlant {
       constructor(x, y) {
         this.x = x;
@@ -829,7 +861,6 @@ html_code = """
       }
     }
 
-    /* Falling Sand 물리 엔진 */
     function updatePixelPhysics() {
       for (let gy = gridRows - 2; gy >= 0; gy--) {
         for (let gx = 0; gx < gridCols; gx++) {
@@ -921,6 +952,7 @@ html_code = """
       netBadge.innerText = `담김: ${count}`;
     }
 
+    /* 뜰채에 담긴 개체를 버리는 함수 */
     function emptyNetToTrash() {
       let count = netInventory.creatures.length + netInventory.foods.length;
       if (count === 0) {
@@ -932,7 +964,36 @@ html_code = """
       netInventory.foods = [];
       updateNetBadge();
 
-      bannerText.innerText = `뜰채의 개체 ${count}개를 쓰레기통에 비웠습니다.`;
+      bannerText.innerText = `뜰채의 개체 ${count}개를 쓰레기통에 영구 삭제했습니다!`;
+    }
+
+    /* 뜰채 해제 / 풀어주기 (어항 복원) 함수 */
+    function restoreNetToAquarium() {
+      let count = netInventory.creatures.length + netInventory.foods.length;
+      if (count === 0) {
+        bannerText.innerText = '풀어줄 개체가 뜰채에 없습니다.';
+        return;
+      }
+
+      // 뜰채에 담긴 물고기들을 어항으로 다시 방생
+      for (let c of netInventory.creatures) {
+        c.x = random(100, canvas.width - 100);
+        c.y = random(100, canvas.height - 150);
+        creatures.push(c);
+      }
+
+      // 뜰채에 담긴 먹이들을 어항 상단으로 다시 방생
+      for (let f of netInventory.foods) {
+        f.x = random(50, canvas.width - 50);
+        f.y = random(40, 100);
+        foods.push(f);
+      }
+
+      netInventory.creatures = [];
+      netInventory.foods = [];
+      updateNetBadge();
+
+      bannerText.innerText = `뜰채에 있던 개체 ${count}개를 어항 속으로 무사히 풀어주었습니다! 🐟`;
     }
 
     canvas.addEventListener('mousemove', (e) => {
@@ -1091,7 +1152,7 @@ html_code = """
 
       if (mode === 'net') {
         canvas.classList.add('net-active');
-        bannerText.innerText = '만능 뜰채: 클릭/드래그하여 생물을 수집한 후 쓰레기통을 클릭하세요.';
+        bannerText.innerText = '만능 뜰채: 클릭하여 수집 후 [풀어주기]로 다시 복원하거나 쓰레기통을 누르세요!';
       } else {
         canvas.classList.remove('net-active');
       }
@@ -1149,7 +1210,7 @@ html_code = """
 
     function takeSnapshot() {
       const img = canvas.toDataURL('image/png');
-      const a = document.createElement('a'); a.href = img; a.download = 'pixel_aquarium.png'; a.click();
+      const a = document.createElement('a'); a.href = img; a.download = 'sandbox_aquarium.png'; a.click();
     }
 
     function animate() {
