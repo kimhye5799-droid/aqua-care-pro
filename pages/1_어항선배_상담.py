@@ -1,1205 +1,774 @@
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(page_title="샌드박스 파우더 어항 Pro", layout="wide")
-
-html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>샌드박스 파우더 어항 Pro</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body {
-      font-family: 'Courier New', Courier, monospace, 'Pretendard', sans-serif;
-      background-color: #080c14;
-      color: #f8fafc;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>어항선배 - 초보 물집사를 위한 AI 수족관 케어 솔루션</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Neo Dunggeunmo (Pixel feel) & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aqua: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        deepbg: '#08101e',
+                        cardbg: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        pixel: ['DungGeunMo', 'monospace'],
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050b14;
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(13, 148, 136, 0.25) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(14, 116, 144, 0.2) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(2, 132, 199, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #f1f5f9;
+        }
 
-    .sidebar {
-      width: 350px;
-      background-color: #0f172a;
-      border-right: 2px solid #1e293b;
-      display: flex;
-      flex-direction: column;
-      z-index: 20;
-      transition: margin-left 0.3s ease;
-      position: relative;
-    }
+        .glass-card {
+            background: rgba(13, 27, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(45, 212, 191, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
 
-    .sidebar.collapsed { margin-left: -350px; }
+        .glass-card-hover:hover {
+            border-color: rgba(45, 212, 191, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(45, 212, 191, 0.2);
+        }
 
-    .sidebar-toggle-btn {
-      position: absolute;
-      right: -36px;
-      top: 16px;
-      width: 36px;
-      height: 36px;
-      background: #0f172a;
-      border: 2px solid #1e293b;
-      border-left: none;
-      border-radius: 0 8px 8px 0;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 30;
-      box-shadow: 4px 0 10px rgba(0,0,0,0.5);
-    }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(5, 11, 20, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(45, 212, 191, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(45, 212, 191, 0.6);
+        }
 
-    .sidebar-header {
-      padding: 14px 16px;
-      background-color: #080c14;
-      border-bottom: 2px solid #1e293b;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+        /* Bubble Animation */
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1));
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp 8s infinite ease-in;
+            opacity: 0.6;
+        }
 
-    .sidebar-header i { font-size: 20px; color: #38bdf8; }
-    .sidebar-header h1 { font-size: 14px; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0.3);
+                opacity: 0;
+            }
+            20% { opacity: 0.6; }
+            100% {
+                transform: translateY(-10vh) scale(1.2);
+                opacity: 0;
+            }
+        }
 
-    .tab-bar {
-      display: flex;
-      background: #0b0f19;
-      border-bottom: 2px solid #1e293b;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #64748b;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .tab-btn:hover { color: #cbd5e1; }
-    .tab-btn.active {
-      color: #38bdf8;
-      border-bottom-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.08);
-    }
-
-    .tab-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px;
-      display: none;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .tab-content.active { display: flex; }
-
-    .section-title {
-      font-size: 11px;
-      font-weight: 800;
-      color: #38bdf8;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-    }
-
-    .tool-btn {
-      background-color: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-    }
-
-    .tool-btn:hover { background-color: #334155; border-color: #38bdf8; }
-    .tool-btn.active {
-      background-color: #0284c7;
-      color: #ffffff;
-      border-color: #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
-    }
-
-    .slider-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #334155;
-    }
-
-    .slider-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #cbd5e1;
-      font-weight: 600;
-    }
-
-    .slider-group input[type="range"] {
-      width: 100%;
-      accent-color: #38bdf8;
-      cursor: pointer;
-    }
-
-    .color-picker-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #1e293b;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #334155;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .color-picker-row input[type="color"] {
-      border: none;
-      width: 28px;
-      height: 28px;
-      border-radius: 4px;
-      cursor: pointer;
-      background: none;
-    }
-
-    .aquarium-container {
-      flex: 1;
-      position: relative;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      gap: 16px;
-      background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
-    }
-
-    .glass-tank-frame {
-      position: relative;
-      flex: 1;
-      height: 86vh;
-      border-radius: 12px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(56, 189, 248, 0.2);
-      border: 3px solid #334155;
-      background-color: #020617;
-      overflow: hidden;
-    }
-
-    .trash-zone {
-      width: 100px;
-      height: 86vh;
-      background: rgba(15, 23, 42, 0.8);
-      border: 2px dashed #475569;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: #94a3b8;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .trash-zone:hover {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: #ef4444;
-      color: #f8fafc;
-    }
-
-    .trash-icon {
-      font-size: 32px;
-      transition: transform 0.2s ease;
-    }
-
-    .trash-zone:hover .trash-icon {
-      transform: scale(1.15) rotate(-10deg);
-      color: #ef4444;
-    }
-
-    .trash-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    .trash-count {
-      font-size: 11px;
-      background: #1e293b;
-      padding: 4px 10px;
-      border-radius: 10px;
-      color: #38bdf8;
-      font-weight: 700;
-      border: 1px solid #334155;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      image-rendering: pixelated;
-    }
-
-    canvas.net-active { cursor: none; }
-
-    .status-overlay {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid #334155;
-      padding: 8px 14px;
-      border-radius: 8px;
-      display: flex;
-      gap: 16px;
-      font-size: 11px;
-      font-weight: 700;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .status-item { display: flex; align-items: center; gap: 6px; }
-    .status-item i { color: #38bdf8; }
-
-    .info-card {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: 220px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid #38bdf8;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 11px;
-      z-index: 15;
-      display: none;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    }
-
-    .info-card h3 { font-size: 13px; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-    .info-line { display: flex; justify-content: space-between; margin-bottom: 4px; color: #cbd5e1; }
-    .info-line span.val { color: #f8fafc; font-weight: 700; }
-
-    .tank-banner {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid #334155;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #cbd5e1;
-      pointer-events: none;
-    }
-
-    .sidebar-footer {
-      padding: 10px;
-      border-top: 2px solid #1e293b;
-      background: #080c14;
-      display: flex;
-      gap: 6px;
-    }
-
-    .action-btn {
-      flex: 1;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      font-weight: 700;
-      font-size: 11px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: white;
-    }
-    .btn-snap { background-color: #10b981; }
-    .btn-clean { background-color: #0ea5e9; }
-    .btn-reset { background-color: #ef4444; }
-  </style>
+        /* Pixel style border */
+        .pixel-box {
+            box-shadow: 
+                -2px 0 0 0 #2dd4bf,
+                2px 0 0 0 #2dd4bf,
+                0 -2px 0 0 #2dd4bf,
+                0 2px 0 0 #2dd4bf;
+        }
+    </style>
 </head>
-<body>
+<body class="font-sans min-h-screen flex flex-col relative overflow-x-hidden">
 
-  <aside class="sidebar" id="sidebar">
-    <button class="sidebar-toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+    <!-- Ambient Floating Bubbles -->
+    <div id="bubble-container" class="fixed inset-0 pointer-events-none z-0"></div>
 
-    <div class="sidebar-header">
-      <i class="fa-solid fa-cubes"></i>
-      <h1>샌드박스 파우더 어항 PRO</h1>
-    </div>
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 glass-card border-b border-teal-500/30 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('chat')">
+                <div class="w-10 h-10 rounded-lg bg-teal-500/20 border border-teal-400 flex items-center justify-center text-teal-300 font-pixel text-xl shadow-[0_0_12px_rgba(45,212,191,0.4)]">
+                    🐟
+                </div>
+                <div>
+                    <h1 class="font-pixel text-xl lg:text-2xl text-teal-300 tracking-wider flex items-center gap-2">
+                        어항선배 <span class="text-xs font-sans px-2 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/40">PRO v2.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">초보 물집사를 위한 AI 스마트 케어 솔루션</p>
+                </div>
+            </div>
 
-    <nav class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('tab-powder')"><i class="fa-solid fa-spray-can"></i>파우더 물리</button>
-      <button class="tab-btn" onclick="switchTab('tab-fish')"><i class="fa-solid fa-fish"></i>생물 피쳐</button>
-      <button class="tab-btn" onclick="switchTab('tab-equip')"><i class="fa-solid fa-plug"></i>수조 장비</button>
-    </nav>
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/80 p-1 rounded-xl border border-teal-900/60 text-xs sm:text-sm font-medium">
+                <button onclick="switchTab('chat')" id="nav-chat" class="tab-btn px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 bg-teal-600 text-white shadow">
+                    <i class="fa-solid me-1 fa-comments"></i> AI 상담
+                </button>
+                <button onclick="switchTab('compatibility')" id="nav-compatibility" class="tab-btn px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-teal-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-code-compare me-1"></i> 합사 진단기
+                </button>
+                <button onclick="switchTab('calc')" id="nav-calc" class="tab-btn px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-teal-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-calculator me-1"></i> 물용량 계산
+                </button>
+                <button onclick="switchTab('water')" id="nav-water" class="tab-btn px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-teal-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check me-1"></i> 물잡이 스케줄
+                </button>
+            </nav>
+        </div>
+    </header>
 
-    <div class="tab-content active" id="tab-powder">
-      <div class="section-title"><i class="fa-solid fa-sliders"></i> 브러시 크기 설정</div>
-      <div class="slider-group">
-        <div class="slider-header"><span>펜 크기</span><span id="pen-size-val">3 px</span></div>
-        <input type="range" id="pen-size-slider" min="1" max="10" value="3" oninput="updatePenSize(this.value)">
-      </div>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 z-10 relative">
 
-      <div class="section-title"><i class="fa-solid fa-hand-pointer"></i> 특수 조작 펜</div>
-      <div class="btn-grid">
-        <button class="tool-btn active" id="mode-select" onclick="setInteractionMode('select')"><i class="fa-solid fa-magnifying-glass"></i> 개체 선택펜</button>
-        <button class="tool-btn" id="mode-net" onclick="setInteractionMode('net')"><i class="fa-solid fa-network-wired"></i> 만능 뜰채</button>
-        <button class="tool-btn" id="mode-eraser" onclick="setInteractionMode('eraser')"><i class="fa-solid fa-eraser"></i> 픽셀 삭제펜</button>
-        <button class="tool-btn" id="mode-drag" onclick="setInteractionMode('drag')"><i class="fa-solid fa-hand"></i> 개체 이동펜</button>
-      </div>
+        <!-- ================= 1. AI 어항선배 Q&A TAB ================= -->
+        <section id="tab-chat" class="tab-content grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Sidebar: Character Profile & Quick Questions -->
+            <div class="lg:col-span-1 space-y-4">
+                <!-- Character Profile Card -->
+                <div class="glass-card rounded-2xl p-5 border border-teal-500/30 text-center relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl"></div>
+                    
+                    <div class="relative inline-block mb-3">
+                        <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-teal-600 to-cyan-400 p-1 shadow-[0_0_20px_rgba(45,212,191,0.4)]">
+                            <div class="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-4xl">
+                                🧙‍♂️🐠
+                            </div>
+                        </div>
+                        <span class="absolute bottom-0 right-0 bg-emerald-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-full border border-slate-900 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span> AI ON
+                        </span>
+                    </div>
 
-      <div class="section-title"><i class="fa-solid fa-boxes-stacked"></i> 샌드박스 지형/원소</div>
-      <div class="btn-grid">
-        <button class="tool-btn" id="mode-powder-sand" onclick="setInteractionMode('powder-sand')"><i class="fa-solid fa-square" style="color:#fde047"></i> 금사 모래</button>
-        <button class="tool-btn" id="mode-powder-gravel" onclick="setInteractionMode('powder-gravel')"><i class="fa-solid fa-square" style="color:#d97706"></i> 영양 소일</button>
-        <button class="tool-btn" id="mode-powder-stone" onclick="setInteractionMode('powder-stone')"><i class="fa-solid fa-cubes" style="color:#94a3b8"></i> 고정 암석</button>
-        <button class="tool-btn" id="mode-powder-wood" onclick="setInteractionMode('powder-wood')"><i class="fa-solid fa-tree" style="color:#78350f"></i> 고정 유목</button>
-        <button class="tool-btn" id="mode-powder-seed" onclick="setInteractionMode('powder-seed')"><i class="fa-solid fa-seedling" style="color:#22c55e"></i> 수초 씨앗</button>
-        <button class="tool-btn" id="mode-powder-food" onclick="setInteractionMode('powder-food')"><i class="fa-solid fa-cookie" style="color:#f59e0b"></i> 먹이 입자</button>
-      </div>
+                    <h2 class="font-pixel text-xl text-teal-300">어항선배</h2>
+                    <p class="text-xs text-teal-400/80 mt-1 font-mono">경력 15년 차 물생활 마스터 AI</p>
+                    <p class="text-xs text-slate-300 mt-3 leading-relaxed bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                        "안녕 초보 물집사! 물고기가 용궁 갈까 봐 걱정인가? 물잡이부터 어종 합사, 환수 주기까지 뭐든지 물어보게나!"
+                    </p>
+                </div>
 
-      <div class="section-title"><i class="fa-solid fa-temperature-three-quarters"></i> 환경 컨트롤</div>
-      <div class="slider-group">
-        <div class="slider-header"><span>수온 설정</span><span id="temp-val">24°C</span></div>
-        <input type="range" id="temp-slider" min="15" max="35" value="24" oninput="updateTemperature(this.value)">
-      </div>
-      <div class="color-picker-row">
-        <span>조명 칼라</span>
-        <input type="color" id="light-color" value="#e0f2fe" onchange="updateLightColor(this.value)">
-      </div>
-    </div>
+                <!-- Quick Questions Widget -->
+                <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                    <h3 class="text-xs font-semibold text-teal-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> 초보 필수 퀵 질문
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="askQuickQuestion('어항 물잡이가 뭔가요? 초기 세팅하는 법 알려주세요.')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-teal-950/60 hover:text-teal-300 text-slate-300 p-2.5 rounded-lg border border-slate-700/60 transition duration-200 flex items-center justify-between group">
+                            <span>🧪 물잡이란 무엇인가요?</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <button onclick="askQuickQuestion('물고기가 자꾸 수면에 떠서 뻐끔거려요. 이유가 뭔가요?')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-teal-950/60 hover:text-teal-300 text-slate-300 p-2.5 rounded-lg border border-slate-700/60 transition duration-200 flex items-center justify-between group">
+                            <span>🫧 수면 뻐끔거림 해결법</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <button onclick="askQuickQuestion('환수는 얼마나 자주, 몇 %씩 해줘야 하나요?')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-teal-950/60 hover:text-teal-300 text-slate-300 p-2.5 rounded-lg border border-slate-700/60 transition duration-200 flex items-center justify-between group">
+                            <span>🪣 올바른 환수 주기 및 방법</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <button onclick="askQuickQuestion('어항에 백탁 현상이 왔어요. 어떻게 해야 되나요?')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-teal-950/60 hover:text-teal-300 text-slate-300 p-2.5 rounded-lg border border-slate-700/60 transition duration-200 flex items-center justify-between group">
+                            <span>🌫️ 백탁 현상 대처 가이드</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <button onclick="askQuickQuestion('구피와 체리새우 한 어항에서 같이 키워도 되나요?')" class="w-full text-left text-xs bg-slate-800/80 hover:bg-teal-950/60 hover:text-teal-300 text-slate-300 p-2.5 rounded-lg border border-slate-700/60 transition duration-200 flex items-center justify-between group">
+                            <span>🦐 구피 x 체리새우 합사 가능 여부</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    <div class="tab-content" id="tab-fish">
-      <div class="section-title"><i class="fa-solid fa-fish"></i> 픽셀 생물 스폰</div>
-      <div class="btn-grid">
-        <button class="tool-btn" onclick="addCreature('neon')"><i class="fa-solid fa-fish"></i> 네온테트라</button>
-        <button class="tool-btn" onclick="addCreature('angel')"><i class="fa-solid fa-fish-fins"></i> 엔젤피쉬</button>
-        <button class="tool-btn" onclick="addCreature('shrimp')"><i class="fa-solid fa-shrimp"></i> 체리새우</button>
-        <button class="tool-btn" onclick="addCreature('turtle')"><i class="fa-solid fa-otter"></i> 거북이</button>
-        <button class="tool-btn" onclick="addCreature('puffer')"><i class="fa-solid fa-circle"></i> 복어</button>
-      </div>
-    </div>
+            <!-- Right Area: Chat Window -->
+            <div class="lg:col-span-3 flex flex-col h-[650px] glass-card rounded-2xl border border-teal-500/30 overflow-hidden">
+                <!-- Chat Header -->
+                <div class="bg-slate-900/90 px-5 py-3.5 border-b border-teal-500/20 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+                        <span class="text-sm font-semibold text-slate-200">어항선배 1:1 상담실</span>
+                    </div>
+                    <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> 대화 초기화
+                    </button>
+                </div>
 
-    <div class="tab-content" id="tab-equip">
-      <div class="section-title"><i class="fa-solid fa-plug"></i> 수조 필수 장비</div>
-      <div class="btn-grid">
-        <button class="tool-btn active" id="eq-thermometer" onclick="toggleEquipment('thermometer')"><i class="fa-solid fa-temperature-full"></i> 온도계 (ON)</button>
-        <button class="tool-btn active" id="eq-airstone" onclick="toggleEquipment('airstone')"><i class="fa-solid fa-wind"></i> 산소 기포기 (ON)</button>
-        <button class="tool-btn active" id="eq-filter" onclick="toggleEquipment('filter')"><i class="fa-solid fa-filter"></i> 여과기 (ON)</button>
-        <button class="tool-btn active" id="eq-heater" onclick="toggleEquipment('heater')"><i class="fa-solid fa-fire"></i> 히터 (ON)</button>
-      </div>
-    </div>
+                <!-- Chat Scroll Area -->
+                <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-4">
+                    <!-- Welcome Assistant Message -->
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-full bg-teal-500/20 border border-teal-400 flex items-center justify-center text-lg flex-shrink-0">
+                            🧙‍♂️
+                        </div>
+                        <div class="max-w-[80%] bg-slate-800/90 border border-teal-500/20 rounded-2xl rounded-tl-none p-4 text-sm text-slate-200 leading-relaxed shadow">
+                            반갑네 물집사! 🐟<br>어항 사이즈, 여과기 종류, 물고기 상태 등 무엇이든 편하게 물어보게나. 친절하고 정확하게 가이드해주지!
+                        </div>
+                    </div>
+                </div>
 
-    <div class="sidebar-footer">
-      <button class="action-btn btn-snap" onclick="takeSnapshot()"><i class="fa-solid fa-camera"></i> 캡처</button>
-      <button class="action-btn btn-clean" onclick="cleanFood()"><i class="fa-solid fa-broom"></i> 청소</button>
-      <button class="action-btn btn-reset" onclick="resetTank()"><i class="fa-solid fa-rotate-right"></i> 초기화</button>
-    </div>
-  </aside>
+                <!-- Chat Input Area -->
+                <div class="p-3 bg-slate-900/90 border-t border-teal-500/20">
+                    <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="어항선배에게 물생활 질문하기... (예: 구피 환수 방법 알려줘)" 
+                            class="flex-1 bg-slate-950/80 border border-slate-700 focus:border-teal-400 text-slate-100 text-sm rounded-xl px-4 py-3 outline-none transition placeholder:text-slate-500">
+                        <button type="submit" id="send-btn" class="bg-teal-600 hover:bg-teal-500 text-white px-5 py-3 rounded-xl font-medium text-sm transition flex items-center gap-2 shadow-[0_0_15px_rgba(45,212,191,0.3)]">
+                            <span>전송</span>
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
 
-  <main class="aquarium-container">
-    <div class="glass-tank-frame" id="tank-frame">
-      <div class="status-overlay">
-        <div class="status-item"><i class="fa-solid fa-temperature-full"></i> 수온: <span id="disp-temp">24°C</span></div>
-        <div class="status-item"><i class="fa-solid fa-droplet"></i> 수질: <span id="disp-water">100%</span></div>
-        <div class="status-item"><i class="fa-solid fa-fish"></i> 개체수: <span id="disp-count">0</span></div>
-      </div>
 
-      <div class="info-card" id="info-card">
-        <h3><i class="fa-solid fa-circle-info"></i> <span id="info-name">네온테트라</span></h3>
-        <div class="info-line"><span>종류:</span><span class="val" id="info-type">열대어</span></div>
-        <div class="info-line"><span>상태:</span><span class="val" id="info-mood">행복함 😄</span></div>
-        <div class="info-line"><span>포만감:</span><span class="val" id="info-hunger">85%</span></div>
-        <div class="info-line"><span>수온:</span><span class="val" id="info-temp-status">적정 (24°C)</span></div>
-      </div>
+        <!-- ================= 2. COMPATIBILITY CHECKER TAB ================= -->
+        <section id="tab-compatibility" class="tab-content hidden space-y-6">
+            <div class="glass-card rounded-2xl p-6 border border-teal-500/30">
+                <div class="max-w-2xl">
+                    <h2 class="font-pixel text-2xl text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-heart-circle-bolt text-teal-400"></i> 어종/생물 합사 가능 여부 진단기
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">
+                        어항에 함께 키우고 싶은 생물 2종을 선택하세요. 공격성, 수온, 수질, 크기 차이를 분석하여 궁합을 진단합니다.
+                    </p>
+                </div>
 
-      <canvas id="aquariumCanvas"></canvas>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Fish 1 Selection -->
+                    <div class="bg-slate-900/70 p-5 rounded-xl border border-slate-800">
+                        <label class="block text-xs font-semibold text-teal-400 uppercase tracking-wider mb-2">첫 번째 생물 선택</label>
+                        <select id="fish1" onchange="checkCompatibility()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg p-3 outline-none focus:border-teal-400">
+                            <!-- Populated by JS -->
+                        </select>
+                        <div id="fish1-info" class="mt-4 p-3 bg-slate-950/60 rounded-lg text-xs text-slate-400 space-y-1"></div>
+                    </div>
 
-      <div class="tank-banner">
-        <i class="fa-solid fa-terminal"></i>
-        <span id="banner-text">샌드박스 도구를 선택하여 픽셀 어항을 꾸며보세요.</span>
-      </div>
-    </div>
+                    <!-- Fish 2 Selection -->
+                    <div class="bg-slate-900/70 p-5 rounded-xl border border-slate-800">
+                        <label class="block text-xs font-semibold text-teal-400 uppercase tracking-wider mb-2">두 번째 생물 선택</label>
+                        <select id="fish2" onchange="checkCompatibility()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg p-3 outline-none focus:border-teal-400">
+                            <!-- Populated by JS -->
+                        </select>
+                        <div id="fish2-info" class="mt-4 p-3 bg-slate-950/60 rounded-lg text-xs text-slate-400 space-y-1"></div>
+                    </div>
+                </div>
 
-    <div class="trash-zone" id="trash-zone" onclick="emptyNetToTrash()">
-      <i class="fa-solid fa-trash-can trash-icon"></i>
-      <div class="trash-label">뜰채 비우기<br><span style="font-size:9px; color:#64748b;">(클릭)</span></div>
-      <div class="trash-count" id="net-count-badge">담김: 0</div>
-    </div>
-  </main>
+                <!-- Compatibility Result Box -->
+                <div id="compatibility-result" class="mt-6 p-6 rounded-xl bg-slate-900/90 border border-teal-500/30 text-center transition-all">
+                    <div class="text-slate-400 text-sm">생물 두 종류를 선택하시면 진단 결과가 표시됩니다.</div>
+                </div>
+            </div>
+        </section>
 
-  <script>
-    const canvas = document.getElementById('aquariumCanvas');
-    const ctx = canvas.getContext('2d');
-    const tankFrame = document.getElementById('tank-frame');
-    const bannerText = document.getElementById('banner-text');
-    const netBadge = document.getElementById('net-count-badge');
 
-    const infoCard = document.getElementById('info-card');
-    const infoName = document.getElementById('info-name');
-    const infoType = document.getElementById('info-type');
-    const infoMood = document.getElementById('info-mood');
-    const infoHunger = document.getElementById('info-hunger');
-    const infoTempStatus = document.getElementById('info-temp-status');
+        <!-- ================= 3. WATER VOLUME & CAPACITY CALCULATOR TAB ================= -->
+        <section id="tab-calc" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Inputs Section -->
+                <div class="lg:col-span-1 glass-card rounded-2xl p-6 border border-teal-500/30 space-y-5">
+                    <h2 class="font-pixel text-xl text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> 어항 치수 입력
+                    </h2>
 
-    const PIXEL_SIZE = 4;
-    let gridCols = 0;
-    let gridRows = 0;
-    let pixelGrid = [];
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">어항 가로 (cm)</label>
+                        <input type="number" id="tank-w" value="45" oninput="calculateWaterVolume()" class="w-full bg-slate-950 border border-slate-700 text-teal-300 font-mono text-lg rounded-xl p-3 outline-none focus:border-teal-400">
+                    </div>
 
-    function resizeCanvas() {
-      canvas.width = Math.floor(tankFrame.clientWidth);
-      canvas.height = Math.floor(tankFrame.clientHeight);
-      
-      gridCols = Math.floor(canvas.width / PIXEL_SIZE);
-      gridRows = Math.floor(canvas.height / PIXEL_SIZE);
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">어항 세로 (폭) (cm)</label>
+                        <input type="number" id="tank-d" value="30" oninput="calculateWaterVolume()" class="w-full bg-slate-950 border border-slate-700 text-teal-300 font-mono text-lg rounded-xl p-3 outline-none focus:border-teal-400">
+                    </div>
 
-      if (pixelGrid.length === 0) {
-        pixelGrid = new Array(gridCols * gridRows).fill(null);
-      }
-    }
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">어항 높이 (cm)</label>
+                        <input type="number" id="tank-h" value="30" oninput="calculateWaterVolume()" class="w-full bg-slate-950 border border-slate-700 text-teal-300 font-mono text-lg rounded-xl p-3 outline-none focus:border-teal-400">
+                    </div>
 
-    let interactionMode = 'select';
-    let penSize = 3;
-    let temperature = 24;
-    let waterQuality = 100;
-    let customLightColor = '#e0f2fe';
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">바닥재 두께 (cm)</label>
+                        <input type="number" id="substrate-h" value="3" oninput="calculateWaterVolume()" class="w-full bg-slate-950 border border-slate-700 text-teal-300 font-mono text-lg rounded-xl p-3 outline-none focus:border-teal-400">
+                    </div>
+                </div>
 
-    let equipState = { thermometer: true, airstone: true, filter: true, heater: true };
+                <!-- Results Output Section -->
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-teal-500/30 flex flex-col justify-between">
+                    <div>
+                        <h2 class="font-pixel text-xl text-teal-300 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie"></i> 계산 진단 결과
+                        </h2>
 
-    let creatures = [];
-    let foods = [];
-    let bubbles = [];
-    let plants = [];
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            <!-- Total Water -->
+                            <div class="bg-slate-900/80 p-4 rounded-xl border border-teal-500/20 text-center">
+                                <span class="text-xs text-slate-400">실제 총 물용량</span>
+                                <div class="text-2xl sm:text-3xl font-bold font-mono text-cyan-300 mt-1" id="res-volume">0 L</div>
+                                <span class="text-[11px] text-slate-500">바닥재/상단 여유공간 차감</span>
+                            </div>
 
-    let netInventory = { creatures: [], foods: [] };
-    let netCursor = { x: -100, y: -100, isScooping: false, scoopProgress: 0 };
+                            <!-- Recommended Fish Count -->
+                            <div class="bg-slate-900/80 p-4 rounded-xl border border-teal-500/20 text-center">
+                                <span class="text-xs text-slate-400">적정 물고기 마릿수</span>
+                                <div class="text-2xl sm:text-3xl font-bold font-mono text-emerald-300 mt-1" id="res-fish">0 마리</div>
+                                <span class="text-[11px] text-slate-500">소형종 (3~4cm) 기준</span>
+                            </div>
 
-    let draggedCreature = null;
-    let selectedCreature = null;
-    let isMouseDown = false;
+                            <!-- Weekly Water Change -->
+                            <div class="bg-slate-900/80 p-4 rounded-xl border border-teal-500/20 text-center">
+                                <span class="text-xs text-slate-400">주간 환수 권장량 (30%)</span>
+                                <div class="text-2xl sm:text-3xl font-bold font-mono text-amber-300 mt-1" id="res-waterchange">0 L</div>
+                                <span class="text-[11px] text-slate-500">주 1회 기준</span>
+                            </div>
+                        </div>
 
-    function random(min, max) { return Math.random() * (max - min) + min; }
+                        <!-- Extra Advice Banner -->
+                        <div class="bg-teal-950/40 p-4 rounded-xl border border-teal-500/30 text-xs sm:text-sm text-slate-300 space-y-2">
+                            <div class="font-semibold text-teal-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info"></i> 어항선배의 수용량 꿀팁
+                            </div>
+                            <ul class="list-disc list-inside space-y-1 text-slate-400 text-xs">
+                                <li>어항 입수 초기에는 권장 마릿수의 **30~50%만 먼저 입수**시켜 여과 cycle을 잡는 것이 안전합니다.</li>
+                                <li>체리새우나 소형 가재 등 갑각류는 오염원이 적어 물고기 대비 더 여유 있게 합사 가능합니다.</li>
+                                <li>여과기 성능(스펀지, 걸이식, 외부여과기)에 따라 과밀 사육 시 환수 주기를 2~3일에 1회로 늘려주세요.</li>
+                            </ul>
+                        </div>
+                    </div>
 
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+                    <div class="mt-4 pt-4 border-t border-slate-800 text-right">
+                        <button onclick="askQuickQuestion(`제 어항 물용량이 ${document.getElementById('res-volume').innerText}인데 추천하는 여과기와 생물 조합 알려주세요.`)" class="text-xs bg-teal-600 hover:bg-teal-500 text-white font-medium px-4 py-2.5 rounded-lg transition inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-comments"></i> 이 용량에 맞는 추천 여과기 AI에 물어보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    /* 수초 객체 */
-    class NaturalPlant {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.maxHeight = random(90, 200);
-        this.currentHeight = 4;
-        this.stemSegments = [];
-        this.leaves = [];
-        this.swayOffset = random(0, Math.PI * 2);
 
-        this.generateStructure();
-      }
+        <!-- ================= 4. WATER CYCLING SCHEDULER TAB ================= -->
+        <section id="tab-water" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Scheduler Timeline -->
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-teal-500/30 space-y-4">
+                    <h2 class="font-pixel text-2xl text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-teal-400"></i> 초기 30일 물잡이(여과) 스케줄러
+                    </h2>
+                    <p class="text-xs text-slate-400">
+                        물고기가 생존할 수 있는 유익균(박테리아) 생태계를 형성하는 30일 코스 가이드입니다.
+                    </p>
 
-      generateStructure() {
-        let currY = 0;
-        let currX = 0;
-        while (currY < this.maxHeight) {
-          currY += random(10, 18);
-          currX += random(-4, 4);
-          this.stemSegments.push({ x: currX, y: currY });
+                    <div class="space-y-3 mt-4">
+                        <!-- Step 1 -->
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-teal-500/30 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-teal-500/20 border border-teal-400 font-pixel text-teal-300 text-sm flex items-center justify-center flex-shrink-0">
+                                1~3일
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-slate-200">1단계: 어항 세팅 및 박테리아제 투여</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    바닥재 wash, 여과기 설치, 염소 제거된 물 채우기. 생박테리아제를 용량에 맞춰 투여하고 24시간 여과기를 연속 가동합니다.
+                                </p>
+                            </div>
+                        </div>
 
-          if (currY < this.maxHeight - 12) {
-            this.leaves.push({ y: currY, side: 1, length: random(10, 20) });
-            this.leaves.push({ y: currY + random(-2, 2), side: -1, length: random(10, 20) });
-          }
-        }
-      }
+                        <!-- Step 2 -->
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-cyan-500/20 border border-cyan-400 font-pixel text-cyan-300 text-sm flex items-center justify-center flex-shrink-0">
+                                4~7일
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-slate-200">2단계: 박테리아 먹이 공급 (암모니아 발생)</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    물고기 사료를 극소량 투여하여 암모니아 발생 유도. 물이 뿌옇게 흐려지는 **백탁 현상**이 올 수 있으나 박테리아 번식 과정이므로 정상입니다.
+                                </p>
+                            </div>
+                        </div>
 
-      update() {
-        if (this.currentHeight < this.maxHeight) this.currentHeight += 0.25;
-        this.swayOffset += 0.02;
-      }
+                        <!-- Step 3 -->
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-400 font-pixel text-amber-300 text-sm flex items-center justify-center flex-shrink-0">
+                                8~14일
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-slate-200">3단계: 아질산염 피크 및 첫 물잡이 고기 입수</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    백탁이 맑게 걷히는 시기. 강인한 주노에 해당하는 '물잡이 특공대(제브라다니오 1~2마리)'를 입수하여 여과 생태계를 가속화합니다.
+                                </p>
+                            </div>
+                        </div>
 
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
+                        <!-- Step 4 -->
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-emerald-500/20 border border-emerald-400 font-pixel text-emerald-300 text-sm flex items-center justify-center flex-shrink-0">
+                                15~30일
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-bold text-slate-200">4단계: 질산염 전환 & 메인 생물 단계적 입수</h3>
+                                <p class="text-xs text-slate-400 leading-relaxed">
+                                    여과 사이클 완결 단계. 주 1회 20~30% 환수를 시작하며, 키우고 싶은 메인 어종을 3~4일 간격으로 조금씩 나누어 입수합니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        let sway = Math.sin(this.swayOffset) * 5;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
+                <!-- Interactive Checklist & State Diagnostic -->
+                <div class="lg:col-span-1 glass-card rounded-2xl p-6 border border-teal-500/30 space-y-4">
+                    <h2 class="font-pixel text-xl text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-square-check"></i> 어항 상태 진단 체크
+                    </h2>
+                    <p class="text-xs text-slate-400">현재 어항 증상을 체크해 보세요.</p>
 
-        let activeSegments = this.stemSegments.filter(s => s.y <= this.currentHeight);
-        for (let i = 0; i < activeSegments.length; i++) {
-          let seg = activeSegments[i];
-          let segSway = (seg.y / this.maxHeight) * sway;
-          ctx.lineTo(seg.x + segSway, -seg.y);
-        }
-        ctx.strokeStyle = '#15803d';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+                    <div class="space-y-2 text-xs">
+                        <label class="flex items-center gap-2.5 p-3 bg-slate-900/80 rounded-xl cursor-pointer border border-slate-800 hover:border-teal-500/40">
+                            <input type="checkbox" id="chk-cloudy" onchange="diagnoseChecklist()" class="rounded accent-teal-400 w-4 h-4">
+                            <span class="text-slate-300">물이 뿌옇고 불투명함 (백탁)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-3 bg-slate-900/80 rounded-xl cursor-pointer border border-slate-800 hover:border-teal-500/40">
+                            <input type="checkbox" id="chk-foam" onchange="diagnoseChecklist()" class="rounded accent-teal-400 w-4 h-4">
+                            <span class="text-slate-300">수면에 거품이 안 사라짐</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-3 bg-slate-900/80 rounded-xl cursor-pointer border border-slate-800 hover:border-teal-500/40">
+                            <input type="checkbox" id="chk-gasping" onchange="diagnoseChecklist()" class="rounded accent-teal-400 w-4 h-4">
+                            <span class="text-slate-300">물고기가 수면에서 뻐끔거림</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-3 bg-slate-900/80 rounded-xl cursor-pointer border border-slate-800 hover:border-teal-500/40">
+                            <input type="checkbox" id="chk-algae" onchange="diagnoseChecklist()" class="rounded accent-teal-400 w-4 h-4">
+                            <span class="text-slate-300">유리창/이끼에 녹조/갈조 발생</span>
+                        </label>
+                    </div>
 
-        for (let leaf of this.leaves) {
-          if (leaf.y > this.currentHeight) continue;
+                    <!-- Diagnostic Response Box -->
+                    <div id="checklist-diagnosis" class="p-4 rounded-xl bg-slate-950/80 border border-teal-500/30 text-xs text-slate-300 min-h-[140px] leading-relaxed">
+                        증상을 선택하시면 어항선배의 맞춤 처방법이 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </section>
 
-          let leafSway = (leaf.y / this.maxHeight) * sway;
-          let leafX = (leaf.side * 2) + leafSway;
-          let leafY = -leaf.y;
+    </main>
 
-          ctx.save();
-          ctx.translate(leafX, leafY);
-          ctx.rotate((leaf.side * 0.5) + Math.sin(this.swayOffset + leaf.y) * 0.1);
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/80 py-4 px-6 text-center text-xs text-slate-500">
+        <p>© 2026 어항선배 PRO — 초보 물집사를 위한 AI 통합 수족관 케어 스위트</p>
+    </footer>
 
-          ctx.fillStyle = leaf.y % 2 === 0 ? '#22c55e' : '#16a34a';
-          ctx.beginPath();
-          ctx.ellipse(leaf.side * (leaf.length / 2), 0, leaf.length / 2, 3, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
-        }
-
-        ctx.restore();
-      }
-    }
-
-    function getGridIndex(gx, gy) {
-      if (gx < 0 || gx >= gridCols || gy < 0 || gy >= gridRows) return -1;
-      return gy * gridCols + gx;
-    }
-
-    function getPixel(gx, gy) {
-      let idx = getGridIndex(gx, gy);
-      return idx !== -1 ? pixelGrid[idx] : 'wall';
-    }
-
-    function setPixel(gx, gy, data) {
-      let idx = getGridIndex(gx, gy);
-      if (idx !== -1) pixelGrid[idx] = data;
-    }
-
-    function getSubstrateTopY(x) {
-      let gx = Math.floor(x / PIXEL_SIZE);
-      for (let gy = 0; gy < gridRows; gy++) {
-        let p = getPixel(gx, gy);
-        if (p && typeof p === 'object' && p.isSubstrate) {
-          return gy * PIXEL_SIZE;
-        }
-      }
-      return canvas.height - 16;
-    }
-
-    class Creature {
-      constructor(type, x, y) {
-        this.id = Math.random().toString(36).substr(2, 9);
-        this.type = type;
-        this.x = x || random(80, canvas.width - 80);
-        this.y = y || random(100, canvas.height - 150);
-        this.vx = random(-1.2, 1.2) || 0.8;
-        this.vy = random(-0.4, 0.4);
-        this.facingRight = this.vx > 0;
-        this.hunger = random(50, 80);
-        this.tailAngle = random(0, Math.PI * 2);
-        this.climbingPlant = null;
-
-        if (type === 'neon') { this.name = '네온테트라'; this.size = 20; }
-        else if (type === 'angel') { this.name = '엔젤피쉬'; this.size = 28; }
-        else if (type === 'shrimp') { this.name = '체리새우'; this.size = 18; }
-        else if (type === 'turtle') { this.name = '거북이'; this.size = 46; }
-        else if (type === 'puffer') { this.name = '복어'; this.size = 26; }
-      }
-
-      update() {
-        if (this === draggedCreature) return;
-
-        this.tailAngle += 0.12;
-        this.hunger = Math.max(0, this.hunger - 0.0015);
-        let speedMult = (temperature < 20) ? 0.6 : (temperature > 28 ? 1.3 : 1.0);
-
-        if (this.type === 'shrimp') {
-          if (!this.climbingPlant && plants.length > 0 && Math.random() < 0.02) {
-            for (let p of plants) {
-              if (Math.abs(p.x - this.x) < 30 && p.currentHeight > 20) {
-                this.climbingPlant = p;
-                break;
-              }
+    <!-- JavaScript Application Logic -->
+    <script>
+        /* ================= 1. BUBBLE ANIMATION GENERATOR ================= */
+        function createBubbles() {
+            const container = document.getElementById('bubble-container');
+            const bubbleCount = 15;
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 16 + 6;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.animationDelay = `${Math.random() * 8}s`;
+                bubble.style.animationDuration = `${Math.random() * 6 + 6}s`;
+                container.appendChild(bubble);
             }
-          }
+        }
 
-          if (this.climbingPlant) {
-            let p = this.climbingPlant;
-            let targetY = p.y - random(10, p.currentHeight);
-            this.x += (p.x - this.x) * 0.05;
-            this.y += (targetY - this.y) * 0.05;
+        /* ================= 2. TAB NAVIGATION ================= */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-600', 'text-white', 'shadow');
+                btn.classList.add('text-slate-400');
+            });
 
-            if (Math.random() < 0.01 || Math.abs(p.x - this.x) > 60) {
-              this.climbingPlant = null;
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-teal-600', 'text-white', 'shadow');
+                activeBtn.classList.remove('text-slate-400');
             }
-            return;
-          }
         }
 
-        let nearestFood = null;
-        if (this.hunger < 85) {
-          let minDist = 220;
-          for (let f of foods) {
-            let d = Math.hypot(f.x - this.x, f.y - this.y);
-            if (d < minDist) { minDist = d; nearestFood = f; }
-          }
-        }
+        /* ================= 3. AI CHATBOT LOGIC (Gemini API) ================= */
+        let chatHistory = [];
 
-        if (nearestFood) {
-          let angle = Math.atan2(nearestFood.y - this.y, nearestFood.x - this.x);
-          this.vx = Math.cos(angle) * 1.4 * speedMult;
-          this.vy = Math.sin(angle) * 1.4 * speedMult;
+        function appendMessage(role, text) {
+            const chatBox = document.getElementById('chat-box');
+            const wrapper = document.createElement('div');
+            wrapper.className = role === 'user' ? 'flex items-start justify-end gap-3' : 'flex items-start gap-3';
 
-          if (Math.hypot(nearestFood.x - this.x, nearestFood.y - this.y) < this.size / 2 + 6) {
-            let idx = foods.indexOf(nearestFood);
-            if (idx > -1) {
-              foods.splice(idx, 1);
-              this.hunger = Math.min(100, this.hunger + 30);
-              for (let i = 0; i < 3; i++) bubbles.push(new Bubble(this.x, this.y, random(2, 4), random(0.5, 1.5)));
+            if (role === 'user') {
+                wrapper.innerHTML = `
+                    <div class="max-w-[80%] bg-teal-600 text-white rounded-2xl rounded-tr-none p-3.5 text-sm leading-relaxed shadow">
+                        ${escapeHtml(text)}
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="w-9 h-9 rounded-full bg-teal-500/20 border border-teal-400 flex items-center justify-center text-lg flex-shrink-0">
+                        🧙‍♂️
+                    </div>
+                    <div class="max-w-[80%] bg-slate-800/90 border border-teal-500/20 rounded-2xl rounded-tl-none p-4 text-sm text-slate-200 leading-relaxed shadow whitespace-pre-wrap">
+                        ${text}
+                    </div>
+                `;
             }
-          }
-        } else {
-          if (Math.random() < 0.02) {
-            this.vx = random(-1.2, 1.2) * speedMult;
-            this.vy = random(-0.5, 0.5) * speedMult;
-          }
+
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        if (Math.abs(this.vx) < 0.2) this.vx = this.facingRight ? 0.6 : -0.6;
-
-        this.x += this.vx;
-        this.y += this.vy;
-
-        let groundY = getSubstrateTopY(this.x) - (this.size / 2);
-
-        if (this.y > groundY) {
-          this.y = groundY;
-          this.vy = -Math.abs(this.vy) - 0.5;
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        if (this.y < 40) { this.y = 40; this.vy = Math.abs(this.vy) + 0.2; }
-        if (this.x < 30) { this.x = 30; this.vx *= -1; }
-        if (this.x > canvas.width - 30) { this.x = canvas.width - 30; this.vx *= -1; }
-
-        if (this.vx > 0.05) this.facingRight = true;
-        else if (this.vx < -0.05) this.facingRight = false;
-      }
-
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        if (selectedCreature === this) {
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.arc(0, 0, this.size + 10, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
+        function askQuickQuestion(questionText) {
+            switchTab('chat');
+            document.getElementById('chat-input').value = questionText;
+            handleChatSubmit(new Event('submit'));
         }
 
-        if (!this.facingRight) ctx.scale(-1, 1);
-        const tailWag = Math.sin(this.tailAngle) * 3;
-
-        if (this.type === 'neon') {
-          ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(0, 0, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#00f0ff'; ctx.beginPath(); ctx.fillRect(-10, -3, 18, 2); ctx.fill();
-          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.ellipse(4, 1, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
-          ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(-20, -5 + tailWag); ctx.lineTo(-18, 0); ctx.lineTo(-20, 5 + tailWag); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(8, -2, 2, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(8, -2, 1, 0, Math.PI * 2); ctx.fill();
-
-        } else if (this.type === 'angel') {
-          ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-10, -12); ctx.lineTo(-12, 0); ctx.lineTo(-10, 12); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.fillRect(-4, -10, 3, 20); ctx.fillRect(2, -6, 2, 12);
-          ctx.fillStyle = '#cbd5e1';
-          ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(-16, -26); ctx.lineTo(-2, -8); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(-18, 26); ctx.lineTo(-2, 8); ctx.fill();
-          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(5, -2, 2, 0, Math.PI * 2); ctx.fill();
-
-        } else if (this.type === 'shrimp') {
-          ctx.fillStyle = '#dc2626';
-          ctx.beginPath(); ctx.ellipse(4, -1, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-2, 0, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-7, 1, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-11, 2, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-13, 2); ctx.lineTo(-18, -1 + tailWag); ctx.lineTo(-18, 5 + tailWag); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 1.2;
-          ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(0, 8); ctx.moveTo(-1, 3); ctx.lineTo(-4, 8); ctx.moveTo(-4, 3); ctx.lineTo(-7, 8); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(8, -2); ctx.lineTo(18, -8); ctx.moveTo(8, -1); ctx.lineTo(16, -2); ctx.stroke();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(6, -2, 1, 0, Math.PI * 2); ctx.fill();
-
-        } else if (this.type === 'turtle') {
-          ctx.fillStyle = '#15803d'; ctx.beginPath(); ctx.ellipse(-2, 0, 22, 16, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#166534'; ctx.lineWidth = 2; ctx.stroke();
-          ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.rect(-12, -8, 10, 8); ctx.rect(-2, -8, 10, 8); ctx.rect(-7, 0, 10, 8); ctx.stroke();
-          ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.ellipse(22, 0, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(24, -2, 1.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#16a34a';
-          ctx.beginPath(); ctx.ellipse(10, -14 + tailWag*0.5, 10, 5, Math.PI/4, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(10, 14 - tailWag*0.5, 10, 5, -Math.PI/4, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-14, -12, 6, 3, Math.PI/6, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-14, 12, 6, 3, -Math.PI/6, 0, Math.PI * 2); ctx.fill();
-
-        } else if (this.type === 'puffer') {
-          ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.arc(0, 4, 10, 0, Math.PI); ctx.fill();
-          ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
-          for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-            let sx = Math.cos(a) * 13; let sy = Math.sin(a) * 13;
-            let ex = Math.cos(a) * 16; let ey = Math.sin(a) * 16;
-            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
-          }
-          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(5, -4, 4, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(6, -4, 2, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#eab308';
-          ctx.beginPath(); ctx.moveTo(-13, 0); ctx.lineTo(-19, -5 + tailWag); ctx.lineTo(-19, 5 + tailWag); ctx.closePath(); ctx.fill();
+        function clearChat() {
+            chatHistory = [];
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-full bg-teal-500/20 border border-teal-400 flex items-center justify-center text-lg flex-shrink-0">
+                        🧙‍♂️
+                    </div>
+                    <div class="max-w-[80%] bg-slate-800/90 border border-teal-500/20 rounded-2xl rounded-tl-none p-4 text-sm text-slate-200 leading-relaxed shadow">
+                        대화가 초기화되었네! 물생활에 대해 또 궁금한 점이 있다면 언제든 물어보게나. 🐟
+                    </div>
+                </div>
+            `;
         }
 
-        ctx.restore();
-      }
-    }
+        async function handleChatSubmit(e) {
+            e.preventDefault();
+            const inputEl = document.getElementById('chat-input');
+            const prompt = inputEl.value.trim();
+            if (!prompt) return;
 
-    class Food {
-      constructor(x, y) { this.x = x; this.y = y; }
-      update() {
-        let groundY = getSubstrateTopY(this.x);
-        if (this.y < groundY - 2) this.y += 0.8;
-      }
-      draw() { ctx.fillStyle = '#f59e0b'; ctx.fillRect(this.x - 2, this.y - 2, 4, 4); }
-    }
+            // UI user message
+            appendMessage('user', prompt);
+            inputEl.value = '';
 
-    class Bubble {
-      constructor(x, y, radius, speed) {
-        this.x = x || random(20, canvas.width - 20);
-        this.y = y || canvas.height - 20;
-        this.radius = radius || random(2, 4);
-        this.speed = speed || random(1, 2);
-      }
-      update() { this.y -= this.speed; this.x += Math.sin(this.y * 0.05) * 0.4; }
-      draw() {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.strokeRect(Math.floor(this.x), Math.floor(this.y), PIXEL_SIZE, PIXEL_SIZE);
-      }
-    }
+            // Loading indicator
+            const chatBox = document.getElementById('chat-box');
+            const loadingId = 'loading-' + Date.now();
+            const loadingEl = document.createElement('div');
+            loadingEl.id = loadingId;
+            loadingEl.className = 'flex items-start gap-3';
+            loadingEl.innerHTML = `
+                <div class="w-9 h-9 rounded-full bg-teal-500/20 border border-teal-400 flex items-center justify-center text-lg flex-shrink-0 animate-spin">
+                    🌀
+                </div>
+                <div class="bg-slate-800/60 border border-teal-500/20 rounded-2xl p-3 text-xs text-teal-300 font-mono flex items-center gap-2">
+                    어항선배가 답을 생각 중입니다...
+                </div>
+            `;
+            chatBox.appendChild(loadingEl);
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-    /* Falling Sand 물리 시뮬레이션 엔진 */
-    function updatePixelPhysics() {
-      for (let gy = gridRows - 2; gy >= 0; gy--) {
-        for (let gx = 0; gx < gridCols; gx++) {
-          let current = getPixel(gx, gy);
-          if (current && typeof current === 'object' && current.falling) {
-            // 1. 바로 아래가 비어있으면 낙하
-            if (!getPixel(gx, gy + 1)) {
-              setPixel(gx, gy, null);
-              setPixel(gx, gy + 1, current);
-            } 
-            // 2. 대각선 왼쪽 아래로 흘러내림
-            else if (!getPixel(gx - 1, gy + 1) && Math.random() < 0.6) {
-              setPixel(gx, gy, null);
-              setPixel(gx - 1, gy + 1, current);
-            } 
-            // 3. 대각선 오른쪽 아래로 흘러내림
-            else if (!getPixel(gx + 1, gy + 1) && Math.random() < 0.6) {
-              setPixel(gx, gy, null);
-              setPixel(gx + 1, gy + 1, current);
+            // Prepare Gemini Request
+            const systemPrompt = `당신은 경력 15년 차 열대어 및 수족관 물잡이 전문가 캐릭터 '어항선배'입니다. 
+말투는 다정하고 친근한 반말 말투("~라네", "~하게나", "알겠지?")를 사용하며, 초보 물집사(사용자)가 이해하기 쉽도록 핵심을 정확하게 설명해주세요. 
+물고기 건강, 수질 관리, 여과기 추천, 환수 방법, 이끼 대처법 등 물생활 제반 지식에 답변해주세요. 이모지를 적절히 활용하세요.`;
+
+            chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+
+            try {
+                const apiKey = ""; // Built-in environment key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: chatHistory,
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId)?.remove();
+
+                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                    const aiReply = data.candidates[0].content.parts[0].text;
+                    chatHistory.push({ role: 'model', parts: [{ text: aiReply }] });
+                    appendMessage('model', aiReply);
+                } else {
+                    appendMessage('model', '어라라, 수중 통신에 잠깐 문제가 생긴 것 같네! 다시 한번 물어봐줄 수 있겠나?');
+                }
+            } catch (err) {
+                document.getElementById(loadingId)?.remove();
+                appendMessage('model', '오류가 발생했네! 네트워크 연결을 확인하고 다시 시도해보게나.');
             }
-          }
         }
-      }
-    }
 
-    function drawFishNetCursor() {
-      if (interactionMode !== 'net' || netCursor.x < 0) return;
 
-      ctx.save();
-      ctx.translate(netCursor.x, netCursor.y);
+        /* ================= 4. FISH COMPATIBILITY DATABASE & LOGIC ================= */
+        const fishDatabase = {
+            neon: { name: "네온테트라", temp: "22~26°C", size: "3~4cm", aggression: "순함 (소형 군영어)", icon: "🐟" },
+            angel: { name: "엔젤피쉬", temp: "24~28°C", size: "12~15cm", aggression: "중간 (성어 시 입에 들어가는 유어 포식)", icon: "🐠" },
+            cherry: { name: "체리새우", temp: "20~25°C", size: "2~3cm", aggression: "완전 순함 (먹이사슬 최하위)", icon: "🦐" },
+            puffer: { name: "초록복어", temp: "24~28°C", size: "6~10cm", aggression: "매우 강함 (지느러미 뜯음, 새우/달팽이 사냥)", icon: "🐡" },
+            turtle: { name: "거북이 (수생)", temp: "25~29°C", size: "15~25cm", aggression: "잡식/포식성 (물고기 잡아먹음)", icon: "🐢" },
+            guppy: { name: "구피", temp: "22~27°C", size: "3~5cm", aggression: "순함 (번식력 왕)", icon: "🐠" },
+            cory: { name: "코리도라스", temp: "22~26°C", size: "4~6cm", aggression: "매우 순함 (바닥재 청소)", icon: "🐟" }
+        };
 
-      let currentAngle = -Math.PI / 4;
+        // Specific rules: key "fish1-fish2"
+        const compatibilityRules = {
+            "neon-angel": { score: "주의", color: "text-amber-400", bg: "border-amber-500/40 bg-amber-950/20", text: "엔젤피쉬가 어릴 때는 합사가 가능하지만, 성어가 되면 커진 입으로 소형 네온테트라를 삼킬 위험이 높습니다!" },
+            "neon-cherry": { score: "가능 (수초 필수)", color: "text-emerald-400", bg: "border-emerald-500/40 bg-emerald-950/20", text: "성체 새우와는 잘 지내지만, 치새우(새끼 새우)는 수초나 모스 같은 숨을 공간이 없으면 네온테트라의 먹이가 될 수 있습니다." },
+            "neon-puffer": { score: "불가 ❌", color: "text-rose-400", bg: "border-rose-500/40 bg-rose-950/20", text: "복어는 공격성이 강해 네온테트라의 지느러미를 입으로 물어뜯고 공격합니다. 절대 같이 합사하지 마세요." },
+            "cherry-puffer": { score: "절대 불가 ❌", color: "text-rose-500", bg: "border-rose-500/50 bg-rose-950/30", text: "복어에게 체리새우는 가장 좋아하는 최고급 특식입니다. 입수하는 즉시 모두 잡아먹힙니다." },
+            "turtle-neon": { score: "불가 ❌", color: "text-rose-400", bg: "border-rose-500/40 bg-rose-950/20", text: "거북이는 빠른 물고기도 자는 동안이나 구석에 몰아서 잡아먹습니다." },
+            "guppy-cherry": { score: "최상 🟢", color: "text-emerald-300", bg: "border-emerald-500/40 bg-emerald-950/20", text: "대표적인 평화로운 온순 조합입니다! 수초를 풍성하게 해주면 치새우 번식도 문제없이 가능합니다." },
+            "cory-neon": { score: "최상 🟢", color: "text-emerald-300", bg: "border-emerald-500/40 bg-emerald-950/20", text: "상층/중층(네온)과 하층(코리) 서식층이 달라 완벽한 조합을 이룹니다." }
+        };
 
-      if (netCursor.isScooping) {
-        netCursor.scoopProgress += 0.18;
-        currentAngle += Math.sin(netCursor.scoopProgress) * 0.9;
-        if (netCursor.scoopProgress >= Math.PI) {
-          netCursor.isScooping = false;
-          netCursor.scoopProgress = 0;
+        function initCompatibility() {
+            const f1 = document.getElementById('fish1');
+            const f2 = document.getElementById('fish2');
+            f1.innerHTML = ''; f2.innerHTML = '';
+
+            Object.keys(fishDatabase).forEach(key => {
+                const item = fishDatabase[key];
+                f1.innerHTML += `<option value="${key}">${item.icon} ${item.name}</option>`;
+                f2.innerHTML += `<option value="${key}">${item.icon} ${item.name}</option>`;
+            });
+
+            f1.value = "neon";
+            f2.value = "cherry";
+            checkCompatibility();
         }
-      }
 
-      ctx.rotate(currentAngle);
-      let netR = penSize * 10 + 15;
+        function checkCompatibility() {
+            const k1 = document.getElementById('fish1').value;
+            const k2 = document.getElementById('fish2').value;
 
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(45, -45);
-      ctx.stroke();
+            const info1 = fishDatabase[k1];
+            const info2 = fishDatabase[k2];
 
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, netR, netR * 0.65, 0, 0, Math.PI * 2);
-      ctx.stroke();
+            document.getElementById('fish1-info').innerHTML = `적정수온: ${info1.temp} | 성체크기: ${info1.size}<br>성향: ${info1.aggression}`;
+            document.getElementById('fish2-info').innerHTML = `적정수온: ${info2.temp} | 성체크기: ${info2.size}<br>성향: ${info2.aggression}`;
 
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      for (let i = -netR + 4; i < netR; i += 6) {
-        let h = Math.sqrt(Math.max(0, netR*netR - i*i)) * 0.65;
-        ctx.moveTo(i, -h); ctx.lineTo(i, h);
-      }
-      for (let j = -netR * 0.65 + 4; j < netR * 0.65; j += 5) {
-        let w = Math.sqrt(Math.max(0, (netR*netR)*(1 - (j*j)/(netR*0.65*netR*0.65))));
-        ctx.moveTo(-w, j); ctx.lineTo(w, j);
-      }
-      ctx.stroke();
+            const resultBox = document.getElementById('compatibility-result');
 
-      let totalCaptured = netInventory.creatures.length + netInventory.foods.length;
-      if (totalCaptured > 0) {
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(0, -netR * 0.65 - 8, 9, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(totalCaptured, 0, -netR * 0.65 - 7);
-      }
-
-      ctx.restore();
-    }
-
-    function updateNetBadge() {
-      let count = netInventory.creatures.length + netInventory.foods.length;
-      netBadge.innerText = `담김: ${count}`;
-    }
-
-    function emptyNetToTrash() {
-      let count = netInventory.creatures.length + netInventory.foods.length;
-      if (count === 0) {
-        bannerText.innerText = '뜰채가 비어 있습니다.';
-        return;
-      }
-
-      netInventory.creatures = [];
-      netInventory.foods = [];
-      updateNetBadge();
-
-      bannerText.innerText = `뜰채의 개체 ${count}개를 쓰레기통에 비웠습니다.`;
-    }
-
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      netCursor.x = e.clientX - rect.left;
-      netCursor.y = e.clientY - rect.top;
-
-      if (isMouseDown) handleMouseAction(e);
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-      netCursor.x = -100;
-      netCursor.y = -100;
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-      isMouseDown = true;
-      handleMouseAction(e);
-    });
-
-    window.addEventListener('mouseup', () => {
-      isMouseDown = false;
-      draggedCreature = null;
-    });
-
-    function handleMouseAction(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      let gx = Math.floor(mx / PIXEL_SIZE);
-      let gy = Math.floor(my / PIXEL_SIZE);
-
-      if (interactionMode === 'select') {
-        let found = false;
-        for (let c of creatures) {
-          if (Math.hypot(c.x - mx, c.y - my) < c.size + 10) {
-            selectedCreature = c;
-            showCreatureInfo(c);
-            found = true;
-            break;
-          }
-        }
-        if (!found) { selectedCreature = null; infoCard.style.display = 'none'; }
-
-      } else if (interactionMode === 'net') {
-        netCursor.isScooping = true;
-        netCursor.scoopProgress = 0;
-
-        let netRadius = penSize * 10 + 15;
-
-        for (let i = creatures.length - 1; i >= 0; i--) {
-          if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < netRadius) {
-            let removed = creatures.splice(i, 1)[0];
-            netInventory.creatures.push(removed);
-          }
-        }
-        for (let i = foods.length - 1; i >= 0; i--) {
-          if (Math.hypot(foods[i].x - mx, foods[i].y - my) < netRadius) {
-            let removed = foods.splice(i, 1)[0];
-            netInventory.foods.push(removed);
-          }
-        }
-        for (let i = plants.length - 1; i >= 0; i--) {
-          if (Math.hypot(plants[i].x - mx, plants[i].y - my) < netRadius) {
-            plants.splice(i, 1);
-          }
-        }
-        let pRadius = Math.floor(netRadius / PIXEL_SIZE);
-        for (let dy = -pRadius; dy <= pRadius; dy++) {
-          for (let dx = -pRadius; dx <= pRadius; dx++) {
-            if (Math.hypot(dx, dy) <= pRadius) {
-              setPixel(gx + dx, gy + dy, null);
+            if (k1 === k2) {
+                resultBox.className = "mt-6 p-6 rounded-xl bg-slate-900/90 border border-teal-500/30 text-center";
+                resultBox.innerHTML = `<div class="text-teal-300 font-bold text-lg">동종 합사</div><p class="text-xs text-slate-400 mt-1">같은 종끼리는 수용량만 넘지 않는다면 문제없이 무리 생활이 가능합니다.</p>`;
+                return;
             }
-          }
+
+            const ruleKey1 = `${k1}-${k2}`;
+            const ruleKey2 = `${k2}-${k1}`;
+            const match = compatibilityRules[ruleKey1] || compatibilityRules[ruleKey2];
+
+            if (match) {
+                resultBox.className = `mt-6 p-6 rounded-xl border ${match.bg} text-center`;
+                resultBox.innerHTML = `
+                    <div class="text-xs text-slate-400 font-mono">합사 진단 결과</div>
+                    <div class="text-2xl font-bold ${match.color} mt-1">${match.score}</div>
+                    <p class="text-xs sm:text-sm text-slate-200 mt-2 max-w-xl mx-auto leading-relaxed">${match.text}</p>
+                `;
+            } else {
+                resultBox.className = "mt-6 p-6 rounded-xl bg-slate-900/90 border border-slate-700 text-center";
+                resultBox.innerHTML = `
+                    <div class="text-teal-300 font-bold text-base">일반적인 합사 가능 (관찰 필요)</div>
+                    <p class="text-xs text-slate-400 mt-1">특별한 극상성 보고는 없으나, 수온 range와 생물 크기 차이를 고려하여 초기에 공격성을 유심히 관찰하세요.</p>
+                `;
+            }
         }
 
-        updateNetBadge();
 
-      } else if (interactionMode === 'eraser') {
-        for (let dy = -penSize; dy <= penSize; dy++) {
-          for (let dx = -penSize; dx <= penSize; dx++) {
-            setPixel(gx + dx, gy + dy, null);
-          }
-        }
-        for (let i = foods.length - 1; i >= 0; i--) {
-          if (Math.hypot(foods[i].x - mx, foods[i].y - my) < penSize * 4) foods.splice(i, 1);
-        }
-        for (let i = creatures.length - 1; i >= 0; i--) {
-          if (Math.hypot(creatures[i].x - mx, creatures[i].y - my) < creatures[i].size) creatures.splice(i, 1);
-        }
+        /* ================= 5. WATER VOLUME CALCULATOR ================= */
+        function calculateWaterVolume() {
+            const w = parseFloat(document.getElementById('tank-w').value) || 0;
+            const d = parseFloat(document.getElementById('tank-d').value) || 0;
+            const h = parseFloat(document.getElementById('tank-h').value) || 0;
+            const subH = parseFloat(document.getElementById('substrate-h').value) || 0;
 
-      } else if (interactionMode === 'drag') {
-        if (!draggedCreature) {
-          for (let c of creatures) {
-            if (Math.hypot(c.x - mx, c.y - my) < c.size + 10) { draggedCreature = c; break; }
-          }
-        } else {
-          draggedCreature.x = mx; draggedCreature.y = my;
+            // Net water height = total height - substrate height - top glass gap (approx 3cm)
+            const netH = Math.max(0, h - subH - 3);
+            const volumeLiters = (w * d * netH) / 1000;
+
+            // Approx rule: ~1.5 Liters per 3cm small fish
+            const recommendedFish = Math.floor(volumeLiters / 1.5);
+            const weeklyWaterChange = (volumeLiters * 0.3).toFixed(1);
+
+            document.getElementById('res-volume').innerText = `${volumeLiters.toFixed(1)} L`;
+            document.getElementById('res-fish').innerText = `${recommendedFish} 마리`;
+            document.getElementById('res-waterchange').innerText = `${weeklyWaterChange} L`;
         }
 
-      } else if (interactionMode.startsWith('powder-')) {
-        let type = interactionMode.replace('powder-', '');
 
-        for (let dy = -penSize + 1; dy < penSize; dy++) {
-          for (let dx = -penSize + 1; dx < penSize; dx++) {
-            let targetGx = gx + dx;
-            let targetGy = gy + dy;
+        /* ================= 6. CHECKLIST DIAGNOSTIC LOGIC ================= */
+        function diagnoseChecklist() {
+            const cloudy = document.getElementById('chk-cloudy').checked;
+            const foam = document.getElementById('chk-foam').checked;
+            const gasping = document.getElementById('chk-gasping').checked;
+            const algae = document.getElementById('chk-algae').checked;
 
-            if (type === 'sand') setPixel(targetGx, targetGy, { color: '#fde047', falling: true, isSubstrate: true });
-            else if (type === 'gravel') setPixel(targetGx, targetGy, { color: '#d97706', falling: true, isSubstrate: true });
-            else if (type === 'stone') setPixel(targetGx, targetGy, { color: '#94a3b8', falling: false, isSubstrate: false });
-            else if (type === 'wood') setPixel(targetGx, targetGy, { color: '#78350f', falling: false, isSubstrate: false });
-          }
+            const box = document.getElementById('checklist-diagnosis');
+
+            if (!cloudy && !foam && !gasping && !algae) {
+                box.innerHTML = `<span class="text-slate-400">증상을 선택하시면 어항선배의 맞춤 처방법이 표시됩니다.</span>`;
+                return;
+            }
+
+            let advice = [];
+
+            if (cloudy) {
+                advice.push(`• <b>백탁 현상:</b> 신규 어항의 경우 유익균 박테리아의 폭번 과정입니다. 며칠간 사료 투여를 줄이고 여과기를 끄지 마세요. 박테리아제 보충이 도움 됩니다.`);
+            }
+            if (foam) {
+                advice.push(`• <b>수면 거품:</b> 유기물(단백질) 농도가 높거나 여과력이 부족할 때 발생합니다. 즉시 20% 환수 후 에어레이션(기포기)을 강화하세요.`);
+            }
+            if (gasping) {
+                advice.push(`• <b>뻐끔거림 (용존산소 부족/아질산 중독):</b> 긴급 상황입니다! 즉시 환수를 실시하고 기포기를 켜 산소를 공급하세요.`);
+            }
+            if (algae) {
+                advice.push(`• <b>이끼 발생:</b> 조명 시간을 하루 6시간 이하로 줄이고 직사광선을 차단하세요. 체리새우나 오토싱, 안시를 투입하면 효과적입니다.`);
+            }
+
+            box.innerHTML = `<div class="space-y-2 text-teal-200">${advice.join('<br><br>')}</div>`;
         }
 
-        if (type === 'seed' && Math.random() < 0.15) {
-          let groundY = getSubstrateTopY(mx);
-          plants.push(new NaturalPlant(mx, groundY));
-        } else if (type === 'food' && Math.random() < 0.3) {
-          foods.push(new Food(mx + random(-4, 4), my));
-        }
-      }
-    }
 
-    function showCreatureInfo(c) {
-      infoCard.style.display = 'block';
-      infoName.innerText = c.name;
-      infoType.innerText = c.type === 'shrimp' ? '갑각류' : (c.type === 'turtle' ? '파충류' : '열대어');
-
-      let moodText = '행복함 😄';
-      if (c.hunger < 30) moodText = '배고픔 😫';
-      else if (temperature < 18 || temperature > 30) moodText = '스트레스 😰';
-      infoMood.innerText = moodText;
-
-      infoHunger.innerText = `${Math.round(c.hunger)}%`;
-
-      let tempText = '적정 (24°C)';
-      if (temperature < 20) tempText = '저온 ❄️';
-      else if (temperature > 28) tempText = '고온 ☀️';
-      infoTempStatus.innerText = tempText;
-    }
-
-    function updatePenSize(val) {
-      penSize = parseInt(val);
-      document.getElementById('pen-size-val').innerText = val + ' px';
-    }
-
-    function addCreature(type) { creatures.push(new Creature(type)); }
-
-    function setInteractionMode(mode) {
-      interactionMode = mode;
-      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-      const activeBtn = document.getElementById(`mode-${mode}`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      if (mode === 'net') {
-        canvas.classList.add('net-active');
-        bannerText.innerText = '만능 뜰채: 클릭/드래그하여 생물을 수집한 후 쓰레기통을 클릭하세요.';
-      } else {
-        canvas.classList.remove('net-active');
-      }
-
-      if (mode !== 'select') {
-        selectedCreature = null;
-        infoCard.style.display = 'none';
-      }
-
-      if (mode === 'select') bannerText.innerText = '개체 선택펜: 생물을 클릭해 상태창을 확인하세요.';
-      else if (mode === 'eraser') bannerText.innerText = '픽셀 삭제펜: 지정 영역을 클릭하여 삭제합니다.';
-      else if (mode === 'drag') bannerText.innerText = '개체 이동펜: 생물을 마우스로 드래그하여 이동시킵니다.';
-      else if (mode === 'powder-stone') bannerText.innerText = '고정 암석: 중력의 영향을 받지 않는 구조물을 배치합니다.';
-      else if (mode === 'powder-wood') bannerText.innerText = '고정 유목: 생물이 자유롭게 지나가는 유목을 생성합니다.';
-      else if (mode === 'powder-seed') bannerText.innerText = '수초 씨앗: 실시간으로 성장하는 풍성한 수초를 심습니다.';
-      else if (mode.startsWith('powder-')) bannerText.innerText = '파우더 원소: 흐르는 샌드 입자로 수조 바닥을 채웁니다.';
-    }
-
-    function toggleEquipment(item) {
-      equipState[item] = !equipState[item];
-      const btn = document.getElementById(`eq-${item}`);
-      btn.classList.toggle('active', equipState[item]);
-      const nameMap = { thermometer: '온도계', airstone: '산소 기포기', filter: '여과기', heater: '히터' };
-      btn.innerHTML = `<i class="fa-solid fa-plug"></i> ${nameMap[item]} (${equipState[item] ? 'ON' : 'OFF'})`;
-    }
-
-    function updateTemperature(val) {
-      temperature = parseInt(val);
-      document.getElementById('temp-val').innerText = val + '°C';
-      document.getElementById('disp-temp').innerText = val + '°C';
-      if (selectedCreature) showCreatureInfo(selectedCreature);
-    }
-
-    function updateLightColor(hex) {
-      customLightColor = hex;
-      tankFrame.style.background = `radial-gradient(circle at center, ${customLightColor} 0%, #030712 100%)`;
-    }
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      document.getElementById(tabId).classList.add('active');
-    }
-
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
-    function cleanFood() { foods = []; waterQuality = 100; }
-    function resetTank() {
-      creatures = []; foods = []; bubbles = []; plants = [];
-      pixelGrid = new Array(gridCols * gridRows).fill(null);
-      netInventory = { creatures: [], foods: [] };
-      updateNetBadge();
-      selectedCreature = null; infoCard.style.display = 'none';
-    }
-
-    function takeSnapshot() {
-      const img = canvas.toDataURL('image/png');
-      const a = document.createElement('a'); a.href = img; a.download = 'sandbox_aquarium.png'; a.click();
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      /* 1. Falling Sand 파우더 입자 물리 업데이트 */
-      updatePixelPhysics();
-
-      for (let gy = 0; gy < gridRows; gy++) {
-        for (let gx = 0; gx < gridCols; gx++) {
-          let cell = getPixel(gx, gy);
-          if (cell && typeof cell === 'object') {
-            ctx.fillStyle = cell.color;
-            ctx.fillRect(gx * PIXEL_SIZE, gy * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-          }
-        }
-      }
-
-      /* 2. 자연 수초 */
-      for (let plant of plants) {
-        plant.update();
-        plant.draw();
-      }
-
-      /* 3. 기포기 bubble 및 먹이 */
-      if (equipState.airstone) {
-        let airX = canvas.width * 0.5;
-        if (Math.random() < 0.5) bubbles.push(new Bubble(airX + random(-10, 10), canvas.height - 20, random(2, 4), random(1.5, 2.5)));
-      }
-
-      for (let i = bubbles.length - 1; i >= 0; i--) {
-        bubbles[i].update(); bubbles[i].draw();
-        if (bubbles[i].y < 0) bubbles.splice(i, 1);
-      }
-      for (let f of foods) { f.update(); f.draw(); }
-
-      /* 4. 생물 렌더링 */
-      for (let c of creatures) {
-        c.update();
-        c.draw();
-      }
-
-      /* 5. 뜰채 커서 */
-      drawFishNetCursor();
-
-      document.getElementById('disp-count').innerText = creatures.length;
-      document.getElementById('disp-water').innerText = `${Math.round(waterQuality)}%`;
-
-      requestAnimationFrame(animate);
-    }
-
-    animate();
-  </script>
+        /* ================= 7. INITIALIZATION ================= */
+        window.onload = function() {
+            createBubbles();
+            initCompatibility();
+            calculateWaterVolume();
+        };
+    </script>
 </body>
 </html>
-"""
-
-components.html(html_code, height=780, scrolling=False)
