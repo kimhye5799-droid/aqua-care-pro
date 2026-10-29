@@ -65,8 +65,8 @@ html_code = r"""
   </div>
 
   <div class="box-card">
-    <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">4 px</span></div>
-    <input type="range" id="brush-size" min="1" max="10" value="4" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
+    <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">3 px</span></div>
+    <input type="range" id="brush-size" min="1" max="8" value="3" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
   </div>
 
   <div id="sec-powder">
@@ -158,7 +158,7 @@ html_code = r"""
     <span style="font-size:24px;">🥅🗑️</span>
     <span>뜰채 생물<br>버리기/방생</span>
   </div>
-  <button class="act-btn" style="background:#0284c7; height:50px;" onclick="addRandomCreature()">🐠 랜던 풀어주기</button>
+  <button class="act-btn" style="background:#0284c7; height:50px;" onclick="addRandomCreature()">🐠 랜덤 키우기</button>
 </div>
 
 <script>
@@ -174,7 +174,7 @@ let poopTypeGrid = Array.from({length: HEIGHT}, () => new Uint8Array(WIDTH));
 
 let tankEnv = 'FRESH';
 let currentTool = 'NET';
-let brushSize = 4;
+let brushSize = 3;
 let lightOn = true;
 
 let equipPos = {
@@ -196,7 +196,7 @@ const SPECIES_DATA = {
   SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 9, poopType: 2 },
   DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3 },
   ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1 },
-  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 26, poopType: 3 },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3 },
   
   CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1 },
   BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1 },
@@ -204,7 +204,7 @@ const SPECIES_DATA = {
   PUFFER: { name: '복어', env: 'SALT', color: '#facc15', bellyColor: '#ffffff', size: 16, poopType: 3 },
   YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1 },
   QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3 },
-  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 34, poopType: 3 }
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3 }
 };
 
 function toggleLight() {
@@ -287,20 +287,21 @@ class Creature {
   }
 
   update() {
-    this.animFrame += 0.15;
-
+    // 서식지 환경 불일치 시 체력 감소
     if (this.info.env !== tankEnv) {
-      this.health -= 0.12;
+      this.health -= 0.15;
     }
 
     if (this.health <= 0) {
       this.isDead = true;
       this.vx = 0;
       if (this.y > 15) {
-        this.y -= 0.6; 
+        this.y -= 0.5; // 죽으면 배를 위로 하고 천천히 수면 위로 떠오름
       }
-      return;
+      return; // 사망 시 애니메이션 및 이동 정지
     }
+
+    this.animFrame += 0.15;
 
     this.fullness -= 0.004;
     if (this.fullness < 0) this.fullness = 0;
@@ -367,52 +368,62 @@ class Creature {
     let sx = this.x * SCALE;
     let sy = this.y * SCALE;
     let dir = this.vx >= 0 ? 1 : -1;
-    let wiggle = Math.sin(this.animFrame) * 3;
+    // 죽었으면 꼬리 애니메이션 파동 정지 (0)
+    let wiggle = this.isDead ? 0 : Math.sin(this.animFrame) * 3;
     let s = this.info.size;
 
     ctx.save();
     ctx.translate(sx, sy);
 
+    // 죽었을 경우 180도 뒤집힘 (배면 부상)
     if (this.isDead) {
       ctx.rotate(Math.PI);
     }
 
+    // 색상 지정 (죽으면 회색 빛)
+    let bodyColor = this.isDead ? '#94a3b8' : this.info.color;
+    let tailColor = this.isDead ? '#64748b' : (this.info.tailColor || this.info.color);
+    let stripeColor = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+
     if (this.type === 'TURTLE_SEMI') {
-      ctx.fillStyle = '#78350f';
+      ctx.fillStyle = this.isDead ? '#475569' : '#78350f';
       ctx.fillRect(-s/2, -s/3, s, s*0.7);
-      ctx.fillStyle = '#16a34a';
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(dir * (s/2), -s/6, s/3, s/3);
+      if(!this.isDead) {
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(dir * (s/1.8), -s/10, 2, 2); // 뺨 볼터치
+      }
     } 
     else if (this.type === 'TURTLE_SEA') {
-      ctx.fillStyle = '#0f766e';
+      ctx.fillStyle = this.isDead ? '#334155' : '#0f766e';
       ctx.fillRect(-s/2, -s/3, s, s*0.65);
-      ctx.fillStyle = '#0d9488';
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(dir * (s/2), -s/8, s/3, s/3);
     }
     else if (this.type === 'BETTA') {
-      ctx.fillStyle = this.info.color;
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
-      ctx.fillStyle = this.info.tailColor;
+      ctx.fillStyle = tailColor;
       ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2);
     }
     else if (this.type === 'SEAHORSE') {
-      ctx.fillStyle = this.info.color;
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/3, -s/2, s*0.6, s);
       ctx.fillRect(-s/2, s/3, s*0.5, s*0.4);
     }
     else {
-      ctx.fillStyle = this.info.color;
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s, s*0.6);
 
-      if (this.info.stripeColor) {
-        ctx.fillStyle = this.info.stripeColor;
+      if (stripeColor) {
+        ctx.fillStyle = stripeColor;
         ctx.fillRect(-s/6, -s/3, 3, s*0.6);
       }
 
       ctx.fillStyle = '#ffffff'; ctx.fillRect(dir * (s/3), -s/5, 3, 3);
       ctx.fillStyle = '#000000'; ctx.fillRect(dir * (s/3) + (dir > 0 ? 1 : 0), -s/5 + 1, 1, 1);
 
-      ctx.fillStyle = this.info.tailColor || this.info.color;
+      ctx.fillStyle = tailColor;
       ctx.beginPath();
       ctx.moveTo(-dir * (s/2), 0);
       ctx.lineTo(-dir * (s * 0.9), -s/3 + wiggle);
@@ -466,7 +477,7 @@ canvas.addEventListener('mousedown', e => {
       document.getElementById('info-name').innerText = selectedCreature.info.name;
       document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
       document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
-      document.getElementById('info-poop').innerText = selectedCreature.digestTimer > 200 ? '배변 임박' : '양호';
+      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 200 ? '배변 임박' : '양호');
     } else {
       infoBox.style.display = 'none';
     }
@@ -518,6 +529,7 @@ function handleInput(e) {
     return;
   }
 
+  // 씨앗 및 브러시 도구 작동 (씨앗 크기 소형화)
   for (let dy = -brushSize; dy <= brushSize; dy++) {
     for (let dx = -brushSize; dx <= brushSize; dx++) {
       let nx = mx + dx;
@@ -528,7 +540,7 @@ function handleInput(e) {
         else if (currentTool === 'ROCK') grid[ny][nx] = 3;
         else if (currentTool === 'WOOD') grid[ny][nx] = 4;
         else if (currentTool === 'SEED') {
-          // 빈 공간이거나 모래/소일/암석/유목 위에 씨앗(5) 바로 투척
+          // 수초 씨앗(5)을 점 형태로 아주 작게 배치
           if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
             grid[ny][nx] = 5;
           }
@@ -574,19 +586,17 @@ function updatePhysics() {
         }
       }
 
-      // 수초 씨앗(5) 발아 엔진 수정완료
+      // 수초 씨앗(5) 발아 (작은 알갱이 발아)
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
-        // 바닥재(모래, 소일, 바위, 유목) 또는 이미 자란 수초 위에 있으면 확실히 발아
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
-          if (Math.random() < 0.1) {
-            grid[y][x] = 6; // 수초로 변환
-            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.8) {
-              grid[y - 1][x] = 5; // 위로 줄기 연쇄 성장
+          if (Math.random() < 0.08) {
+            grid[y][x] = 6;
+            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.7) {
+              grid[y - 1][x] = 5;
             }
           }
         } else if (under === 0) {
-          // 공중에 떠있는 씨앗은 아래로 살짝 낙하시킴
           grid[y + 1][x] = 5;
           grid[y][x] = 0;
         }
@@ -638,8 +648,8 @@ function loop() {
       else if (t === 2) ctx.fillStyle = '#57534e';
       else if (t === 3) ctx.fillStyle = '#475569';
       else if (t === 4) ctx.fillStyle = '#78350f';
-      else if (t === 5) ctx.fillStyle = '#86efac'; // 수초 씨앗 색상
-      else if (t === 6) ctx.fillStyle = '#16a34a'; // 자란 수초 색상
+      else if (t === 5) ctx.fillStyle = '#86efac'; // 초소형 씨앗 입자
+      else if (t === 6) ctx.fillStyle = '#16a34a'; // 자란 수초
       else if (t === 7) ctx.fillStyle = '#facc15'; // 부유식 먹이
       else if (t === 8) {
         let pt = poopTypeGrid[y][x];
