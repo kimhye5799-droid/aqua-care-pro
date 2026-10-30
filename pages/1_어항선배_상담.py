@@ -86,7 +86,7 @@ html_code = r"""
   </div>
 
   <div id="sec-creature" style="display:none;">
-    <div class="panel-title">🐟 귀여운 어종 (총 16종)</div>
+    <div class="panel-title">🐟 어종 및 생물 (총 16종)</div>
     <div class="tool-grid">
       <button class="tool-btn" onclick="setTool('SHRIMP', this)">🦐 체리새우(담수)</button>
       <button class="tool-btn" onclick="setTool('GUPPY', this)">🐟 구피 (담수)</button>
@@ -189,22 +189,22 @@ let selectedCreature = null;
 let draggedCreature = null;
 
 const SPECIES_DATA = {
-  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2 },
-  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1 },
-  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2 },
-  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1 },
-  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 10, poopType: 2 }, // 달팽이 속성
-  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3 },
-  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1 },
-  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3 },
+  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2, shape: 'shrimp' },
+  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1, shape: 'fish' },
+  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2, shape: 'fish' },
+  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1, shape: 'betta' },
+  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 11, poopType: 2, shape: 'snail' },
+  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3, shape: 'roundfish' },
+  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1, shape: 'angelfish' },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3, shape: 'turtle' },
   
-  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1 },
-  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1 },
-  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1 },
-  PUFFER: { name: '복어', env: 'SALT', color: '#facc15', bellyColor: '#ffffff', size: 16, poopType: 3 },
-  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1 },
-  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3 },
-  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3 }
+  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1, shape: 'fish' },
+  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1, shape: 'roundfish' },
+  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1, shape: 'seahorse' },
+  PUFFER: { name: '복어', env: 'SALT', color: '#facc15', bellyColor: '#ffffff', size: 16, poopType: 3, shape: 'puffer' },
+  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1, shape: 'roundfish' },
+  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3, shape: 'angelfish' },
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3, shape: 'seaturtle' }
 };
 
 function toggleLight() {
@@ -277,8 +277,9 @@ class Creature {
     this.info = SPECIES_DATA[type];
     this.x = x;
     this.y = y;
-    this.vx = (Math.random() - 0.5) * (type === 'SNAIL' ? 0.4 : 1.0); // 달팽이는 느림
-    this.vy = (Math.random() - 0.5) * (type === 'SNAIL' ? 0.2 : 0.6);
+    let speed = this.info.shape === 'snail' ? 0.3 : 1.0;
+    this.vx = (Math.random() - 0.5) * speed;
+    this.vy = (Math.random() - 0.5) * (speed * 0.6);
     this.fullness = 70;
     this.health = 100;
     this.digestTimer = 0;
@@ -313,7 +314,7 @@ class Creature {
       }
     }
 
-    if (this.type !== 'SNAIL' && this.fullness < 95) {
+    if (this.info.shape !== 'snail' && this.fullness < 95) {
       this.findAndEatFood();
     }
 
@@ -324,10 +325,10 @@ class Creature {
     if (this.y < 25 || this.y > HEIGHT - 35) this.vy *= -1;
 
     if (Math.random() < 0.02) {
-      let speedMult = this.type === 'SNAIL' ? 0.4 : 0.5;
-      this.vx += (Math.random() - 0.5) * speedMult;
-      this.vy += (Math.random() - 0.5) * speedMult;
-      this.vx = Math.max(-1.0, Math.min(1.0, this.vx));
+      let m = this.info.shape === 'snail' ? 0.3 : 0.5;
+      this.vx += (Math.random() - 0.5) * m;
+      this.vy += (Math.random() - 0.5) * m;
+      this.vx = Math.max(-1.2, Math.min(1.2, this.vx));
       this.vy = Math.max(-0.6, Math.min(0.6, this.vy));
     }
   }
@@ -379,39 +380,62 @@ class Creature {
 
     let bodyColor = this.isDead ? '#94a3b8' : this.info.color;
     let tailColor = this.isDead ? '#64748b' : (this.info.tailColor || this.info.color);
+    let shape = this.info.shape;
 
-    // 애플스네일(달팽이) 전용 픽셀 디자인 렌더링
-    if (this.type === 'SNAIL') {
-      ctx.fillStyle = this.isDead ? '#64748b' : '#ca8a04';
-      ctx.fillRect(-s/2, -s/2, s*0.9, s*0.8); // 소라 껍질 모양
+    // 1. 애플스네일 (달팽이 전용 모양)
+    if (shape === 'snail') {
+      ctx.fillStyle = this.isDead ? '#64748b' : '#eab308';
+      ctx.beginPath();
+      ctx.arc(0, -s/4, s/2, 0, Math.PI * 2);
+      ctx.fill(); // 둥근 소라 껍질
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-s/3, s/4, s*0.8, s*0.4); // 발판 몸체
-      // 더듬이
-      ctx.fillRect(dir * (s/3), -s/4, 2, 4);
-    } 
-    else if (this.type === 'TURTLE_SEMI') {
-      ctx.fillStyle = this.isDead ? '#475569' : '#78350f';
-      ctx.fillRect(-s/2, -s/3, s, s*0.7);
+      ctx.fillRect(-s/2, 0, s*0.9, s*0.35); // 기어가는 발판 몸체
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3);
-    } 
-    else if (this.type === 'TURTLE_SEA') {
-      ctx.fillStyle = this.isDead ? '#334155' : '#0f766e';
-      ctx.fillRect(-s/2, -s/3, s, s*0.65);
-      ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/2), -s/8, s/3, s/3);
+      ctx.fillRect(dir * (s/3), -s/2, 2, 6); // 더듬이
     }
-    else if (this.type === 'BETTA') {
+    // 2. 체리새우
+    else if (shape === 'shrimp') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/4, s*0.8, s*0.5);
+      ctx.fillRect(-s/3, s/4, s*0.4, s*0.3);
+    }
+    // 3. 반수생/바다 거북이
+    else if (shape === 'turtle' || shape === 'seaturtle') {
+      ctx.fillStyle = this.isDead ? '#475569' : (this.info.shellColor || '#78350f');
+      ctx.fillRect(-s/2, -s/3, s, s*0.7); // 등껍질
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3); // 머리
+    }
+    // 4. 베타
+    else if (shape === 'betta') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
       ctx.fillStyle = tailColor;
-      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2);
+      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2); // 화려한 지느러미
     }
-    else if (this.type === 'SEAHORSE') {
+    // 5. 해마
+    else if (shape === 'seahorse') {
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-s/3, -s/2, s*0.6, s);
-      ctx.fillRect(-s/2, s/3, s*0.5, s*0.4);
+      ctx.fillRect(-s/3, -s/2, s*0.5, s);
+      ctx.fillRect(-s/2, s/3, s*0.4, s*0.4); // 말린 꼬리
     }
+    // 6. 복어 (동글동글한 형태)
+    else if (shape === 'puffer') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, s/2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // 7. 엔젤피쉬 / 디스커스 (체고가 높은 열대어)
+    else if (shape === 'angelfish' || shape === 'roundfish') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/2, s*0.8, s);
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-s/6, -s/2, 3, s);
+      }
+    }
+    // 8. 일반 물고기류
     else {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s, s*0.6);
