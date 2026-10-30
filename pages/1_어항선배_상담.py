@@ -1,166 +1,678 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-# 페이지 기본 설정
-st.set_page_config(
-    page_title="어항선배 AI 상담소 (50대 Q&A)",
-    page_icon="🐠",
-    layout="wide"
-)
+st.set_page_config(page_title="픽셀 파우더 어항 Sandbox", layout="wide")
 
-# 어항선배 PRO v2.0 헤더
-st.markdown("### 🐠 어항선배 <span style='background-color:#0284c7; color:white; padding:2px 8px; border-radius:6px; font-size:12px;'>PRO v2.0</span>", unsafe_allow_html=True)
-st.caption("초보 물집사를 위한 물생활 백과사전 (총 50선 큐레이션 Q&A)")
+html_code = r"""
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body { background-color: #060c18; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  
+  #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; }
+  .panel-title { font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  
+  .mode-btn-group { display: flex; gap: 4px; }
+  .mode-btn { flex: 1; padding: 8px 4px; background-color: #182642; border: 1px solid #24385e; color: #94a3b8; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
+  .mode-btn.active { background-color: #0284c7; color: #ffffff; border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+  
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .tool-btn { padding: 7px 6px; background-color: #182642; border: 1px solid #24385e; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: left; display: flex; align-items: center; gap: 4px; }
+  .tool-btn.active { border-color: #38bdf8; background-color: #1e3a8a; color: #38bdf8; font-weight: bold; box-shadow: 0 0 6px rgba(56,189,248,0.3); }
+  
+  .box-card { background: #182642; padding: 8px; border-radius: 6px; border: 1px solid #24385e; display: flex; flex-direction: column; gap: 5px; }
+  .slider-label { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
+  input[type="range"], input[type="color"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
+  input[type="color"] { height: 24px; border: none; background: transparent; }
 
-# 상단 기능 탭
-tab1, tab2, tab3, tab4 = st.tabs(["💬 어항선배 50선 Q&A", "🔄 어종 합사 진단기", "📐 물용량 & 환수 계산기", "📅 30일 물잡이 스케줄"])
+  #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
+  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; }
+  
+  #status-bar { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+  
+  #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
-with tab1:
-    st.info('하… 직접 타이핑하면서 엉뚱한 소리 하지 말고, 아래 카테고리별 초보 필수 질문 50선 중에서 골라서 눌러봐. 다 팩트로 조져줄 테니까.')
+  #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; }
+  .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
+  .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
+  
+  .act-btn { padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; width: 100%; }
+  .btn-reset { background: #ef4444; }
+  .btn-clean { background: #0284c7; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div>
+    <div class="panel-title">🌊 서식 환경 (담수 / 해수)</div>
+    <div class="mode-btn-group">
+      <button class="mode-btn active" id="btn-fresh" onclick="setTankEnv('FRESH')">🌿 담수 어항</button>
+      <button class="mode-btn" id="btn-salt" onclick="setTankEnv('SALT')">🪸 해수 어항</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel-title">🛠️ 도구 모드</div>
+    <div class="mode-btn-group">
+      <button class="mode-btn active" id="tab-powder" onclick="setCategory('POWDER')">파우더</button>
+      <button class="mode-btn" id="tab-creature" onclick="setCategory('CREATURE')">생물</button>
+      <button class="mode-btn" id="tab-equip" onclick="setCategory('EQUIP')">장비</button>
+    </div>
+  </div>
+
+  <div class="box-card">
+    <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">3 px</span></div>
+    <input type="range" id="brush-size" min="1" max="8" value="3" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
+  </div>
+
+  <div id="sec-powder">
+    <div class="panel-title">🧪 펜 도구 & 바닥재</div>
+    <div class="tool-grid">
+      <button class="tool-btn active" onclick="setTool('NET', this)">🥅 만능 뜰채</button>
+      <button class="tool-btn" onclick="setTool('SELECT', this)">🔍 개체 선택펜</button>
+      <button class="tool-btn" onclick="setTool('MOVE', this)">✋ 개체 이동펜</button>
+      <button class="tool-btn" onclick="setTool('ERASER_ALL', this)">🧹 만능 지우개</button>
+      <button class="tool-btn" onclick="setTool('SAND', this)">🟨 금사 모래</button>
+      <button class="tool-btn" onclick="setTool('SOIL', this)">🤎 영양 소일</button>
+      <button class="tool-btn" onclick="setTool('ROCK', this)">🪨 고정 암석</button>
+      <button class="tool-btn" onclick="setTool('WOOD', this)">🪵 고정 유목</button>
+      <button class="tool-btn" onclick="setTool('SEED', this)">🌱 수초 씨앗</button>
+      <button class="tool-btn" onclick="setTool('FOOD', this)">🟡 부유 먹이</button>
+    </div>
+  </div>
+
+  <div id="sec-creature" style="display:none;">
+    <div class="panel-title">🐟 귀여운 어종 (총 16종)</div>
+    <div class="tool-grid">
+      <button class="tool-btn" onclick="setTool('SHRIMP', this)">🦐 체리새우(담수)</button>
+      <button class="tool-btn" onclick="setTool('GUPPY', this)">🐟 구피 (담수)</button>
+      <button class="tool-btn" onclick="setTool('TETRA', this)">💙 네온테트라(담수)</button>
+      <button class="tool-btn" onclick="setTool('BETTA', this)">👑 베타 (담수)</button>
+      <button class="tool-btn" onclick="setTool('SNAIL', this)">🐌 애플스네일(담수)</button>
+      <button class="tool-btn" onclick="setTool('DISCUS', this)">🔴 디스커스(담수)</button>
+      <button class="tool-btn" onclick="setTool('ANGEL', this)">🤍 엔젤피쉬(담수)</button>
+      <button class="tool-btn" onclick="setTool('TURTLE_SEMI', this)">🐢 반수생거북(담수)</button>
+      
+      <button class="tool-btn" onclick="setTool('CLOWN', this)">🧡 크라운피쉬(해수)</button>
+      <button class="tool-btn" onclick="setTool('BLUETANG', this)">💙 블루탱(해수)</button>
+      <button class="tool-btn" onclick="setTool('SEAHORSE', this)">✨ 해마 (해수)</button>
+      <button class="tool-btn" onclick="setTool('PUFFER', this)">🐡 복어 (해수)</button>
+      <button class="tool-btn" onclick="setTool('YELLOWTANG', this)">💛 옐로우탱(해수)</button>
+      <button class="tool-btn" onclick="setTool('QUEENANGEL', this)">👑 퀸엔젤(해수)</button>
+      <button class="tool-btn" onclick="setTool('TURTLE_SEA', this)">🐢 바다거북(해수)</button>
+    </div>
+  </div>
+
+  <div id="sec-equip" style="display:none;">
+    <div class="panel-title">🫧 어항 장비 설치</div>
+    <div class="tool-grid">
+      <button class="tool-btn" onclick="setTool('BUBBLER_MOVE', this)">🫧 기포기 이동</button>
+      <button class="tool-btn" onclick="setTool('FILTER_MOVE', this)">🌀 여과기 이동</button>
+      <button class="tool-btn" onclick="setTool('HEATER_MOVE', this)">🔥 히터 이동</button>
+    </div>
+  </div>
+
+  <div class="box-card">
+    <div class="panel-title">💡 조명 및 수온 제어</div>
+    <div class="slider-label"><span>🌡️ 수온</span><span id="temp-val">24°C</span></div>
+    <input type="range" min="18" max="32" value="24" oninput="document.getElementById('temp-val').innerText=this.value+'°C'; document.getElementById('txt-temp').innerText=this.value;">
     
-    # 50가지 질문 데이터 베이스 (카테고리별)
-    qna_db = {
-        "💧 물잡이 & 환수 (1~10)": [
-            ("물잡이는 도대체 왜 해야 하고 어떻게 하는 거야?", "물잡이란 어항 속에 여과 박테리아가 살 수 있는 생태계를 미리 만드는 거야. 히터랑 여과기 켜놓고 생물 없이 최소 1~2주는 공회전시켜야지. 안 그러면 물고기들 다 용궁 간다?", "https://www.google.com/search?q=어항+물잡이+방법"),
-            ("물잡이 기간을 단축할 수 있는 꿀팁이 있어?", "시중에 파는 박테리아제를 투여하거나 기존 잘 잡힌 어항의 스펀지 여과기를 짜 넣으면 단축되지만, 그렇다고 하루 만에 끝내려고 하면 대참사 난다?", "https://www.google.com/search?q=물잡이+기간+단축+방법"),
-            ("일주일에 환수를 5번이나 해도 되는 거야?", "미쳤어? 어항을 세탁기에 돌릴 작정이니? 환수를 너무 자주 하면 여과 박테리아가 다 쓸려 나가고 수온/수질 쇼크로 물고기들 기절해. 일주일에 딱 1번, 20~30%만 해라.", "https://www.google.com/search?q=어항+환수+주기"),
-            ("환수할 때 수돗물 그냥 바로 넣어도 돼?", "미쳤니? 수돗물 속 염소 때문에 물고기 며칠 안에 전멸한다. 반드시 염소 제거제를 넣거나 하루 이상 받아둔 물(받아놓은 물)을 온도 맞춰서 써.", "https://www.google.com/search?q=어항+환수+수돗물+염소"),
-            ("어항 물이 우유처럼 하얗게 변했어 (백탁 현상)", "백탁 현상인데 세균이 폭발적으로 늘었거나 분진 때문이야. 물 전면 교체한다고 다 갈아엎으면 생태계 박살 난다? 밥 줄이고 여과기 24시간 돌리면서 차분히 기다려.", "https://www.google.com/search?q=어항+백탁현상+해결"),
-            ("어항 벽면에 초록색 이끼가 자꾸 생겨요", "빛이 너무 강하거나 영양분이 과다해서 그래. 스크래퍼로 닦아내고 조명 켜는 시간을 줄이거나 생이새우·안테나 스네일 같은 이끼 청소반을 투입해.", "https://www.google.com/search?q=어항+이끼+제거+방법"),
-            ("물갈이 할 때 기존 물을 100% 다 갈면 왜 안 돼?", "거긴 생물들이 적응해 놓은 생태계의 고향이야. 물을 100% 다 갈아버리면 수질과 박테리아가 리셋되면서 물고기들한테 엄청난 쇼크가 와서 쇼크사한다?", "https://www.google.com/search?q=어항+물갈이+전체환수+위험"),
-            ("새 어항에 물을 채웠는데 뿌옇게 분진이 안 가라앉아요", "보통 소일이나 바닥재 세척이 덜 되어서 그래. 여과기를 빵빵하게 돌리고 솜 여과재를 채워두면 몇 일 안에 필터링 돼서 맑아질 거야.", "https://www.google.com/search?q=어항+분진+제거+방법"),
-            ("환수할 때 물 온도가 다르면 어떻게 되나요?", "온도 쇼크 와서 백점병 걸리거나 물고기가 핑 돌아서 기절해. 반드시 기존 어항 물 온도랑 새로 넣을 물 온도를 디지털 온도계로 똑같이 맞춰.", "https://www.google.com/search?q=어항+온도쇼크+환수"),
-            ("수돗물에 락스 냄새가 나는데 그냥 써도 되나요?", "염소(클로린) 성분이니까 절대 그냥 쓰지 마. 에어레이션을 하루 이상 하거나 안티클로린(염소 제거제)을 규정량 타서 써야 해.", "https://www.google.com/search?q=수돗물+염소제거+물생활")
-        ],
-        "🐟 먹이 & 급여 (11~20)": [
-            ("물고기 밥은 하루에 몇 번 주는 게 정답이야?", "성어 기준 하루 1~2번, 1~2분 안에 다 먹을 수 있을 만큼만 소량으로 줘. 남은 밥은 수질 오염의 주범이야.", "https://www.google.com/search?q=물고기+밥+주기+횟수"),
-            ("물고기 밥을 너무 많이 줬는데 어떡하죠?", "당장 스포이트나 사이펀으로 남은 사료 찌꺼기를 싹 건져내야 해! 안 그러면 다음 날 물 색이 뿌옇게 변하고 암모니아 폭탄 맞는다.", "https://www.google.com/search?q=어항+사료+남은것+처리"),
-            ("여행 갈 때 물고기 밥 안 주고 며칠까지 버텨?", "건강한 성어 기준 3일~5일 정도는 밥 안 줘도 죽지 않아. 일주일 이상 비우면 오토피더(자동 급여기)를 쓰거나 휴일용 블록 사료를 쓰도록 해.", "https://www.google.com/search?q=물고기+금식+기간+여행"),
-            ("냉동 브라인슈림프는 어떻게 급여해야 하나요?", "냉동 블록을 채에 받쳐서 찬물에 헹군 뒤(염분과 불순물 제거), 스포이트로 조금씩 짜서 줘야 수질이 안 더러워져.", "https://www.google.com/search?q=브라인슈림프+급여+방법"),
-            ("치어(새끼)한테는 어떤 밥을 줘야 하나요?", "입이 아주 작기 때문에 탈각 아르테미아나 액상 치어 전용 사료, 혹은 브라인슈림프 유충을 아주 곱게 갈아서 급여해야 살 수 있어.", "https://www.google.com/search?q=열대어+치어+먹이+추천"),
-            ("식물성 사료와 동물성 사료는 번갈아 줘야 하나요?", "그래야 영양 균형이 맞아. 구피 같은 잡식성은 알몬드잎이나 스피루리나 성분이 든 식물성 사료도 같이 먹여야 변비에 안 걸려.", "https://www.google.com/search?q=열대어+사료+식물성+동물성"),
-            ("바닥에 가라앉는 사료를 먹는 고기는 따로 있나요?", "코리도라스나 안시 같은 저서어(바닥 고기)들은 위로 잘 안 올라오니까 태블릿형 싱킹 카니바이나 침강성 사료를 바닥에 따로 떨어뜨려 줘야 해.", "https://www.google.com/search?q=저서어+바닥고기+사료"),
-            ("사료를 안 먹고 뱉어내는데 아픈 건가요?", "알갱이가 너무 크거나 입맛에 안 맞아서 그래. 사료 입단위를 잘게 부숴주거나 다른 브랜드 사료로 바꿔서 테스트해 봐.", "https://www.google.com/search?q=물고기가+사료를+뱉어요"),
-            ("자동 급여기를 쓸 때 주의할 점은 뭔가요?", "습기 때문에 사료가 눅눅해져서 덩어리지면 기계가 고장 나거나 곰팡이가 피니까, 통 안의 실리카겔(방습제)을 꼭 확인해.", "https://www.google.com/search?q=어항+자동급여기+주의사항"),
-            ("치어들이 서로 뜯어먹는 카니발리즘이 생겨요", "크기 차이가 나면 큰 녀석들이 작은 치어들을 벌레로 보고 잡아먹어. 격리통을 쓰거나 숨을 수 있는 수초(모스)를 풍성하게 넣어줘.", "https://www.google.com/search?q=치어+카니발리즘+격리")
-        ],
-        "🌿 합사 & 생물 (21~30)": [
-            ("구피랑 체리새우 합사해도 정말 괜찮을까?", "합사 자체는 가능하지만 주의해야 해. 구피는 온순해도 입에 들어가는 아주 작은 치새우는 사냥할 수 있거든. 은신처를 빽빽하게 만들어줘.", "https://www.google.com/search?q=구피와+체리새우+합사"),
-            ("거북이가 물고기나 새우를 잡아먹었어, 어떡해?", "거북이랑 소형 생물을 같이 넣었으니 당연한 결과지! 거북이는 사냥 본능이 강해서 소형 갑각류나 물고기는 그냥 움직이는 간식일 뿐이야. 분리해.", "https://www.google.com/search?q=거북이와+물고기+합사"),
-            ("베타는 왜 무조건 단독 사육을 해야 하나요?", "투어(싸움 물고기) 피가 흐르기 때문에 다른 고기의 하늘하늘한 지느러미를 공격해서 찢어놓거나 끝까지 물어뜯어 죽이기 때문이야.", "https://www.google.com/search?q=베타+단독사육+이유"),
-            ("엔젤피쉬와 작은 네온테트라를 같이 키워도 되나요?", "처음엔 괜찮아 보여도 엔젤피쉬가 성어로 자라면서 입에 쏙 들어가는 네온테트라를 야금야금 사냥해 먹으니까 합사 비추천이야.", "https://www.google.com/search?q=엔젤피쉬와+네온테트라+합사"),
-            ("새우 항에 백점충 약을 넣어도 되나요?", "절대 안 돼! 구리(Copper) 성분이 들어간 대부분의 어류 질병 치료제나 약품은 갑각류(새우, 달팽이)한테는 맹독이라 다 죽어나가.", "https://www.google.com/search?q=새우항에+약품+사용+주의"),
-            ("애플스네일이 자꾸 어항 밖으로 탈출해요", "수질이 악화되었거나 뚜껑이 열려 있을 때 산소 호흡이나 탈출을 시도해. 어항 뚜껑을 꼭 닫고 수질을 점검해 봐.", "https://www.google.com/search?q=애플스네일+탈출+이유"),
-            ("코리도라스는 왜 샌드(모래) 바닥재가 더 좋나요?", "소일이나 날카로운 자갈을 깔아두면 코리도라스들이 바닥을 헤집다가 주둥이(수염)가 다 까져서 닳아버리기 때문이야.", "https://www.google.com/search?q=코리도라스+바닥재+샌드"),
-            ("합사 성공률을 높이는 공간 배치 팁이 있나요?", "유목이나 수초를 이용해서 어항 속에 시야 차단벽을 만들어주면 영역 다툼이나 쫓고 쫓기는 스트레스를 훨씬 줄일 수 있어.", "https://www.google.com/search?q=어항+합사+은신처+배치"),
-            ("새우가 허물을 벗고 가만히 있어요, 죽은 건가요?", "껍질만 벗고 체력 회복 중이거나 숨어있는 거야! 허물 벗은 직후엔 몸이 말랑해서 무방비니까 건드리지 말고 놔둬.", "https://www.google.com/search?q=새우+탈피+시체+구분"),
-            ("안시(롱핀/숏핀)는 어항 속에서 뭘 먹고 살죠?", "기본적으로 벽면 이끼나 애호박 데친 것, 그리고 침강성 사료를 주면 콧수염을 흔들며 아주 잘 먹어 치워.", "https://www.google.com/search?q=안시스트루스+먹이+키우기")
-        ],
-        "🩺 질병 & 돌발 상황 (31~40)": [
-            ("물고기 몸에 하얀 점들이 생겼어요 (백점병)", "수온 급변으로 오는 대표적인 기생충 질병이야! 히터 온도를 28~30도로 서서히 올리고 소금욕이나 전용 백점병 치료제를 써야 해.", "https://www.google.com/search?q=물고기+백점병+치료+방법"),
-            ("물고기가 수면 위로 올라와서 자꾸 뻐끔거려!", "산소가 부족하다는 다급한 SOS야. 당장 에어스톤(산소 기포기) 설치하고 여과기 출수구를 수면 위로 올려서 물살을 일으켜.", "https://www.google.com/search?q=물고기+수면+뻐끔거림"),
-            ("물고기 배가 빵빵하게 부풀고 비늘이 솔방울처럼 떴어요", "이거 완치율 낮은 무서운 '솔방울병(복수증)'이야. 신장 기능이 망가진 거라 즉시 격리하고 전용 항생제 욕을 시켜야 해.", "https://www.google.com/search?q=물고기+솔방울병+치료"),
-            ("물고기가 수족관 바닥에 가만히 엎드려 있어요", "기운이 없거나 수질 충격, 혹은 소화 불량 상태야. 밥을 끊고 30% 부분 환수를 해주면서 상태를 지켜봐야 해.", "https://www.google.com/search?q=물고기가+바닥에+가만히+있어요"),
-            ("지느러미가 갈라지거나 녹아내려요 (꼬리녹병)", "여과 사이클 깨짐이나 수질 악화로 세균성 감염이 온 거야. 멜라픽스 같은 항균제나 소금욕을 병행하면서 수질을 깨끗이 해줘.", "https://www.google.com/search?q=물고기+꼬리녹병+치료"),
-            ("어항에서 꼬릿꼬릿한 썩은내가 나요", "바닥재 밑에 유기물 찌꺼기가 썩어 들어가서 황화수소나 암모니아가 폭발한 거야. 당장 환수하고 바닥재 청소를 해줘야 해.", "https://www.google.com/search?q=어항에서+냄새가+나요"),
-            ("물고기가 수면 근처나 구석에서 덜덜 떨어요", "스트레스를 극도로 받았거나 수질 독성(아อม니아/아질산 중독) 신호야. 전면적인 수질 검사와 대량 환수가 시급해.", "https://www.google.com/search?q=물고기가+떨어요+스트레스"),
-            ("점프사(어항 밖으로 튀어나와 죽음)를 막으려면?", "야간이나 놀랐을 때 펄쩍 뛰는 애들이 많아. 반드시 어항 상단에 뚜껑이나 루버망을 덮어줘야 점프사를 막을 수 있어.", "https://www.google.com/search?q=물고기+점프사+방지+뚜껑"),
-            ("새우들이 자꾸 수면 위로 기어올라와요", "용존 산소량이 바닥났거나 수중 질산염 농도가 너무 높아서 탈출하려고 발버둥 치는 거니까 즉시 환수해.", "https://www.google.com/search?q=새우가+수면위로+기어올라와요"),
-            ("물고기 눈에 하얗게 곰팡이 같은 게 꼈어요 (안구백탁)", "수질 불량이나 상처 부위에 세균이 감염된 거야. 깨끗한 물로 부분 환수해주면 자연 치유되기도 하지만 심하면 소금욕을 해줘.", "https://www.google.com/search?q=물고기+안구백탁+치료")
-        ],
-        "⚙️ 장비 & 세팅 (41~50)": [
-            ("어항에 그냥 일반 돌이나 주운 돌 넣어도 돼?", "아무 돌이나 주워 넣었다가 물에 녹아 나오는 성분 때문에 수질 알칼리화되거나 물고기 죽는다? 석회 성분 나오는 돌은 금지야.", "https://www.google.com/search?q=어항에+일반돌+넣어도+되나요"),
-            ("스펀지 여과기는 씻을 때 어떻게 세척해야 해?", "절대 수돗물로 빡빡 씻으면 안 돼! 여과 박테리아 다 죽어. 환수할 때 퍼낸 어항 물에 살살 흔들어 씻어야 박테리아가 보존돼.", "https://www.google.com/search?q=스펀지여과기+세척+방법"),
-            ("히터는 물 밖으로 나오면 터지나요?", "응! 히터가 물에 잠기지 않은 상태에서 전원이 켜져 있으면 유리가 과열되어 폭발(터짐)하니까 물갈이할 때는 무조건 콘센트부터 뽑아.", "https://www.google.com/search?q=어항+히터+터짐+주의사항"),
-            ("걸이식 여과기 여과재는 뭘 채우는 게 제일 좋아?", "기본 스펀지 외에 생물학적 여과 면적이 넓은 '시더링 세라믹 링'이나 '여과볼'을 꽉 채워주는 게 훨씬 효율적이야.", "https://www.google.com/search?q=걸이식여과기+여과재+추천"),
-            ("LED 조명은 하루에 몇 시간 정도 켜두는 게 적당할까요?", "너무 오래 켜두면 이끼 폭탄 맞는다. 하루에 딱 6시간~8시간 타이머로 설정해서 켜두는 게 가장 이상적이야.", "https://www.google.com/search?q=어항+조명+켜는+시간+이끼"),
-            ("소일(Soil) 바닥재의 수명은 얼마나 되나요?", "보통 1년~2년 지나면 영양분이 다 빠지고 흙이 으깨져서 진흙탕이 되기 때문에 리셋(재세팅)을 해줘야 하는 소모품이야.", "https://www.google.com/search?q=어항+소일+수명+교체"),
-            ("어항 유리벽에 생긴 물때(물마름 흔적)는 어떻게 지워?", "면도칼(스크레이퍼)이나 매직스펀지로 살살 긁어내면 깔끔하게 지워져. 독한 세제나 락스는 절대 쓰면 안 돼!", "https://www.google.com/search?q=어항+물때+제거+방법"),
-            ("외부 여과기를 설치할 때 가장 중요한 팁은?", "입수구와 출수구 호스 길이를 딱 맞추고, 전원을 켜기 전에 통 안에 물을 가득 채우는 '마중물' 작업을 완벽하게 해야 소음이 안 나.", "https://www.google.com/search?q=외부여과기+설치+방법+마중물"),
-            ("유목을 어항에 넣기 전에 꼭 삶아야 하는 이유가 뭘까?", "유목 속의 타닌 성분이 물을 진하게 갈색으로 물들이고 가라앉지 않고 둥둥 뜨기 때문에, 솥에 넣고 푹 삶거나 물에 오래 우려내야 해.", "https://www.google.com/search?q=유목+삶기+우려내기+방법"),
-            ("2거치대(어항 받침대)는 왜 튼튼한 걸 써야 할까요?", "물 60리터짜리 어항 하나만 해도 무게가 모래랑 합치면 80kg이 넘어가! 수평이 안 맞거나 약하면 유리 어항이 터져서 대홍수 난다?", "https://www.google.com/search?q=어항+받침대+수평+중요성")
-        ]
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+      <span style="font-size:11px; color:#94a3b8;">💡 조명 전원</span>
+      <button id="btn-light-toggle" onclick="toggleLight()" style="padding:2px 8px; font-size:10px; background:#0284c7; border:none; color:white; border-radius:4px; cursor:pointer;">ON</button>
+    </div>
+    <input type="color" id="light-color" value="#00b4d8">
+  </div>
+
+  <div style="margin-top:auto; display:flex; gap:6px;">
+    <button class="act-btn btn-clean" onclick="cleanPoop()">🧹 똥 청소</button>
+    <button class="act-btn btn-reset" onclick="clearTank()">🔄 전체 비우기</button>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="status-bar">
+    <span id="txt-env" style="color:#38bdf8;">🌿 담수 어항</span>
+    <span>🌡️ 수온: <span id="txt-temp">24</span>°C</span>
+    <span>💧 수질: <span id="txt-quality">100</span>%</span>
+    <span>🐠 생물: <span id="txt-count">0</span>마리</span>
+    <span>🥅 뜰채담음: <span id="txt-net-count" style="color:#facc15;">0</span>마리</span>
+  </div>
+
+  <canvas id="sandCanvas" width="1000" height="650"></canvas>
+
+  <div id="info-box">
+    <span>📌 이름: <b id="info-name" style="color:#38bdf8;">-</b></span>
+    <span>❤️ 체력: <b id="info-hp" style="color:#4ade80;">100%</b></span>
+    <span>🍗 포만감: <b id="info-food" style="color:#facc15;">80%</b></span>
+    <span>💩 장 상태: <b id="info-poop" style="color:#fb923c;">양호</b></span>
+  </div>
+</div>
+
+<div id="right-panel">
+  <div class="trash-box" onclick="emptyNet()">
+    <span style="font-size:24px;">🥅🗑️</span>
+    <span>뜰채 생물<br>버리기/방생</span>
+  </div>
+  <button class="act-btn" style="background:#0284c7; height:50px;" onclick="addRandomCreature()">🐠 랜덤 키우기</button>
+</div>
+
+<script>
+const WIDTH = 500;
+const HEIGHT = 325;
+const SCALE = 2;
+
+const canvas = document.getElementById('sandCanvas');
+const ctx = canvas.getContext('2d');
+
+let grid = Array.from({length: HEIGHT}, () => new Uint8Array(WIDTH));
+let poopTypeGrid = Array.from({length: HEIGHT}, () => new Uint8Array(WIDTH));
+
+let tankEnv = 'FRESH';
+let currentTool = 'NET';
+let brushSize = 3;
+let lightOn = true;
+
+let equipPos = {
+  bubbler: { x: 100, y: 310 },
+  filter: { x: 460, y: 80 },
+  heater: { x: 30, y: 150 }
+};
+
+let creatures = [];
+let netBasket = [];
+let selectedCreature = null;
+let draggedCreature = null;
+
+const SPECIES_DATA = {
+  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2 },
+  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1 },
+  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2 },
+  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1 },
+  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 10, poopType: 2 }, // 달팽이 속성
+  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3 },
+  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1 },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3 },
+  
+  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1 },
+  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1 },
+  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1 },
+  PUFFER: { name: '복어', env: 'SALT', color: '#facc15', bellyColor: '#ffffff', size: 16, poopType: 3 },
+  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1 },
+  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3 },
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3 }
+};
+
+function toggleLight() {
+  lightOn = !lightOn;
+  document.getElementById('btn-light-toggle').innerText = lightOn ? 'ON' : 'OFF';
+  document.getElementById('btn-light-toggle').style.background = lightOn ? '#0284c7' : '#64748b';
+}
+
+function setTankEnv(env) {
+  tankEnv = env;
+  document.getElementById('btn-fresh').classList.toggle('active', env === 'FRESH');
+  document.getElementById('btn-salt').classList.toggle('active', env === 'SALT');
+  document.getElementById('txt-env').innerText = env === 'FRESH' ? '🌿 담수 어항' : '🪸 해수 어항';
+  document.getElementById('txt-env').style.color = env === 'FRESH' ? '#38bdf8' : '#fb923c';
+}
+
+function setCategory(cat) {
+  document.getElementById('tab-powder').classList.toggle('active', cat === 'POWDER');
+  document.getElementById('tab-creature').classList.toggle('active', cat === 'CREATURE');
+  document.getElementById('tab-equip').classList.toggle('active', cat === 'EQUIP');
+
+  document.getElementById('sec-powder').style.display = cat === 'POWDER' ? 'block' : 'none';
+  document.getElementById('sec-creature').style.display = cat === 'CREATURE' ? 'block' : 'none';
+  document.getElementById('sec-equip').style.display = cat === 'EQUIP' ? 'block' : 'none';
+}
+
+function setTool(tool, btn) {
+  currentTool = tool;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function clearTank() {
+  for (let y = 0; y < HEIGHT; y++) {
+    grid[y].fill(0);
+    poopTypeGrid[y].fill(0);
+  }
+  creatures = [];
+  netBasket = [];
+  selectedCreature = null;
+  document.getElementById('info-box').style.display = 'none';
+  document.getElementById('txt-net-count').innerText = 0;
+}
+
+function emptyNet() {
+  netBasket = [];
+  document.getElementById('txt-net-count').innerText = 0;
+}
+
+function cleanPoop() {
+  for (let y = 0; y < HEIGHT; y++) {
+    for (let x = 0; x < WIDTH; x++) {
+      if (grid[y][x] === 8) {
+        grid[y][x] = 0;
+        poopTypeGrid[y][x] = 0;
+      }
+    }
+  }
+}
+
+function addRandomCreature() {
+  const keys = Object.keys(SPECIES_DATA);
+  const randomKey = keys[Math.floor(Math.random() * keys.length)];
+  creatures.push(new Creature(randomKey, Math.random() * (WIDTH - 80) + 40, Math.random() * (HEIGHT - 100) + 50));
+}
+
+class Creature {
+  constructor(type, x, y) {
+    this.type = type;
+    this.info = SPECIES_DATA[type];
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * (type === 'SNAIL' ? 0.4 : 1.0); // 달팽이는 느림
+    this.vy = (Math.random() - 0.5) * (type === 'SNAIL' ? 0.2 : 0.6);
+    this.fullness = 70;
+    this.health = 100;
+    this.digestTimer = 0;
+    this.isDead = false;
+    this.animFrame = Math.random() * 10;
+  }
+
+  update() {
+    if (this.info.env !== tankEnv) {
+      this.health -= 0.15;
     }
 
-    # 세션 스테이트 초기화 (선택된 Q&A 기록 유지)
-    if "selected_50_history" not in st.session_state:
-        st.session_state.selected_50_history = [
-            {"q": "어항선배의 첫인사", "ans": "어머, 반가워라. 🐟 궁금한 질문을 카테고리별로 골라봐. 팩트로 조져줄 테니까.", "link": ""}
-        ]
+    if (this.health <= 0) {
+      this.isDead = true;
+      this.vx = 0;
+      if (this.y > 15) {
+        this.y -= 0.5; // 죽으면 수면 위로 둥둥
+      }
+      return;
+    }
 
-    # 카테고리 선택 셀렉트박스
-    selected_category = st.selectbox("📂 궁금한 질문 카테고리를 선택하세요", list(qna_db.keys()))
+    this.animFrame += 0.15;
+    this.fullness -= 0.004;
+    if (this.fullness < 0) this.fullness = 0;
 
-    st.markdown("---")
-    st.markdown(f"### 📌 [{selected_category}] 질문 리스트")
-    st.caption("아래 질문 버튼을 누르면 어항선배의 시크한 답변과 구글 검색 참고 링크가 대화창에 추가됩니다!")
+    if (this.fullness > 40) {
+      this.digestTimer += 1;
+      if (this.digestTimer > 400) {
+        this.poop();
+        this.digestTimer = 0;
+        this.fullness -= 10;
+      }
+    }
 
-    # 선택된 카테고리의 질문들을 버튼으로 나열
-    for q_item in qna_db[selected_category]:
-        question_text = q_item[0]
-        answer_text = q_item[1]
-        search_link = q_item[2]
-        
-        if st.button(f"✨ {question_text}", use_container_width=True):
-            st.session_state.selected_50_history.append({
-                "q": question_text,
-                "ans": answer_text,
-                "link": search_link
-            })
+    if (this.type !== 'SNAIL' && this.fullness < 95) {
+      this.findAndEatFood();
+    }
 
-    st.markdown("---")
-    st.markdown("### 💬 상담 대화 기록")
+    this.x += this.vx;
+    this.y += this.vy;
 
-    # 대화 기록 출력
-    for chat in st.session_state.selected_50_history:
-        if chat["q"] != "어항선배의 첫인사":
-            with st.chat_message("user"):
-                st.markdown(chat["q"])
-        
-        with st.chat_message("assistant"):
-            st.markdown(chat["ans"])
-            if chat["link"]:
-                st.markdown(f"🔗 [관련 구글 검색 참고 링크 바로가기]({chat['link']})")
+    if (this.x < 25 || this.x > WIDTH - 25) this.vx *= -1;
+    if (this.y < 25 || this.y > HEIGHT - 35) this.vy *= -1;
 
-    # 초기화 버튼
-    if st.button("🗑️ 대화 기록 초기화"):
-        st.session_state.selected_50_history = [
-            {"q": "어항선배의 첫인사", "ans": "어머, 반가워라. 🐟 궁금한 질문을 카테고리별로 골라봐. 팩트로 조져줄 테니까.", "link": ""}
-        ]
-        st.rerun()
+    if (Math.random() < 0.02) {
+      let speedMult = this.type === 'SNAIL' ? 0.4 : 0.5;
+      this.vx += (Math.random() - 0.5) * speedMult;
+      this.vy += (Math.random() - 0.5) * speedMult;
+      this.vx = Math.max(-1.0, Math.min(1.0, this.vx));
+      this.vy = Math.max(-0.6, Math.min(0.6, this.vy));
+    }
+  }
 
-with tab2:
-    st.subheader("🔄 어종별 합사 진단기")
-    st.markdown("키우고 싶은 두 생물을 선택해 봐.")
-    c1, c2 = st.columns(2)
-    with c1:
-        fish1 = st.selectbox("첫 번째 생물", ["네온테트라", "구피", "엔젤피쉬", "체리새우", "초록복어", "베타"])
-    with c2:
-        fish2 = st.selectbox("दूस 번째 생물", ["체리새우", "구피", "네온테트라", "코리도라스", "애플스네일", "거북이"])
-        
-    if st.button("합사 가능성 분석하기"):
-        if "거북" in fish1 or "거북" in fish2:
-            st.error("⚠️ **위험 경고**: 거북이가 포함된 조합은 소형 생물(새우 등)을 사냥할 확률이 매우 높습니다!")
-        else:
-            st.success(f"🔍 **분석 결과 ({fish1} + {fish2})**: 합사 적합도 **85% (나쁘지 않음)**")
-            st.write("- 두 생물은 수온 및 수질 요구 조건이 비슷하여 공존이 가능합니다.")
+  findAndEatFood() {
+    let cx = Math.floor(this.x);
+    let cy = Math.floor(this.y);
+    for (let dy = -35; dy <= 35; dy += 2) {
+      for (let dx = -35; dx <= 35; dx += 2) {
+        let nx = cx + dx;
+        let ny = cy + dy;
+        if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
+          if (grid[ny][nx] === 7) { 
+            this.vx = dx * 0.04;
+            this.vy = dy * 0.04;
+            if (Math.abs(dx) <= 5 && Math.abs(dy) <= 5) {
+              grid[ny][nx] = 0;
+              this.fullness = Math.min(100, this.fullness + 8);
+            }
+            return;
+          }
+        }
+      }
+    }
+  }
 
-with tab3:
-    st.subheader("📐 수조 치수별 물용량 및 환수량 계산기")
-    w = st.number_input("가로 길이 (cm)", value=60)
-    d = st.number_input("세로 폭 (cm)", value=30)
-    h = st.number_input("높이 (cm)", value=36)
-    
-    if st.button("수량 계산하기"):
-        liters = (w * d * h) / 1000
-        net_liters = liters * 0.85
-        st.success(f"💧 **총 수조 용량**: 약 **{liters:.1f} 리터 (L)** (실제 물량 약 {net_liters:.1f}L)")
-        st.info(f"🔄 **권장 1회 환수량 (30%)**: 약 **{net_liters * 0.3:.1f} 리터**")
+  poop() {
+    let px = Math.floor(this.x);
+    let py = Math.floor(this.y) + Math.floor(this.info.size / 2) + 2;
+    if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
+      grid[py][px] = 8;
+      poopTypeGrid[py][px] = this.info.poopType;
+    }
+  }
 
-with tab4:
-    st.subheader("📅 30일 초보 물잡이 가이드 스케줄러")
-    st.markdown("""
-    - **1~3일차**: 바닥재 깔고 물 채우고 히터/여과기 24시간 풀가동 (생물 투입 금지)
-    - **4~7일차**: 박테리아제 투여 및 백탁 현상 대처 (가만히 두기)
-    - **8~14일차**: 물 맑아지면 수초 식재 및 수질 테스트
-    - **15~30일차**: 튼튼한 생물 소수만 먼저 투입 후 점진적 개체수 증가
-    """)
+  draw() {
+    let sx = this.x * SCALE;
+    let sy = this.y * SCALE;
+    let dir = this.vx >= 0 ? 1 : -1;
+    let wiggle = this.isDead ? 0 : Math.sin(this.animFrame) * 3;
+    let s = this.info.size;
+
+    ctx.save();
+    ctx.translate(sx, sy);
+
+    if (this.isDead) {
+      ctx.rotate(Math.PI);
+    }
+
+    let bodyColor = this.isDead ? '#94a3b8' : this.info.color;
+    let tailColor = this.isDead ? '#64748b' : (this.info.tailColor || this.info.color);
+
+    // 애플스네일(달팽이) 전용 픽셀 디자인 렌더링
+    if (this.type === 'SNAIL') {
+      ctx.fillStyle = this.isDead ? '#64748b' : '#ca8a04';
+      ctx.fillRect(-s/2, -s/2, s*0.9, s*0.8); // 소라 껍질 모양
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/3, s/4, s*0.8, s*0.4); // 발판 몸체
+      // 더듬이
+      ctx.fillRect(dir * (s/3), -s/4, 2, 4);
+    } 
+    else if (this.type === 'TURTLE_SEMI') {
+      ctx.fillStyle = this.isDead ? '#475569' : '#78350f';
+      ctx.fillRect(-s/2, -s/3, s, s*0.7);
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3);
+    } 
+    else if (this.type === 'TURTLE_SEA') {
+      ctx.fillStyle = this.isDead ? '#334155' : '#0f766e';
+      ctx.fillRect(-s/2, -s/3, s, s*0.65);
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(dir * (s/2), -s/8, s/3, s/3);
+    }
+    else if (this.type === 'BETTA') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
+      ctx.fillStyle = tailColor;
+      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2);
+    }
+    else if (this.type === 'SEAHORSE') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/3, -s/2, s*0.6, s);
+      ctx.fillRect(-s/2, s/3, s*0.5, s*0.4);
+    }
+    else {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/3, s, s*0.6);
+
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-s/6, -s/3, 3, s*0.6);
+      }
+
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(dir * (s/3), -s/5, 3, 3);
+      ctx.fillStyle = '#000000'; ctx.fillRect(dir * (s/3) + (dir > 0 ? 1 : 0), -s/5 + 1, 1, 1);
+
+      ctx.fillStyle = tailColor;
+      ctx.beginPath();
+      ctx.moveTo(-dir * (s/2), 0);
+      ctx.lineTo(-dir * (s * 0.9), -s/3 + wiggle);
+      ctx.lineTo(-dir * (s * 0.9), s/3 + wiggle);
+      ctx.fill();
+    }
+
+    if (selectedCreature === this) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-s, -s, s*2, s*2);
+    }
+
+    if (!this.isDead && this.info.env !== tankEnv) {
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-s*0.8, -s*0.8, s*1.6, s*1.6);
+    }
+
+    ctx.restore();
+  }
+}
+
+let isMouseDown = false;
+
+canvas.addEventListener('mousedown', e => {
+  isMouseDown = true;
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (currentTool === 'NET') {
+    let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
+    if (targetIdx !== -1) {
+      let caught = creatures.splice(targetIdx, 1)[0];
+      netBasket.push(caught);
+      document.getElementById('txt-net-count').innerText = netBasket.length;
+      if (selectedCreature === caught) {
+        selectedCreature = null;
+        document.getElementById('info-box').style.display = 'none';
+      }
+    }
+    return;
+  }
+
+  if (currentTool === 'SELECT') {
+    selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    const infoBox = document.getElementById('info-box');
+    if (selectedCreature) {
+      infoBox.style.display = 'flex';
+      document.getElementById('info-name').innerText = selectedCreature.info.name;
+      document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
+      document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
+      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 200 ? '배변 임박' : '양호');
+    } else {
+      infoBox.style.display = 'none';
+    }
+    return;
+  }
+
+  if (currentTool === 'MOVE') {
+    draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    return;
+  }
+
+  handleInput(e);
+});
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (draggedCreature && isMouseDown) {
+    draggedCreature.x = mx;
+    draggedCreature.y = my;
+    return;
+  }
+
+  if (isMouseDown && currentTool !== 'NET') handleInput(e);
+});
+
+canvas.addEventListener('mouseup', () => {
+  isMouseDown = false;
+  draggedCreature = null;
+});
+
+function handleInput(e) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
+
+  if (currentTool === 'BUBBLER_MOVE') { equipPos.bubbler = {x: mx, y: my}; return; }
+  if (currentTool === 'FILTER_MOVE') { equipPos.filter = {x: mx, y: my}; return; }
+  if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
+
+  if (SPECIES_DATA[currentTool]) {
+    if (e.type === 'mousedown') {
+      creatures.push(new Creature(currentTool, mx, my));
+    }
+    return;
+  }
+
+  for (let dy = -brushSize; dy <= brushSize; dy++) {
+    for (let dx = -brushSize; dx <= brushSize; dx++) {
+      let nx = mx + dx;
+      let ny = my + dy;
+      if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
+        if (currentTool === 'SAND') grid[ny][nx] = 1;
+        else if (currentTool === 'SOIL') grid[ny][nx] = 2;
+        else if (currentTool === 'ROCK') grid[ny][nx] = 3;
+        else if (currentTool === 'WOOD') grid[ny][nx] = 4;
+        else if (currentTool === 'SEED') {
+          if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
+            grid[ny][nx] = 5;
+          }
+        }
+        else if (currentTool === 'FOOD') grid[ny][nx] = 7;
+        else if (currentTool === 'ERASER_ALL' || currentTool === 'DEL_PIXEL') {
+          grid[ny][nx] = 0;
+          poopTypeGrid[ny][nx] = 0;
+        }
+      }
+    }
+  }
+}
+
+function updatePhysics() {
+  for (let y = HEIGHT - 2; y >= 0; y--) {
+    for (let x = 0; x < WIDTH; x++) {
+      let type = grid[y][x];
+
+      if (type === 1 || type === 2 || type === 8) {
+        if (grid[y + 1][x] === 0) {
+          grid[y + 1][x] = type;
+          poopTypeGrid[y + 1][x] = poopTypeGrid[y][x];
+          grid[y][x] = 0;
+          poopTypeGrid[y][x] = 0;
+        } else if (x > 0 && grid[y + 1][x - 1] === 0) {
+          grid[y + 1][x - 1] = type;
+          grid[y][x] = 0;
+        } else if (x < WIDTH - 1 && grid[y + 1][x + 1] === 0) {
+          grid[y + 1][x + 1] = type;
+          grid[y][x] = 0;
+        }
+      }
+
+      if (type === 7) {
+        if (Math.random() < 0.25) {
+          let dropY = y + 1;
+          if (dropY < HEIGHT && grid[dropY][x] === 0) {
+            grid[dropY][x] = 7;
+            grid[y][x] = 0;
+          }
+        }
+      }
+
+      if (type === 5) {
+        let under = grid[y + 1] ? grid[y + 1][x] : 0;
+        if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
+          if (Math.random() < 0.08) {
+            grid[y][x] = 6;
+            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.7) {
+              grid[y - 1][x] = 5;
+            }
+          }
+        } else if (under === 0) {
+          grid[y + 1][x] = 5;
+          grid[y][x] = 0;
+        }
+      }
+    }
+  }
+}
+
+function loop() {
+  updatePhysics();
+
+  ctx.fillStyle = tankEnv === 'FRESH' ? '#030a17' : '#010512';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (lightOn) {
+    let lightColor = document.getElementById('light-color').value;
+    ctx.fillStyle = lightColor;
+    ctx.globalAlpha = 0.12;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+  }
+
+  // 기포기
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  for (let i = 0; i < 12; i++) {
+    let bx = equipPos.bubbler.x + (Math.random() - 0.5) * 12;
+    let by = equipPos.bubbler.y - Math.random() * 80;
+    let bSize = Math.random() * 3 + 1;
+    ctx.fillRect(bx * SCALE, by * SCALE, bSize, bSize);
+  }
+  ctx.fillStyle = '#475569';
+  ctx.fillRect((equipPos.bubbler.x - 8) * SCALE, equipPos.bubbler.y * SCALE, 16 * SCALE, 8 * SCALE);
+
+  // 여과기 & 히터
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(equipPos.filter.x * SCALE, equipPos.filter.y * SCALE, 16 * SCALE, 35 * SCALE);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(equipPos.heater.x * SCALE, equipPos.heater.y * SCALE, 6 * SCALE, 45 * SCALE);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect((equipPos.heater.x + 1) * SCALE, (equipPos.heater.y + 30) * SCALE, 4 * SCALE, 12 * SCALE);
+
+  // 파우더 그리기
+  for (let y = 0; y < HEIGHT; y++) {
+    for (let x = 0; x < WIDTH; x++) {
+      let t = grid[y][x];
+      if (t === 0) continue;
+
+      if (t === 1) ctx.fillStyle = '#f59e0b';
+      else if (t === 2) ctx.fillStyle = '#57534e';
+      else if (t === 3) ctx.fillStyle = '#475569';
+      else if (t === 4) ctx.fillStyle = '#78350f';
+      else if (t === 5) ctx.fillStyle = '#86efac';
+      else if (t === 6) ctx.fillStyle = '#16a34a';
+      else if (t === 7) ctx.fillStyle = '#facc15';
+      else if (t === 8) {
+        let pt = poopTypeGrid[y][x];
+        if (pt === 1) ctx.fillStyle = '#451a03';
+        else if (pt === 2) ctx.fillStyle = '#78350f';
+        else ctx.fillStyle = '#1c1917';
+      }
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+    }
+  }
+
+  // 생물 그리기
+  for (let i = creatures.length - 1; i >= 0; i--) {
+    let c = creatures[i];
+    c.update();
+    c.draw();
+  }
+
+  document.getElementById('txt-count').innerText = creatures.length;
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
+"""
+
+components.html(html_code, height=680)
