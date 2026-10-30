@@ -31,7 +31,9 @@ html_code = r"""
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
   canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; }
   
-  #status-bar { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+  /* 드래그 가능한 상태바 */
+  #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
+  #status-bar:active { cursor: grabbing; }
   
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
@@ -86,13 +88,13 @@ html_code = r"""
   </div>
 
   <div id="sec-creature" style="display:none;">
-    <div class="panel-title">🐟 귀여운 어종 (총 16종)</div>
+    <div class="panel-title">🐟 귀여운 어종 (총 17종)</div>
     <div class="tool-grid">
       <button class="tool-btn" onclick="setTool('SHRIMP', this)">🦐 체리새우(담수)</button>
       <button class="tool-btn" onclick="setTool('GUPPY', this)">🐟 구피 (담수)</button>
       <button class="tool-btn" onclick="setTool('TETRA', this)">💙 네온테트라(담수)</button>
       <button class="tool-btn" onclick="setTool('BETTA', this)">👑 베타 (담수)</button>
-      <button class="tool-btn" onclick="setTool('SNAIL', this)">🟡 애플스네일(담수)</button>
+      <button class="tool-btn" onclick="setTool('SNAIL', this)">🐌 애플스네일(담수)</button>
       <button class="tool-btn" onclick="setTool('DISCUS', this)">🔴 디스커스(담수)</button>
       <button class="tool-btn" onclick="setTool('ANGEL', this)">🤍 엔젤피쉬(담수)</button>
       <button class="tool-btn" onclick="setTool('TURTLE_SEMI', this)">🐢 반수생거북(담수)</button>
@@ -103,6 +105,7 @@ html_code = r"""
       <button class="tool-btn" onclick="setTool('PUFFER', this)">🐡 복어 (해수)</button>
       <button class="tool-btn" onclick="setTool('YELLOWTANG', this)">💛 옐로우탱(해수)</button>
       <button class="tool-btn" onclick="setTool('QUEENANGEL', this)">👑 퀸엔젤(해수)</button>
+      <button class="tool-btn" onclick="setTool('GARDENEEL', this)">🐍 가든일 (해수)</button>
       <button class="tool-btn" onclick="setTool('TURTLE_SEA', this)">🐢 바다거북(해수)</button>
     </div>
   </div>
@@ -135,7 +138,8 @@ html_code = r"""
 </div>
 
 <div id="main-container">
-  <div id="status-bar">
+  <!-- 마우스로 드래그 가능한 상태바 -->
+  <div id="status-bar" onmousedown="startDragStatus(event)">
     <span id="txt-env" style="color:#38bdf8;">🌿 담수 어항</span>
     <span>🌡️ 수온: <span id="txt-temp">24</span>°C</span>
     <span>💧 수질: <span id="txt-quality">100</span>%</span>
@@ -146,7 +150,7 @@ html_code = r"""
   <canvas id="sandCanvas" width="1000" height="650"></canvas>
 
   <div id="info-box">
-    <span>📌 어종: <b id="info-name" style="color:#38bdf8;">-</b></span>
+    <span>📌 이름: <b id="info-name" style="color:#38bdf8;">-</b></span>
     <span>❤️ 체력: <b id="info-hp" style="color:#4ade80;">100%</b></span>
     <span>🍗 포만감: <b id="info-food" style="color:#facc15;">80%</b></span>
     <span>💩 장 상태: <b id="info-poop" style="color:#fb923c;">양호</b></span>
@@ -188,23 +192,51 @@ let netBasket = [];
 let selectedCreature = null;
 let draggedCreature = null;
 
+// 상태바 드래그 이동 로직
+let isStatusDragging = false;
+let statusOffsetX = 0, statusOffsetY = 0;
+const statusBar = document.getElementById('status-bar');
+
+function startDragStatus(e) {
+  isStatusDragging = true;
+  const rect = statusBar.getBoundingClientRect();
+  statusOffsetX = e.clientX - rect.left;
+  statusOffsetY = e.clientY - rect.top;
+  e.stopPropagation();
+}
+
+document.addEventListener('mousemove', e => {
+  if (!isStatusDragging) return;
+  const parentRect = document.getElementById('main-container').getBoundingClientRect();
+  let newX = e.clientX - parentRect.left - statusOffsetX;
+  let newY = e.clientY - parentRect.top - statusOffsetY;
+  statusBar.style.left = newX + 'px';
+  statusBar.style.top = newY + 'px';
+  statusBar.style.transform = 'none';
+});
+
+document.addEventListener('mouseup', () => {
+  isStatusDragging = false;
+});
+
 const SPECIES_DATA = {
-  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2 },
-  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1 },
-  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2 },
-  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1 },
-  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 9, poopType: 2 },
-  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3 },
-  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1 },
-  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3 },
+  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2, shape: 'shrimp', speed: 0.5 },
+  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1, shape: 'fish', speed: 0.6 },
+  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2, shape: 'fish', speed: 0.6 },
+  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1, shape: 'betta', speed: 0.5 },
+  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 11, poopType: 2, shape: 'snail', speed: 0.3 },
+  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3, shape: 'roundfish', speed: 0.4 },
+  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1, shape: 'angelfish', speed: 0.4 },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3, shape: 'turtle', speed: 0.4 },
   
-  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1 },
-  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1 },
-  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1 },
-  PUFFER: { name: '복어', env: 'SALT', color: '#facc15', bellyColor: '#ffffff', size: 16, poopType: 3 },
-  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1 },
-  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3 },
-  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3 }
+  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1, shape: 'fish', speed: 0.6 },
+  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1, shape: 'roundfish', speed: 0.5 },
+  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1, shape: 'seahorse', speed: 0.4 },
+  PUFFER: { name: '복어', env: 'SALT', color: '#eab308', bellyColor: '#ffffff', size: 15, poopType: 3, shape: 'puffer', speed: 0.4 },
+  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1, shape: 'yellowtang', speed: 0.6 },
+  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3, shape: 'angelfish', speed: 0.4 },
+  GARDENEEL: { name: '가든일', env: 'SALT', color: '#f1f5f9', size: 12, poopType: 1, shape: 'gardeneel', speed: 0.2 },
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3, shape: 'seaturtle', speed: 0.4 }
 };
 
 function toggleLight() {
@@ -277,17 +309,26 @@ class Creature {
     this.info = SPECIES_DATA[type];
     this.x = x;
     this.y = y;
-    this.vx = (Math.random() - 0.5) * 1.0;
-    this.vy = (Math.random() - 0.5) * 0.6;
+    let spd = this.info.speed;
+    this.vx = (Math.random() - 0.5) * spd;
+    this.vy = (Math.random() - 0.5) * (spd * 0.5);
     this.fullness = 70;
     this.health = 100;
     this.digestTimer = 0;
     this.isDead = false;
     this.animFrame = Math.random() * 10;
+    
+    // 가든일 특성 (모래 속에서 숨었다 뿅뿅 나옴)
+    if (this.shape === 'gardeneel') {
+      this.inSand = true;
+      this.y = HEIGHT - 25;
+      this.vx = 0; this.vy = 0;
+    }
   }
 
+  get shape() { return this.info.shape; }
+
   update() {
-    // 서식지 환경 불일치 시 체력 감소
     if (this.info.env !== tankEnv) {
       this.health -= 0.15;
     }
@@ -296,14 +337,26 @@ class Creature {
       this.isDead = true;
       this.vx = 0;
       if (this.y > 15) {
-        this.y -= 0.5; // 죽으면 배를 위로 하고 천천히 수면 위로 떠오름
+        this.y -= 0.5; // 사망 시 수면 위로 둥둥
       }
-      return; // 사망 시 애니메이션 및 이동 정지
+      return;
+    }
+
+    // 가든일 특별 움직임 (모래 속에서 쏙 나왔다 들어감)
+    if (this.shape === 'gardeneel') {
+      if (Math.random() < 0.01) {
+        this.inSand = !this.inSand;
+      }
+      if (this.inSand) {
+        this.vx = 0; this.vy = 0;
+      } else {
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.2;
+      }
     }
 
     this.animFrame += 0.15;
-
-    this.fullness -= 0.004;
+    this.fullness -= 0.003;
     if (this.fullness < 0) this.fullness = 0;
 
     if (this.fullness > 40) {
@@ -315,7 +368,7 @@ class Creature {
       }
     }
 
-    if (this.fullness < 95) {
+    if (this.shape !== 'snail' && this.shape !== 'gardeneel' && this.fullness < 95) {
       this.findAndEatFood();
     }
 
@@ -325,11 +378,21 @@ class Creature {
     if (this.x < 25 || this.x > WIDTH - 25) this.vx *= -1;
     if (this.y < 25 || this.y > HEIGHT - 35) this.vy *= -1;
 
-    if (Math.random() < 0.02) {
-      this.vx += (Math.random() - 0.5) * 0.5;
-      this.vy += (Math.random() - 0.5) * 0.3;
-      this.vx = Math.max(-1.5, Math.min(1.5, this.vx));
-      this.vy = Math.max(-1.0, Math.min(1.0, this.vy));
+    // 수초(6) 영역과 충돌 시 살짝 밀려나도록 처리 (낑김 방지)
+    let curX = Math.floor(this.x);
+    let curY = Math.floor(this.y);
+    if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
+      if (grid[curY][curX] === 6) {
+        this.y -= 1.0; // 수초 위로 살짝 뜸
+      }
+    }
+
+    if (!this.isDead && Math.random() < 0.02 && this.shape !== 'gardeneel') {
+      let m = this.info.speed;
+      this.vx += (Math.random() - 0.5) * m;
+      this.vy += (Math.random() - 0.5) * (m * 0.5);
+      this.vx = Math.max(-0.8, Math.min(0.8, this.vx));
+      this.vy = Math.max(-0.4, Math.min(0.4, this.vy));
     }
   }
 
@@ -342,8 +405,8 @@ class Creature {
         let ny = cy + dy;
         if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
           if (grid[ny][nx] === 7) { 
-            this.vx = dx * 0.04;
-            this.vy = dy * 0.04;
+            this.vx = dx * 0.03;
+            this.vy = dy * 0.03;
             if (Math.abs(dx) <= 5 && Math.abs(dy) <= 5) {
               grid[ny][nx] = 0;
               this.fullness = Math.min(100, this.fullness + 8);
@@ -368,55 +431,114 @@ class Creature {
     let sx = this.x * SCALE;
     let sy = this.y * SCALE;
     let dir = this.vx >= 0 ? 1 : -1;
-    // 죽었으면 꼬리 애니메이션 파동 정지 (0)
     let wiggle = this.isDead ? 0 : Math.sin(this.animFrame) * 3;
     let s = this.info.size;
 
     ctx.save();
     ctx.translate(sx, sy);
 
-    // 죽었을 경우 180도 뒤집힘 (배면 부상)
     if (this.isDead) {
       ctx.rotate(Math.PI);
     }
 
-    // 색상 지정 (죽으면 회색 빛)
     let bodyColor = this.isDead ? '#94a3b8' : this.info.color;
     let tailColor = this.isDead ? '#64748b' : (this.info.tailColor || this.info.color);
-    let stripeColor = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+    let shape = this.shape;
 
-    if (this.type === 'TURTLE_SEMI') {
-      ctx.fillStyle = this.isDead ? '#475569' : '#78350f';
-      ctx.fillRect(-s/2, -s/3, s, s*0.7);
+    // 1. 애플스네일 (달팽이 전용 모양)
+    if (shape === 'snail') {
+      ctx.fillStyle = this.isDead ? '#64748b' : '#eab308';
+      ctx.beginPath();
+      ctx.arc(0, -s/4, s/2, 0, Math.PI * 2);
+      ctx.fill(); 
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3);
-      if(!this.isDead) {
-        ctx.fillStyle = '#ef4444'; ctx.fillRect(dir * (s/1.8), -s/10, 2, 2); // 뺨 볼터치
-      }
-    } 
-    else if (this.type === 'TURTLE_SEA') {
-      ctx.fillStyle = this.isDead ? '#334155' : '#0f766e';
-      ctx.fillRect(-s/2, -s/3, s, s*0.65);
+      ctx.fillRect(-s/2, 0, s*0.9, s*0.35); 
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/2), -s/8, s/3, s/3);
+      ctx.fillRect(dir * (s/3), -s/4, 2, 6); 
     }
-    else if (this.type === 'BETTA') {
+    // 2. 체리새우
+    else if (shape === 'shrimp') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/4, s*0.8, s*0.5);
+      ctx.fillRect(-s/3, s/4, s*0.4, s*0.3);
+    }
+    // 3. 반수생/바다 거북이
+    else if (shape === 'turtle' || shape === 'seaturtle') {
+      ctx.fillStyle = this.isDead ? '#475569' : (this.info.shellColor || '#78350f');
+      ctx.fillRect(-s/2, -s/3, s, s*0.7); 
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3); 
+    }
+    // 4. 베타
+    else if (shape === 'betta') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
       ctx.fillStyle = tailColor;
-      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2);
+      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2); 
     }
-    else if (this.type === 'SEAHORSE') {
+    // 5. 해마
+    else if (shape === 'seahorse') {
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-s/3, -s/2, s*0.6, s);
-      ctx.fillRect(-s/2, s/3, s*0.5, s*0.4);
+      ctx.fillRect(-s/3, -s/2, s*0.5, s);
+      ctx.fillRect(-s/2, s/3, s*0.4, s*0.4); 
     }
+    // 6. 복어 (동글동글한 원형 몸체)
+    else if (shape === 'puffer') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, s*0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(dir * (s/4), -s/4, 2, 2); // 눈
+    }
+    // 7. 옐로우탱 (납작하고 날렵한 삼각형 형태의 노란 물고기)
+    else if (shape === 'yellowtang') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(s/2, 0);
+      ctx.lineTo(-s/2, -s/2);
+      ctx.lineTo(-s/2, s/2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(s/4, -s/6, 2, 2);
+    }
+    // 8. 엔젤피쉬 (위아래로 뾰족하고 세모난 지느러미 형태)
+    else if (shape === 'angelfish') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(0, -s); // 위쪽 뾰족한 등지느러미
+      ctx.lineTo(s/2, 0);
+      ctx.lineTo(0, s); // 아래쪽 뾰족한 배지느러미
+      ctx.lineTo(-s/2, 0);
+      ctx.fill();
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-2, -s*0.6, 3, s*1.2);
+      }
+    }
+    // 9. 디스커스 & 일반 원형 어종
+    else if (shape === 'roundfish') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/2, s*0.8, s);
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-s/6, -s/2, 3, s);
+      }
+    }
+    // 10. 가든일 (모래 속에서 쏙 나온 길쭉한 장어 형태)
+    else if (shape === 'gardeneel') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-2, -s, 4, s); // 길쭉한 몸통
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(-1, -s + 2, 2, 2); // 눈점
+    }
+    // 11. 일반 물고기류
     else {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s, s*0.6);
 
-      if (stripeColor) {
-        ctx.fillStyle = stripeColor;
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
         ctx.fillRect(-s/6, -s/3, 3, s*0.6);
       }
 
@@ -529,7 +651,6 @@ function handleInput(e) {
     return;
   }
 
-  // 씨앗 및 브러시 도구 작동 (씨앗 크기 소형화)
   for (let dy = -brushSize; dy <= brushSize; dy++) {
     for (let dx = -brushSize; dx <= brushSize; dx++) {
       let nx = mx + dx;
@@ -540,7 +661,6 @@ function handleInput(e) {
         else if (currentTool === 'ROCK') grid[ny][nx] = 3;
         else if (currentTool === 'WOOD') grid[ny][nx] = 4;
         else if (currentTool === 'SEED') {
-          // 수초 씨앗(5)을 점 형태로 아주 작게 배치
           if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
             grid[ny][nx] = 5;
           }
@@ -575,7 +695,6 @@ function updatePhysics() {
         }
       }
 
-      // 부유식 먹이 (느린 중력)
       if (type === 7) {
         if (Math.random() < 0.25) {
           let dropY = y + 1;
@@ -586,7 +705,6 @@ function updatePhysics() {
         }
       }
 
-      // 수초 씨앗(5) 발아 (작은 알갱이 발아)
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
@@ -648,9 +766,9 @@ function loop() {
       else if (t === 2) ctx.fillStyle = '#57534e';
       else if (t === 3) ctx.fillStyle = '#475569';
       else if (t === 4) ctx.fillStyle = '#78350f';
-      else if (t === 5) ctx.fillStyle = '#86efac'; // 초소형 씨앗 입자
-      else if (t === 6) ctx.fillStyle = '#16a34a'; // 자란 수초
-      else if (t === 7) ctx.fillStyle = '#facc15'; // 부유식 먹이
+      else if (t === 5) ctx.fillStyle = '#86efac';
+      else if (t === 6) ctx.fillStyle = '#16a34a';
+      else if (t === 7) ctx.fillStyle = '#facc15';
       else if (t === 8) {
         let pt = poopTypeGrid[y][x];
         if (pt === 1) ctx.fillStyle = '#451a03';
