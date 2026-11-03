@@ -12,7 +12,7 @@ html_code = """
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body { background-color: #060c18; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
   
-  #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; }
+  #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; z-index: 100; }
   .panel-title { font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
   
   .mode-btn-group { display: flex; gap: 4px; }
@@ -29,14 +29,13 @@ html_code = """
   input[type="color"] { height: 24px; border: none; background: transparent; }
 
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
-  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; outline: none; }
+  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; }
   
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
-  #status-bar:active { cursor: grabbing; }
   
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 10; max-width: 600px; text-align: center; }
 
-  #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; }
+  #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
   .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
   
@@ -143,7 +142,7 @@ html_code = """
     <span>🥅 뜰채담음: <span id="txt-net-count" style="color:#facc15;">0</span>마리</span>
   </div>
 
-  <canvas id="sandCanvas" width="1000" height="650" tabindex="1"></canvas>
+  <canvas id="sandCanvas" width="1000" height="650"></canvas>
 
   <div id="info-box">
     <div style="display:flex; justify-content:space-around; width:100%;">
@@ -512,24 +511,23 @@ class Creature {
 
 let isMouseDown = false;
 
-// 캔버스 클릭/드래그 이벤트 핸들러 (포커스 및 좌표 정확도 보완)
-canvas.addEventListener('pointerdown', e => {
-  canvas.focus();
+// 캔버스 전용 마우스/터치 이벤트 (안전한 바인딩)
+canvas.addEventListener('mousedown', e => {
   isMouseDown = true;
-  handleCanvasInteraction(e);
+  processInteraction(e);
 });
 
-window.addEventListener('pointermove', e => {
+window.addEventListener('mousemove', e => {
   if (!isMouseDown) return;
-  handleCanvasInteraction(e);
+  processInteraction(e);
 });
 
-window.addEventListener('pointerup', () => {
+window.addEventListener('mouseup', () => {
   isMouseDown = false;
   draggedCreature = null;
 });
 
-function handleCanvasInteraction(e) {
+function processInteraction(e) {
   const rect = canvas.getBoundingClientRect();
   const mx = Math.floor((e.clientX - rect.left) / SCALE);
   const my = Math.floor((e.clientY - rect.top) / SCALE);
@@ -537,7 +535,7 @@ function handleCanvasInteraction(e) {
   if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
 
   if (currentTool === 'NET') {
-    if (e.type === 'pointerdown') {
+    if (e.type === 'mousedown') {
       let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
       if (targetIdx !== -1) {
         let caught = creatures.splice(targetIdx, 1)[0];
@@ -553,7 +551,7 @@ function handleCanvasInteraction(e) {
   }
 
   if (currentTool === 'SELECT') {
-    if (e.type === 'pointerdown') {
+    if (e.type === 'mousedown') {
       selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
       const infoBox = document.getElementById('info-box');
       const infoAdvice = document.getElementById('info-advice');
@@ -579,7 +577,7 @@ function handleCanvasInteraction(e) {
   }
 
   if (currentTool === 'MOVE') {
-    if (e.type === 'pointerdown') {
+    if (e.type === 'mousedown') {
       draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
     } else if (draggedCreature) {
       draggedCreature.x = mx;
@@ -593,7 +591,7 @@ function handleCanvasInteraction(e) {
   if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
 
   if (SPECIES_DATA[currentTool]) {
-    if (e.type === 'pointerdown') {
+    if (e.type === 'mousedown') {
       creatures.push(new Creature(currentTool, mx, my));
     }
     return;
