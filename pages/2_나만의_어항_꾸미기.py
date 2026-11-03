@@ -29,11 +29,11 @@ html_code = """
   input[type="color"] { height: 24px; border: none; background: transparent; }
 
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
-  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; }
+  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; z-index: 5; }
   
-  #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
+  #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 20; }
   
-  #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 10; max-width: 600px; text-align: center; }
+  #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 20; max-width: 600px; text-align: center; }
 
   #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
@@ -334,12 +334,11 @@ class Creature {
     if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
     if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
 
-    // 수초(6) 통과 로직: 물리 충돌 없이 자유롭게 지나가되 수초에 갇히거나 막히지 않도록 처리
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
       if (grid[curY][curX] === 6) {
-        this.y -= 0.5; // 자연스럽게 앞뒤 수직 레이어를 통과하도록 우회 보정
+        this.y -= 0.5;
       }
     }
 
@@ -511,18 +510,18 @@ class Creature {
 
 let isMouseDown = false;
 
-// 클릭 및 드래그 반응 안정성 강화
-canvas.addEventListener('mousedown', e => {
+// 캔버스 인터랙션 리스너 안정성 대폭 강화
+canvas.addEventListener('pointerdown', e => {
   isMouseDown = true;
   processInteraction(e);
 });
 
-window.addEventListener('mousemove', e => {
+window.addEventListener('pointermove', e => {
   if (!isMouseDown) return;
   processInteraction(e);
 });
 
-window.addEventListener('mouseup', () => {
+window.addEventListener('pointerup', () => {
   isMouseDown = false;
   draggedCreature = null;
 });
@@ -535,7 +534,7 @@ function processInteraction(e) {
   if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
 
   if (currentTool === 'NET') {
-    if (e.type === 'mousedown') {
+    if (e.type === 'pointerdown') {
       let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
       if (targetIdx !== -1) {
         let caught = creatures.splice(targetIdx, 1)[0];
@@ -551,7 +550,7 @@ function processInteraction(e) {
   }
 
   if (currentTool === 'SELECT') {
-    if (e.type === 'mousedown') {
+    if (e.type === 'pointerdown') {
       selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
       const infoBox = document.getElementById('info-box');
       const infoAdvice = document.getElementById('info-advice');
@@ -577,7 +576,7 @@ function processInteraction(e) {
   }
 
   if (currentTool === 'MOVE') {
-    if (e.type === 'mousedown') {
+    if (e.type === 'pointerdown') {
       draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
     } else if (draggedCreature) {
       draggedCreature.x = mx;
@@ -591,7 +590,7 @@ function processInteraction(e) {
   if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
 
   if (SPECIES_DATA[currentTool]) {
-    if (e.type === 'mousedown') {
+    if (e.type === 'pointerdown') {
       creatures.push(new Creature(currentTool, mx, my));
     }
     return;
