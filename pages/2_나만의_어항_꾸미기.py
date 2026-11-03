@@ -219,24 +219,25 @@ document.addEventListener('mouseup', () => {
   isStatusDragging = false;
 });
 
+// 크기(size)를 기존보다 2배 정도 뻥튀기하여 똥과 생물이 선명하게 보이도록 설정
 const SPECIES_DATA = {
-  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 6, poopType: 2, shape: 'shrimp', speed: 0.5 },
-  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 10, poopType: 1, shape: 'fish', speed: 0.6 },
-  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 10, poopType: 2, shape: 'fish', speed: 0.6 },
-  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 14, poopType: 1, shape: 'betta', speed: 0.5 },
-  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 11, poopType: 2, shape: 'snail', speed: 0.3 },
-  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 18, poopType: 3, shape: 'roundfish', speed: 0.4 },
-  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 18, poopType: 1, shape: 'angelfish', speed: 0.4 },
-  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 24, poopType: 3, shape: 'turtle', speed: 0.4 },
+  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 12, poopType: 2, shape: 'shrimp', speed: 0.5 },
+  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 18, poopType: 1, shape: 'fish', speed: 0.6 },
+  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 18, poopType: 2, shape: 'fish', speed: 0.6 },
+  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 24, poopType: 1, shape: 'betta', speed: 0.5 },
+  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 20, poopType: 2, shape: 'snail', speed: 0.3 },
+  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 32, poopType: 3, shape: 'roundfish', speed: 0.4 },
+  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 32, poopType: 1, shape: 'angelfish', speed: 0.4 },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 40, poopType: 3, shape: 'turtle', speed: 0.4 },
   
-  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 12, poopType: 1, shape: 'fish', speed: 0.6 },
-  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 14, poopType: 1, shape: 'roundfish', speed: 0.5 },
-  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 12, poopType: 1, shape: 'seahorse', speed: 0.4 },
-  PUFFER: { name: '복어', env: 'SALT', color: '#eab308', bellyColor: '#ffffff', size: 15, poopType: 3, shape: 'puffer', speed: 0.4 },
-  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 14, poopType: 1, shape: 'yellowtang', speed: 0.6 },
-  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 20, poopType: 3, shape: 'angelfish', speed: 0.4 },
-  GARDENEEL: { name: '가든일', env: 'SALT', color: '#f1f5f9', size: 12, poopType: 1, shape: 'gardeneel', speed: 0.2 },
-  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 32, poopType: 3, shape: 'seaturtle', speed: 0.4 }
+  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 22, poopType: 1, shape: 'fish', speed: 0.6 },
+  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 24, poopType: 1, shape: 'roundfish', speed: 0.5 },
+  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 22, poopType: 1, shape: 'seahorse', speed: 0.4 },
+  PUFFER: { name: '복어', env: 'SALT', color: '#eab308', bellyColor: '#ffffff', size: 28, poopType: 3, shape: 'puffer', speed: 0.4 },
+  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 24, poopType: 1, shape: 'yellowtang', speed: 0.6 },
+  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 34, poopType: 3, shape: 'angelfish', speed: 0.4 },
+  GARDENEEL: { name: '가든일', env: 'SALT', color: '#f1f5f9', size: 24, poopType: 1, shape: 'gardeneel', speed: 0.2 },
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 48, poopType: 3, shape: 'seaturtle', speed: 0.4 }
 };
 
 function toggleLight() {
@@ -312,28 +313,25 @@ class Creature {
     let spd = this.info.speed;
     this.vx = (Math.random() - 0.5) * spd;
     this.vy = (Math.random() - 0.5) * (spd * 0.5);
-    this.fullness = 80; // 포만감 초기값 넉넉하게
+    this.fullness = 80;
     this.health = 100;
     this.digestTimer = 0;
     this.isDead = false;
     this.animFrame = Math.random() * 10;
     
-    // 가든일 특별 초기화: 생성되면 아래로 내려가 모래를 찾음
     if (this.shape === 'gardeneel') {
       this.inSand = false;
-      this.targetSandX = Math.floor(this.x);
     }
   }
 
   get shape() { return this.info.shape; }
 
   update() {
-    // 환경 불일치 시 체력 감소
     if (this.info.env !== tankEnv) {
       this.health -= 0.1;
     }
 
-    // 가든일 모래 유무 판정 (모래 없으면 스트레스사 위험)
+    // 가든일 모래 감지 (모래 없으면 스트레스사 위험)
     if (this.shape === 'gardeneel' && !this.isDead) {
       let ix = Math.floor(this.x);
       let iy = Math.min(HEIGHT - 1, Math.floor(this.y) + 6);
@@ -346,12 +344,11 @@ class Creature {
       }
 
       if (!hasSandBelow) {
-        this.health -= 0.35; // 모래가 없으면 급격히 스트레스 누적
+        this.health -= 0.35;
         this.noSandWarning = true;
       } else {
         this.noSandWarning = false;
-        // 모래 속으로 꼬리를 파고 들어가 고정
-        if (!this.inSand && this.y >= HEIGHT - 45) {
+        if (!this.inSand && this.y >= HEIGHT - 50) {
           this.inSand = true;
           this.vx = 0; this.vy = 0;
         }
@@ -362,32 +359,29 @@ class Creature {
       this.isDead = true;
       this.vx = 0;
       if (this.y > 15) {
-        this.y -= 0.4; // 사망 시 수면 위로 둥둥
+        this.y -= 0.4;
       }
       return;
     }
 
-    // 가든일 뿅뿅 움직임
     if (this.shape === 'gardeneel' && this.inSand) {
       if (Math.random() < 0.008) {
-        this.inSand = Math.random() < 0.7; // 뿅 하고 나왔다 들어감
+        this.inSand = Math.random() < 0.7;
       }
       this.vx = 0; this.vy = 0;
     }
 
     this.animFrame += 0.15;
-    
-    // 배고픔 속도 늦춤 (0.003 -> 0.0015)
     this.fullness -= 0.0015;
     if (this.fullness < 0) this.fullness = 0;
 
-    // 배가 차 있을 때 밥 먹은 후 소화 후 똥 싸기 (모래/바닥 위에 쌓임)
+    // 배가 차면 똥 싸기
     if (this.fullness > 35) {
       this.digestTimer += 1;
       if (this.digestTimer > 500) {
         this.poop();
         this.digestTimer = 0;
-        this.fullness -= 15; // 포만감 소모
+        this.fullness -= 15;
       }
     }
 
@@ -401,7 +395,6 @@ class Creature {
     if (this.x < 25 || this.x > WIDTH - 25) this.vx *= -1;
     if (this.y < 25 || this.y > HEIGHT - 35) this.vy *= -1;
 
-    // 수초(6) 충돌 시 끼임 방지
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
@@ -422,17 +415,17 @@ class Creature {
   findAndEatFood() {
     let cx = Math.floor(this.x);
     let cy = Math.floor(this.y);
-    for (let dy = -35; dy <= 35; dy += 2) {
-      for (let dx = -35; dx <= 35; dx += 2) {
+    for (let dy = -40; dy <= 40; dy += 2) {
+      for (let dx = -40; dx <= 40; dx += 2) {
         let nx = cx + dx;
         let ny = cy + dy;
         if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
           if (grid[ny][nx] === 7) { 
-            this.vx = dx * 0.03;
-            this.vy = dy * 0.03;
-            if (Math.abs(dx) <= 5 && Math.abs(dy) <= 5) {
-              grid[ny][nx] = 0;
-              this.fullness = Math.min(100, this.fullness + 12);
+            this.vx = dx * 0.04;
+            this.vy = dy * 0.04;
+            if (Math.abs(dx) <= 6 && Math.abs(dy) <= 6) {
+              grid[ny][nx] = 0; // 먹이가 확실하게 사라짐
+              this.fullness = Math.min(100, this.fullness + 15);
             }
             return;
           }
@@ -444,12 +437,11 @@ class Creature {
   poop() {
     let px = Math.floor(this.x);
     let py = Math.floor(this.y) + Math.floor(this.info.size / 2) + 2;
-    // 바닥이나 모래 위에 닿을 때까지 아래로 떨어져서 쌓이게 함
     while (py < HEIGHT - 1 && grid[py][px] === 0) {
       py++;
     }
     if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
-      grid[py][px] = 8; // 똥 입자
+      grid[py][px] = 8;
       poopTypeGrid[py][px] = this.info.poopType;
     }
   }
@@ -544,11 +536,15 @@ class Creature {
       }
     }
     else if (shape === 'gardeneel') {
+      // 가든일: 지렁이/장어처럼 길다랗고 둥글한 형태 구현
       ctx.fillStyle = bodyColor;
-      let lengthMod = this.inSand ? s * 0.5 : s;
-      ctx.fillRect(-2, -lengthMod, 4, lengthMod); 
+      let lengthMod = this.inSand ? s * 0.4 : s * 1.2;
+      ctx.beginPath();
+      ctx.arc(0, -lengthMod, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(-3, -lengthMod, 6, lengthMod);
       ctx.fillStyle = '#000000';
-      ctx.fillRect(-1, -lengthMod + 2, 2, 2); 
+      ctx.fillRect(-1, -lengthMod + 2, 2, 2); // 눈
     }
     else {
       ctx.fillStyle = bodyColor;
@@ -570,17 +566,15 @@ class Creature {
       ctx.fill();
     }
 
-    // 개체 선택 시 파란색 테두리
     if (selectedCreature === this) {
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
       ctx.strokeRect(-s, -s, s*2, s*2);
     }
 
-    // 환경 부적합 또는 가든일 모래 없음 시 빨간색 주의 테두리 깜박임
     if (!this.isDead && (this.info.env !== tankEnv || this.noSandWarning)) {
       ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.strokeRect(-s*0.9, -s*0.9, s*1.8, s*1.8);
     }
 
@@ -596,7 +590,6 @@ canvas.addEventListener('mousedown', e => {
   const mx = Math.floor((e.clientX - rect.left) / SCALE);
   const my = Math.floor((e.clientY - rect.top) / SCALE);
 
-  // 뜰채 도구일 때: 생물 포획뿐만 아니라 모래 위의 똥 입자(8) 클릭 시 청소(제거) 가능!
   if (currentTool === 'NET') {
     if (grid[my] && grid[my][mx] === 8) {
       grid[my][mx] = 0;
@@ -629,7 +622,6 @@ canvas.addEventListener('mousedown', e => {
       document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
       document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 350 ? '배변 임박' : '양호');
       
-      // 문제점 및 해결 방법 처방전 가이드
       let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
       if (selectedCreature.isDead) {
         adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
@@ -681,12 +673,11 @@ function handleInput(e) {
 
   if (currentTool === 'BUBBLER_MOVE') { equipPos.bubbler = {x: mx, y: my}; return; }
   if (currentTool === 'FILTER_MOVE') { equipPos.filter = {x: mx, y: my}; return; }
-  if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
+  if (currentTool === 'HEATTER_MOVE' || currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
 
   if (SPECIES_DATA[currentTool]) {
     if (e.type === 'mousedown') {
       let newC = new Creature(currentTool, mx, my);
-      // 만약 가든일이라면 생성 시 바로 아래 모래 바닥으로 자연스럽게 안착 유도
       if (currentTool === 'GARDENEEL') {
         newC.y = Math.min(HEIGHT - 30, my);
       }
@@ -706,7 +697,7 @@ function handleInput(e) {
         else if (currentTool === 'WOOD') grid[ny][nx] = 4;
         else if (currentTool === 'SEED') {
           if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
-            grid[ny][nx] = 5;
+            grid[ny][nx] = 5; // 수초 씨앗 발아 대기
           }
         }
         else if (currentTool === 'FOOD') grid[ny][nx] = 7;
@@ -724,7 +715,6 @@ function updatePhysics() {
     for (let x = 0; x < WIDTH; x++) {
       let type = grid[y][x];
 
-      // 모래(1,2) 및 똥(8) 아래로 낙하 및 쌓임 물리 연산
       if (type === 1 || type === 2 || type === 8) {
         if (grid[y + 1][x] === 0) {
           grid[y + 1][x] = type;
@@ -750,13 +740,15 @@ function updatePhysics() {
         }
       }
 
+      // 수초 성장 로직: 소일(2)에서는 매우 빠르고 풍성하게, 모래(1)에서는 조금 더디지만 확실하게 성장
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
-          if (Math.random() < 0.08) {
-            grid[y][x] = 6;
-            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.7) {
-              grid[y - 1][x] = 5;
+          let growthChance = (under === 2) ? 0.25 : 0.08; // 소일에서 훨씬 잘 자람
+          if (Math.random() < growthChance) {
+            grid[y][x] = 6; // 수초 완성
+            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < (under === 2 ? 0.85 : 0.5)) {
+              grid[y - 1][x] = 5; // 위로 쑥쑥 자라남
             }
           }
         } else if (under === 0) {
@@ -782,7 +774,6 @@ function loop() {
     ctx.globalAlpha = 1.0;
   }
 
-  // 기포기
   ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
   for (let i = 0; i < 12; i++) {
     let bx = equipPos.bubbler.x + (Math.random() - 0.5) * 12;
@@ -793,7 +784,6 @@ function loop() {
   ctx.fillStyle = '#475569';
   ctx.fillRect((equipPos.bubbler.x - 8) * SCALE, equipPos.bubbler.y * SCALE, 16 * SCALE, 8 * SCALE);
 
-  // 여과기 & 히터
   ctx.fillStyle = '#1e293b';
   ctx.fillRect(equipPos.filter.x * SCALE, equipPos.filter.y * SCALE, 16 * SCALE, 35 * SCALE);
   ctx.fillStyle = '#334155';
@@ -801,7 +791,6 @@ function loop() {
   ctx.fillStyle = '#ef4444';
   ctx.fillRect((equipPos.heater.x + 1) * SCALE, (equipPos.heater.y + 30) * SCALE, 4 * SCALE, 12 * SCALE);
 
-  // 파우더 및 똥 그리기
   for (let y = 0; y < HEIGHT; y++) {
     for (let x = 0; x < WIDTH; x++) {
       let t = grid[y][x];
@@ -824,7 +813,6 @@ function loop() {
     }
   }
 
-  // 생물 그리기
   for (let i = creatures.length - 1; i >= 0; i--) {
     let c = creatures[i];
     c.update();
