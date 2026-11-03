@@ -355,13 +355,11 @@ class Creature {
     this.x += this.vx;
     this.y += this.vy;
 
-    // 어항 벽에 닿았을 때 갇히거나 와리가리 버벅이지 않고 반대 방향으로 확실하게 탈출하도록 유도
     if (this.x < 30) { this.x = 30; this.vx = Math.abs(this.vx) + 0.2; }
     if (this.x > WIDTH - 30) { this.x = WIDTH - 30; this.vx = -Math.abs(this.vx) - 0.2; }
     if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
     if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
 
-    // 수초(6) 벽에 부딪혔을 때 끼임 탈출 로직
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
@@ -461,4 +459,322 @@ class Creature {
     }
     else if (shape === 'seahorse') {
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-s/3,
+      ctx.fillRect(-s/3, -s/2, s*0.5, s);
+      ctx.fillRect(-s/2, s/3, s*0.4, s*0.4); 
+    }
+    else if (shape === 'puffer') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, s*0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(dir * (s/4), -s/4, 2, 2);
+    }
+    else if (shape === 'boxfish') {
+      ctx.fillStyle = this.isDead ? '#94a3b8' : '#facc15';
+      ctx.fillRect(-s/2, -s/2, s, s);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(dir * (s/4), -s/4, 3, 3);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(dir * (s/4) + (dir > 0 ? 1 : 0), -s/4 + 1, 1, 1);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(-dir * (s/2), -s/4, 4, s/2);
+    }
+    else if (shape === 'yellowtang') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(s/2, 0);
+      ctx.lineTo(-s/2, -s/2);
+      ctx.lineTo(-s/2, s/2);
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(s/4, -s/6, 2, 2);
+    }
+    else if (shape === 'angelfish') {
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.moveTo(0, -s); 
+      ctx.lineTo(s/2, 0);
+      ctx.lineTo(0, s); 
+      ctx.lineTo(-s/2, 0);
+      ctx.fill();
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-2, -s*0.6, 3, s*1.2);
+      }
+    }
+    else if (shape === 'roundfish') {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/2, s*0.8, s);
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-s/6, -s/2, 3, s);
+      }
+    }
+    else {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-s/2, -s/3, s, s*0.6);
+
+      if (this.info.stripeColor) {
+        ctx.fillStyle = this.isDead ? '#cbd5e1' : this.info.stripeColor;
+        ctx.fillRect(-s/6, -s/3, 3, s*0.6);
+      }
+
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(dir * (s/3), -s/5, 3, 3);
+      ctx.fillStyle = '#000000'; ctx.fillRect(dir * (s/3) + (dir > 0 ? 1 : 0), -s/5 + 1, 1, 1);
+
+      ctx.fillStyle = tailColor;
+      ctx.beginPath();
+      ctx.moveTo(-dir * (s/2), 0);
+      ctx.lineTo(-dir * (s * 0.9), -s/3 + wiggle);
+      ctx.lineTo(-dir * (s * 0.9), s/3 + wiggle);
+      ctx.fill();
+    }
+
+    if (selectedCreature === this) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-s, -s, s*2, s*2);
+    }
+
+    if (!this.isDead && this.info.env !== tankEnv) {
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(-s*0.9, -s*0.9, s*1.8, s*1.8);
+    }
+
+    ctx.restore();
+  }
+}
+
+let isMouseDown = false;
+
+canvas.addEventListener('mousedown', e => {
+  isMouseDown = true;
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (currentTool === 'NET') {
+    if (grid[my] && grid[my][mx] === 8) {
+      grid[my][mx] = 0;
+      poopTypeGrid[my][mx] = 0;
+      return;
+    }
+
+    let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
+    if (targetIdx !== -1) {
+      let caught = creatures.splice(targetIdx, 1)[0];
+      netBasket.push(caught);
+      document.getElementById('txt-net-count').innerText = netBasket.length;
+      if (selectedCreature === caught) {
+        selectedCreature = null;
+        document.getElementById('info-box').style.display = 'none';
+      }
+    }
+    return;
+  }
+
+  if (currentTool === 'SELECT') {
+    selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    const infoBox = document.getElementById('info-box');
+    const infoAdvice = document.getElementById('info-advice');
+    
+    if (selectedCreature) {
+      infoBox.style.display = 'flex';
+      document.getElementById('info-name').innerText = selectedCreature.info.name;
+      document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
+      document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
+      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 350 ? '배변 임박' : '양호');
+      
+      let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
+      if (selectedCreature.isDead) {
+        adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
+      } else if (selectedCreature.info.env !== tankEnv) {
+        adviceText = `⚠️ [문제점] ${selectedCreature.info.name}은(는) ${selectedCreature.info.env === 'FRESH' ? '담수' : '해수'} 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.`;
+      }
+      infoAdvice.innerText = adviceText;
+    } else {
+      infoBox.style.display = 'none';
+    }
+    return;
+  }
+
+  if (currentTool === 'MOVE') {
+    draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    return;
+  }
+
+  handleInput(e);
+});
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (draggedCreature && isMouseDown) {
+    draggedCreature.x = mx;
+    draggedCreature.y = my;
+    return;
+  }
+
+  if (isMouseDown && currentTool !== 'NET') handleInput(e);
+});
+
+canvas.addEventListener('mouseup', () => {
+  isMouseDown = false;
+  draggedCreature = null;
+});
+
+function handleInput(e) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = Math.floor((e.clientX - rect.left) / SCALE);
+  const my = Math.floor((e.clientY - rect.top) / SCALE);
+
+  if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
+
+  if (currentTool === 'BUBBLER_MOVE') { equipPos.bubbler = {x: mx, y: my}; return; }
+  if (currentTool === 'FILTER_MOVE') { equipPos.filter = {x: mx, y: my}; return; }
+  if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
+
+  if (SPECIES_DATA[currentTool]) {
+    if (e.type === 'mousedown') {
+      creatures.push(new Creature(currentTool, mx, my));
+    }
+    return;
+  }
+
+  for (let dy = -brushSize; dy <= brushSize; dy++) {
+    for (let dx = -brushSize; dx <= brushSize; dx++) {
+      let nx = mx + dx;
+      let ny = my + dy;
+      if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
+        if (currentTool === 'SAND') grid[ny][nx] = 1;
+        else if (currentTool === 'SOIL') grid[ny][nx] = 2;
+        else if (currentTool === 'ROCK') grid[ny][nx] = 3;
+        else if (currentTool === 'WOOD') grid[ny][nx] = 4;
+        else if (currentTool === 'SEED') {
+          if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
+            grid[ny][nx] = 5; 
+          }
+        }
+        else if (currentTool === 'FOOD') grid[ny][nx] = 7;
+        else if (currentTool === 'ERASER_ALL' || currentTool === 'DEL_PIXEL') {
+          grid[ny][nx] = 0;
+          poopTypeGrid[ny][nx] = 0;
+        }
+      }
+    }
+  }
+}
+
+function updatePhysics() {
+  for (let y = HEIGHT - 2; y >= 0; y--) {
+    for (let x = 0; x < WIDTH; x++) {
+      let type = grid[y][x];
+
+      if (type === 1 || type === 2 || type === 8) {
+        if (grid[y + 1][x] === 0) {
+          grid[y + 1][x] = type;
+          poopTypeGrid[y + 1][x] = poopTypeGrid[y][x];
+          grid[y][x] = 0;
+          poopTypeGrid[y][x] = 0;
+        } else if (x > 0 && grid[y + 1][x - 1] === 0) {
+          grid[y + 1][x - 1] = type;
+          grid[y][x] = 0;
+        } else if (x < WIDTH - 1 && grid[y + 1][x + 1] === 0) {
+          grid[y + 1][x + 1] = type;
+          grid[y][x] = 0;
+        }
+      }
+
+      if (type === 7) {
+        if (Math.random() < 0.25) {
+          let dropY = y + 1;
+          if (dropY < HEIGHT && grid[dropY][x] === 0) {
+            grid[dropY][x] = 7;
+            grid[y][x] = 0;
+          }
+        }
+      }
+
+      if (type === 5) {
+        let under = grid[y + 1] ? grid[y + 1][x] : 0;
+        if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
+          let growthChance = (under === 2) ? 0.45 : 0.25;
+          if (Math.random() < growthChance) {
+            grid[y][x] = 6; 
+            if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.9) {
+              grid[y - 1][x] = 5;
+            }
+          }
+        } else if (under === 0) {
+          grid[y + 1][x] = 5;
+          grid[y][x] = 0;
+        }
+      }
+    }
+  }
+}
+
+function loop() {
+  updatePhysics();
+
+  ctx.fillStyle = tankEnv === 'FRESH' ? '#030a17' : '#010512';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (lightOn) {
+    let lightColor = document.getElementById('light-color').value;
+    ctx.fillStyle = lightColor;
+    ctx.globalAlpha = 0.12;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+  }
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  for (let i = 0; i < 12; i++) {
+    let bx = equipPos.bubbler.x + (Math.random() - 0.5) * 12;
+    let by = equipPos.bubbler.y - Math.random() * 80;
+    let bSize = Math.random() * 3 + 1;
+    ctx.fillRect(bx * SCALE, by * SCALE, bSize, bSize);
+  }
+  ctx.fillStyle = '#475569';
+  ctx.fillRect((equipPos.bubbler.x - 8) * SCALE, equipPos.bubbler.y * SCALE, 16 * SCALE, 8 * SCALE);
+
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(equipPos.filter.x * SCALE, equipPos.filter.y * SCALE, 16 * SCALE, 35 * SCALE);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(equipPos.heater.x * SCALE, equipPos.heater.y * SCALE, 6 * SCALE, 45 * SCALE);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect((equipPos.heater.x + 1) * SCALE, (equipPos.heater.y + 30) * SCALE, 4 * SCALE, 12 * SCALE);
+
+  for (let y = 0; y < HEIGHT; y++) {
+    for (let x = 0; x < WIDTH; x++) {
+      let t = grid[y][x];
+      if (t === 0) continue;
+
+      if (t === 1) ctx.fillStyle = '#f59e0b';
+      else if (t === 2) ctx.fillStyle = '#57534e';
+      else if (t === 3) ctx.fillStyle = '#475569';
+      else if (t === 4) ctx.fillStyle = '#78350f';
+      else if (t === 5) ctx.fillStyle = '#86efac';
+      else if (t === 6) ctx.fillStyle = '#16a34a';
+      else if (t === 7) ctx.fillStyle = '#facc15';
+      else if (t === 8) {
+        let pt = poopTypeGrid[y][x];
+        if (pt === 1) ctx.fillStyle = '#78350f';
+        else if (pt === 2) ctx.fillStyle = '#b45309';
+        else ctx.fillStyle = '#292524';
+      }
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE * (t === 8 ? 1.5 : 1), SCALE * (t === 8 ? 1.5 : 1));
+    }
+  }
+
+  for (let i = creatures.length - 1; i >= 0; i--) {
+    let c = creatures[i];
+    c.update();
+    c.draw();
+  }
+
+  document.getElementById('txt-count').innerText = creatures.length;
