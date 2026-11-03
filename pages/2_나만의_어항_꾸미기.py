@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="픽셀 파우더 어항 Sandbox", layout="wide")
 
-html_code = r"""
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -12,7 +12,7 @@ html_code = r"""
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body { background-color: #060c18; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
   
-  #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; }
+  #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; z-index: 100; }
   .panel-title { font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
   
   .mode-btn-group { display: flex; gap: 4px; }
@@ -29,20 +29,18 @@ html_code = r"""
   input[type="color"] { height: 24px; border: none; background: transparent; }
 
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
-  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; }
+  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; }
   
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
-  #status-bar:active { cursor: grabbing; }
   
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 10; max-width: 600px; text-align: center; }
 
-  #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; }
+  #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
   .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
   
   .act-btn { padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; width: 100%; }
   .btn-reset { background: #ef4444; }
-  .btn-clean { background: #0284c7; }
 </style>
 </head>
 <body>
@@ -73,7 +71,7 @@ html_code = r"""
   <div id="sec-powder">
     <div class="panel-title">🧪 펜 도구 & 바닥재</div>
     <div class="tool-grid">
-      <button class="tool-btn active" onclick="setTool('NET', this)">🥅 만능 뜰채(똥 제거)</button>
+      <button class="tool-btn active" onclick="setTool('NET', this)">🥅 만능 뜰채</button>
       <button class="tool-btn" onclick="setTool('SELECT', this)">🔍 개체 선택펜</button>
       <button class="tool-btn" onclick="setTool('MOVE', this)">✋ 개체 이동펜</button>
       <button class="tool-btn" onclick="setTool('ERASER_ALL', this)">🧹 만능 지우개</button>
@@ -87,7 +85,7 @@ html_code = r"""
   </div>
 
   <div id="sec-creature" style="display:none;">
-    <div class="panel-title">🐟 어종 및 생물 (총 17종)</div>
+    <div class="panel-title">🐟 어종 및 생물 (총 16종)</div>
     <div class="tool-grid">
       <button class="tool-btn" onclick="setTool('SHRIMP', this)">🦐 체리새우(담수)</button>
       <button class="tool-btn" onclick="setTool('GUPPY', this)">🐟 구피 (담수)</button>
@@ -130,8 +128,7 @@ html_code = r"""
     <input type="color" id="light-color" value="#00b4d8">
   </div>
 
-  <div style="margin-top:auto; display:flex; gap:6px;">
-    <button class="act-btn btn-clean" onclick="cleanPoop()">🧹 똥 청소</button>
+  <div style="margin-top:auto;">
     <button class="act-btn btn-reset" onclick="clearTank()">🔄 전체 비우기</button>
   </div>
 </div>
@@ -152,7 +149,6 @@ html_code = r"""
       <span>📌 이름: <b id="info-name" style="color:#38bdf8;">-</b></span>
       <span>❤️ 체력: <b id="info-hp" style="color:#4ade80;">100%</b></span>
       <span>🍗 포만감: <b id="info-food" style="color:#facc15;">80%</b></span>
-      <span>💩 장 상태: <b id="info-poop" style="color:#fb923c;">양호</b></span>
     </div>
     <div id="info-advice" style="font-size:11px; color:#f87171; border-top:1px solid #1e2e4a; padding-top:4px; margin-top:2px; text-align:left;"></div>
   </div>
@@ -175,12 +171,12 @@ const canvas = document.getElementById('sandCanvas');
 const ctx = canvas.getContext('2d');
 
 let grid = Array.from({length: HEIGHT}, () => new Uint8Array(WIDTH));
-let poopTypeGrid = Array.from({length: HEIGHT}, () => new Uint8Array(WIDTH));
 
 let tankEnv = 'FRESH';
 let currentTool = 'NET';
 let brushSize = 3;
 let lightOn = true;
+let globalAnimTime = 0;
 
 let equipPos = {
   bubbler: { x: 100, y: 310 },
@@ -220,23 +216,23 @@ document.addEventListener('mouseup', () => {
 });
 
 const SPECIES_DATA = {
-  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 12, poopType: 2, shape: 'shrimp', speed: 0.5 },
-  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 18, poopType: 1, shape: 'fish', speed: 0.6 },
-  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 18, poopType: 2, shape: 'fish', speed: 0.6 },
-  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 24, poopType: 1, shape: 'betta', speed: 0.5 },
-  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 20, poopType: 2, shape: 'snail', speed: 0.3 },
-  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 32, poopType: 3, shape: 'roundfish', speed: 0.4 },
-  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 32, poopType: 1, shape: 'angelfish', speed: 0.4 },
-  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 40, poopType: 3, shape: 'turtle', speed: 0.4 },
+  SHRIMP: { name: '체리새우', env: 'FRESH', color: '#ef4444', size: 12, shape: 'shrimp', speed: 0.5 },
+  GUPPY: { name: '구피', env: 'FRESH', color: '#f59e0b', tailColor: '#ef4444', size: 18, shape: 'fish', speed: 0.6 },
+  TETRA: { name: '네온테트라', env: 'FRESH', color: '#0284c7', tailColor: '#ef4444', size: 18, shape: 'fish', speed: 0.6 },
+  BETTA: { name: '베타', env: 'FRESH', color: '#8b5cf6', tailColor: '#ec4899', size: 24, shape: 'betta', speed: 0.5 },
+  SNAIL: { name: '애플스네일', env: 'FRESH', color: '#eab308', size: 20, shape: 'snail', speed: 0.3 },
+  DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 32, shape: 'roundfish', speed: 0.4 },
+  ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 32, shape: 'angelfish', speed: 0.4 },
+  TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 40, shape: 'turtle', speed: 0.4 },
   
-  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 22, poopType: 1, shape: 'fish', speed: 0.6 },
-  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 24, poopType: 1, shape: 'roundfish', speed: 0.5 },
-  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 22, poopType: 1, shape: 'seahorse', speed: 0.4 },
-  PUFFER: { name: '복어', env: 'SALT', color: '#eab308', bellyColor: '#ffffff', size: 28, poopType: 3, shape: 'puffer', speed: 0.4 },
-  BOXFISH: { name: '박스피쉬', env: 'SALT', color: '#facc15', size: 26, poopType: 2, shape: 'boxfish', speed: 0.4 },
-  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 24, poopType: 1, shape: 'yellowtang', speed: 0.6 },
-  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 34, poopType: 3, shape: 'angelfish', speed: 0.4 },
-  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 48, poopType: 3, shape: 'seaturtle', speed: 0.4 }
+  CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 22, shape: 'fish', speed: 0.6 },
+  BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 24, shape: 'roundfish', speed: 0.5 },
+  SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 22, shape: 'seahorse', speed: 0.4 },
+  PUFFER: { name: '복어', env: 'SALT', color: '#eab308', bellyColor: '#ffffff', size: 28, shape: 'puffer', speed: 0.4 },
+  BOXFISH: { name: '박스피쉬', env: 'SALT', color: '#facc15', size: 26, shape: 'boxfish', speed: 0.4 },
+  YELLOWTANG: { name: '옐로우탱', env: 'SALT', color: '#facc15', size: 24, shape: 'yellowtang', speed: 0.6 },
+  QUEENANGEL: { name: '퀸엔젤', env: 'SALT', color: '#2563eb', stripeColor: '#facc15', size: 34, shape: 'angelfish', speed: 0.4 },
+  TURTLE_SEA: { name: '바다거북', env: 'SALT', color: '#0d9488', shellColor: '#1e3a8a', size: 48, shape: 'seaturtle', speed: 0.4 }
 };
 
 function toggleLight() {
@@ -272,7 +268,6 @@ function setTool(tool, btn) {
 function clearTank() {
   for (let y = 0; y < HEIGHT; y++) {
     grid[y].fill(0);
-    poopTypeGrid[y].fill(0);
   }
   creatures = [];
   netBasket = [];
@@ -284,17 +279,6 @@ function clearTank() {
 function emptyNet() {
   netBasket = [];
   document.getElementById('txt-net-count').innerText = 0;
-}
-
-function cleanPoop() {
-  for (let y = 0; y < HEIGHT; y++) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (grid[y][x] === 8) {
-        grid[y][x] = 0;
-        poopTypeGrid[y][x] = 0;
-      }
-    }
-  }
 }
 
 function addRandomCreature() {
@@ -314,7 +298,6 @@ class Creature {
     this.vy = (Math.random() - 0.5) * (spd * 0.5);
     this.fullness = 80;
     this.health = 100;
-    this.digestTimer = 0;
     this.isDead = false;
     this.animFrame = Math.random() * 10;
   }
@@ -339,15 +322,6 @@ class Creature {
     this.fullness -= 0.0015;
     if (this.fullness < 0) this.fullness = 0;
 
-    if (this.fullness > 35) {
-      this.digestTimer += 1;
-      if (this.digestTimer > 500) {
-        this.poop();
-        this.digestTimer = 0;
-        this.fullness -= 15;
-      }
-    }
-
     if (this.shape !== 'snail' && this.fullness < 95) {
       this.findAndEatFood();
     }
@@ -355,19 +329,17 @@ class Creature {
     this.x += this.vx;
     this.y += this.vy;
 
-    // 어항 벽에 닿았을 때 갇히거나 와리가리 버벅이지 않고 반대 방향으로 확실하게 탈출하도록 유도
     if (this.x < 30) { this.x = 30; this.vx = Math.abs(this.vx) + 0.2; }
     if (this.x > WIDTH - 30) { this.x = WIDTH - 30; this.vx = -Math.abs(this.vx) - 0.2; }
     if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
     if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
 
-    // 수초(6) 벽에 부딪혔을 때 끼임 탈출 로직
+    // 수초(6) 통과 로직: 물리 충돌 없이 자유롭게 지나가되 수초에 갇히거나 막히지 않도록 처리
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
       if (grid[curY][curX] === 6) {
-        this.y -= 1.5;
-        this.vx += (Math.random() - 0.5) * 0.8;
+        this.y -= 0.5; // 자연스럽게 앞뒤 수직 레이어를 통과하도록 우회 보정
       }
     }
 
@@ -399,18 +371,6 @@ class Creature {
           }
         }
       }
-    }
-  }
-
-  poop() {
-    let px = Math.floor(this.x);
-    let py = Math.floor(this.y) + Math.floor(this.info.size / 2) + 2;
-    while (py < HEIGHT - 1 && grid[py][px] === 0) {
-      py++;
-    }
-    if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
-      grid[py][px] = 8;
-      poopTypeGrid[py][px] = this.info.poopType;
     }
   }
 
@@ -472,16 +432,15 @@ class Creature {
       ctx.fillStyle = '#000000';
       ctx.fillRect(dir * (s/4), -s/4, 2, 2);
     }
-    // 박스피쉬: 노란색 네모난 복어 형태
     else if (shape === 'boxfish') {
       ctx.fillStyle = this.isDead ? '#94a3b8' : '#facc15';
-      ctx.fillRect(-s/2, -s/2, s, s); // 네모난 몸체
+      ctx.fillRect(-s/2, -s/2, s, s);
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(dir * (s/4), -s/4, 3, 3); // 눈
+      ctx.fillRect(dir * (s/4), -s/4, 3, 3);
       ctx.fillStyle = '#000000';
       ctx.fillRect(dir * (s/4) + (dir > 0 ? 1 : 0), -s/4 + 1, 1, 1);
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(-dir * (s/2), -s/4, 4, s/2); // 작은 꼬리
+      ctx.fillRect(-dir * (s/2), -s/4, 4, s/2);
     }
     else if (shape === 'yellowtang') {
       ctx.fillStyle = bodyColor;
@@ -552,90 +511,80 @@ class Creature {
 
 let isMouseDown = false;
 
+// 클릭 및 드래그 반응 안정성 강화
 canvas.addEventListener('mousedown', e => {
   isMouseDown = true;
+  processInteraction(e);
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isMouseDown) return;
+  processInteraction(e);
+});
+
+window.addEventListener('mouseup', () => {
+  isMouseDown = false;
+  draggedCreature = null;
+});
+
+function processInteraction(e) {
   const rect = canvas.getBoundingClientRect();
   const mx = Math.floor((e.clientX - rect.left) / SCALE);
   const my = Math.floor((e.clientY - rect.top) / SCALE);
 
-  if (currentTool === 'NET') {
-    if (grid[my] && grid[my][mx] === 8) {
-      grid[my][mx] = 0;
-      poopTypeGrid[my][mx] = 0;
-      return;
-    }
+  if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
 
-    let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
-    if (targetIdx !== -1) {
-      let caught = creatures.splice(targetIdx, 1)[0];
-      netBasket.push(caught);
-      document.getElementById('txt-net-count').innerText = netBasket.length;
-      if (selectedCreature === caught) {
-        selectedCreature = null;
-        document.getElementById('info-box').style.display = 'none';
+  if (currentTool === 'NET') {
+    if (e.type === 'mousedown') {
+      let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
+      if (targetIdx !== -1) {
+        let caught = creatures.splice(targetIdx, 1)[0];
+        netBasket.push(caught);
+        document.getElementById('txt-net-count').innerText = netBasket.length;
+        if (selectedCreature === caught) {
+          selectedCreature = null;
+          document.getElementById('info-box').style.display = 'none';
+        }
       }
     }
     return;
   }
 
   if (currentTool === 'SELECT') {
-    selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
-    const infoBox = document.getElementById('info-box');
-    const infoAdvice = document.getElementById('info-advice');
-    
-    if (selectedCreature) {
-      infoBox.style.display = 'flex';
-      document.getElementById('info-name').innerText = selectedCreature.info.name;
-      document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
-      document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
-      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 350 ? '배변 임박' : '양호');
+    if (e.type === 'mousedown') {
+      selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+      const infoBox = document.getElementById('info-box');
+      const infoAdvice = document.getElementById('info-advice');
       
-      let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
-      if (selectedCreature.isDead) {
-        adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
-      } else if (selectedCreature.info.env !== tankEnv) {
-        adviceText = `⚠️ [문제점] ${selectedCreature.info.name}은(는) ${selectedCreature.info.env === 'FRESH' ? '담수' : '해수'} 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.`;
+      if (selectedCreature) {
+        infoBox.style.display = 'flex';
+        document.getElementById('info-name').innerText = selectedCreature.info.name;
+        document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
+        document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
+        
+        let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
+        if (selectedCreature.isDead) {
+          adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
+        } else if (selectedCreature.info.env !== tankEnv) {
+          adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
+        }
+        infoAdvice.innerText = adviceText;
+      } else {
+        infoBox.style.display = 'none';
       }
-      infoAdvice.innerText = adviceText;
-    } else {
-      infoBox.style.display = 'none';
     }
     return;
   }
 
   if (currentTool === 'MOVE') {
-    draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    if (e.type === 'mousedown') {
+      draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    } else if (draggedCreature) {
+      draggedCreature.x = mx;
+      draggedCreature.y = my;
+    }
     return;
   }
-
-  handleInput(e);
-});
-
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = Math.floor((e.clientX - rect.left) / SCALE);
-  const my = Math.floor((e.clientY - rect.top) / SCALE);
-
-  if (draggedCreature && isMouseDown) {
-    draggedCreature.x = mx;
-    draggedCreature.y = my;
-    return;
-  }
-
-  if (isMouseDown && currentTool !== 'NET') handleInput(e);
-});
-
-canvas.addEventListener('mouseup', () => {
-  isMouseDown = false;
-  draggedCreature = null;
-});
-
-function handleInput(e) {
-  const rect = canvas.getBoundingClientRect();
-  const mx = Math.floor((e.clientX - rect.left) / SCALE);
-  const my = Math.floor((e.clientY - rect.top) / SCALE);
-
-  if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
 
   if (currentTool === 'BUBBLER_MOVE') { equipPos.bubbler = {x: mx, y: my}; return; }
   if (currentTool === 'FILTER_MOVE') { equipPos.filter = {x: mx, y: my}; return; }
@@ -665,7 +614,6 @@ function handleInput(e) {
         else if (currentTool === 'FOOD') grid[ny][nx] = 7;
         else if (currentTool === 'ERASER_ALL' || currentTool === 'DEL_PIXEL') {
           grid[ny][nx] = 0;
-          poopTypeGrid[ny][nx] = 0;
         }
       }
     }
@@ -677,12 +625,10 @@ function updatePhysics() {
     for (let x = 0; x < WIDTH; x++) {
       let type = grid[y][x];
 
-      if (type === 1 || type === 2 || type === 8) {
+      if (type === 1 || type === 2) {
         if (grid[y + 1][x] === 0) {
           grid[y + 1][x] = type;
-          poopTypeGrid[y + 1][x] = poopTypeGrid[y][x];
           grid[y][x] = 0;
-          poopTypeGrid[y][x] = 0;
         } else if (x > 0 && grid[y + 1][x - 1] === 0) {
           grid[y + 1][x - 1] = type;
           grid[y][x] = 0;
@@ -702,15 +648,14 @@ function updatePhysics() {
         }
       }
 
-      // 수초 씨앗 성장 대폭 상향: 소일(2)과 모래(1) 모두 훨씬 빠르고 풍성하게 자라나도록 수정
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
-          let growthChance = (under === 2) ? 0.45 : 0.25; // 소일과 모래 모두 성장률 대폭 상향
+          let growthChance = (under === 2) ? 0.45 : 0.25;
           if (Math.random() < growthChance) {
             grid[y][x] = 6; 
             if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.9) {
-              grid[y - 1][x] = 5; // 위로 쑥쑥 빠르게 자라남
+              grid[y - 1][x] = 5;
             }
           }
         } else if (under === 0) {
@@ -723,6 +668,7 @@ function updatePhysics() {
 }
 
 function loop() {
+  globalAnimTime += 0.05;
   updatePhysics();
 
   ctx.fillStyle = tankEnv === 'FRESH' ? '#030a17' : '#010512';
@@ -763,16 +709,14 @@ function loop() {
       else if (t === 3) ctx.fillStyle = '#475569';
       else if (t === 4) ctx.fillStyle = '#78350f';
       else if (t === 5) ctx.fillStyle = '#86efac';
-      else if (t === 6) ctx.fillStyle = '#16a34a';
       else if (t === 7) ctx.fillStyle = '#facc15';
-      else if (t === 8) {
-        let pt = poopTypeGrid[y][x];
-        // 똥 시인성 강화 (조금 더 진하고 굵은 입자로 표시)
-        if (pt === 1) ctx.fillStyle = '#78350f';
-        else if (pt === 2) ctx.fillStyle = '#b45309';
-        else ctx.fillStyle = '#292524';
+      else if (t === 6) {
+        let sway = Math.sin(globalAnimTime + y * 0.2) * 2;
+        ctx.fillStyle = '#16a34a';
+        ctx.fillRect((x * SCALE) + sway, y * SCALE, SCALE, SCALE);
+        continue;
       }
-      ctx.fillRect(x * SCALE, y * SCALE, SCALE * (t === 8 ? 1.5 : 1), SCALE * (t === 8 ? 1.5 : 1));
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
     }
   }
 
