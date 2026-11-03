@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="픽셀 파우더 어항 Sandbox", layout="wide")
 
-html_code = """
+html_code = r"""
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -355,11 +355,13 @@ class Creature {
     this.x += this.vx;
     this.y += this.vy;
 
+    // 어항 벽에 닿았을 때 갇히거나 와리가리 버벅이지 않고 반대 방향으로 확실하게 탈출하도록 유도
     if (this.x < 30) { this.x = 30; this.vx = Math.abs(this.vx) + 0.2; }
     if (this.x > WIDTH - 30) { this.x = WIDTH - 30; this.vx = -Math.abs(this.vx) - 0.2; }
     if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
     if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
 
+    // 수초(6) 벽에 부딪혔을 때 끼임 탈출 로직
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
@@ -470,15 +472,16 @@ class Creature {
       ctx.fillStyle = '#000000';
       ctx.fillRect(dir * (s/4), -s/4, 2, 2);
     }
+    // 박스피쉬: 노란색 네모난 복어 형태
     else if (shape === 'boxfish') {
       ctx.fillStyle = this.isDead ? '#94a3b8' : '#facc15';
-      ctx.fillRect(-s/2, -s/2, s, s);
+      ctx.fillRect(-s/2, -s/2, s, s); // 네모난 몸체
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(dir * (s/4), -s/4, 3, 3);
+      ctx.fillRect(dir * (s/4), -s/4, 3, 3); // 눈
       ctx.fillStyle = '#000000';
       ctx.fillRect(dir * (s/4) + (dir > 0 ? 1 : 0), -s/4 + 1, 1, 1);
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(-dir * (s/2), -s/4, 4, s/2);
+      ctx.fillRect(-dir * (s/2), -s/4, 4, s/2); // 작은 꼬리
     }
     else if (shape === 'yellowtang') {
       ctx.fillStyle = bodyColor;
@@ -591,7 +594,7 @@ canvas.addEventListener('mousedown', e => {
       if (selectedCreature.isDead) {
         adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
       } else if (selectedCreature.info.env !== tankEnv) {
-        adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
+        adviceText = `⚠️ [문제점] ${selectedCreature.info.name}은(는) ${selectedCreature.info.env === 'FRESH' ? '담수' : '해수'} 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.`;
       }
       infoAdvice.innerText = adviceText;
     } else {
@@ -699,14 +702,15 @@ function updatePhysics() {
         }
       }
 
+      // 수초 씨앗 성장 대폭 상향: 소일(2)과 모래(1) 모두 훨씬 빠르고 풍성하게 자라나도록 수정
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
-          let growthChance = (under === 2) ? 0.45 : 0.25;
+          let growthChance = (under === 2) ? 0.45 : 0.25; // 소일과 모래 모두 성장률 대폭 상향
           if (Math.random() < growthChance) {
             grid[y][x] = 6; 
             if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.9) {
-              grid[y - 1][x] = 5;
+              grid[y - 1][x] = 5; // 위로 쑥쑥 빠르게 자라남
             }
           }
         } else if (under === 0) {
@@ -763,12 +767,12 @@ function loop() {
       else if (t === 7) ctx.fillStyle = '#facc15';
       else if (t === 8) {
         let pt = poopTypeGrid[y][x];
+        // 똥 시인성 강화 (조금 더 진하고 굵은 입자로 표시)
         if (pt === 1) ctx.fillStyle = '#78350f';
         else if (pt === 2) ctx.fillStyle = '#b45309';
         else ctx.fillStyle = '#292524';
       }
-      let poopSizeScale = (t === 8) ? 1.5 : 1;
-      ctx.fillRect(x * SCALE, y * SCALE, SCALE * poopSizeScale, SCALE * poopSizeScale);
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE * (t === 8 ? 1.5 : 1), SCALE * (t === 8 ? 1.5 : 1));
     }
   }
 
