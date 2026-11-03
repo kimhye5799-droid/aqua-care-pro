@@ -31,11 +31,10 @@ html_code = r"""
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
   canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; }
   
-  /* 드래그 가능한 상태바 */
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
   #status-bar:active { cursor: grabbing; }
   
-  #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+  #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 10; max-width: 600px; text-align: center; }
 
   #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; }
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
@@ -74,7 +73,7 @@ html_code = r"""
   <div id="sec-powder">
     <div class="panel-title">🧪 펜 도구 & 바닥재</div>
     <div class="tool-grid">
-      <button class="tool-btn active" onclick="setTool('NET', this)">🥅 만능 뜰채</button>
+      <button class="tool-btn active" onclick="setTool('NET', this)">🥅 만능 뜰채(똥 제거)</button>
       <button class="tool-btn" onclick="setTool('SELECT', this)">🔍 개체 선택펜</button>
       <button class="tool-btn" onclick="setTool('MOVE', this)">✋ 개체 이동펜</button>
       <button class="tool-btn" onclick="setTool('ERASER_ALL', this)">🧹 만능 지우개</button>
@@ -88,7 +87,7 @@ html_code = r"""
   </div>
 
   <div id="sec-creature" style="display:none;">
-    <div class="panel-title">🐟 귀여운 어종 (총 17종)</div>
+    <div class="panel-title">🐟 어종 및 생물 (총 17종)</div>
     <div class="tool-grid">
       <button class="tool-btn" onclick="setTool('SHRIMP', this)">🦐 체리새우(담수)</button>
       <button class="tool-btn" onclick="setTool('GUPPY', this)">🐟 구피 (담수)</button>
@@ -138,7 +137,6 @@ html_code = r"""
 </div>
 
 <div id="main-container">
-  <!-- 마우스로 드래그 가능한 상태바 -->
   <div id="status-bar" onmousedown="startDragStatus(event)">
     <span id="txt-env" style="color:#38bdf8;">🌿 담수 어항</span>
     <span>🌡️ 수온: <span id="txt-temp">24</span>°C</span>
@@ -150,10 +148,13 @@ html_code = r"""
   <canvas id="sandCanvas" width="1000" height="650"></canvas>
 
   <div id="info-box">
-    <span>📌 이름: <b id="info-name" style="color:#38bdf8;">-</b></span>
-    <span>❤️ 체력: <b id="info-hp" style="color:#4ade80;">100%</b></span>
-    <span>🍗 포만감: <b id="info-food" style="color:#facc15;">80%</b></span>
-    <span>💩 장 상태: <b id="info-poop" style="color:#fb923c;">양호</b></span>
+    <div style="display:flex; justify-content:space-around; width:100%;">
+      <span>📌 이름: <b id="info-name" style="color:#38bdf8;">-</b></span>
+      <span>❤️ 체력: <b id="info-hp" style="color:#4ade80;">100%</b></span>
+      <span>🍗 포만감: <b id="info-food" style="color:#facc15;">80%</b></span>
+      <span>💩 장 상태: <b id="info-poop" style="color:#fb923c;">양호</b></span>
+    </div>
+    <div id="info-advice" style="font-size:11px; color:#f87171; border-top:1px solid #1e2e4a; padding-top:4px; margin-top:2px; text-align:left;"></div>
   </div>
 </div>
 
@@ -192,7 +193,6 @@ let netBasket = [];
 let selectedCreature = null;
 let draggedCreature = null;
 
-// 상태바 드래그 이동 로직
 let isStatusDragging = false;
 let statusOffsetX = 0, statusOffsetY = 0;
 const statusBar = document.getElementById('status-bar');
@@ -312,59 +312,82 @@ class Creature {
     let spd = this.info.speed;
     this.vx = (Math.random() - 0.5) * spd;
     this.vy = (Math.random() - 0.5) * (spd * 0.5);
-    this.fullness = 70;
+    this.fullness = 80; // 포만감 초기값 넉넉하게
     this.health = 100;
     this.digestTimer = 0;
     this.isDead = false;
     this.animFrame = Math.random() * 10;
     
-    // 가든일 특성 (모래 속에서 숨었다 뿅뿅 나옴)
+    // 가든일 특별 초기화: 생성되면 아래로 내려가 모래를 찾음
     if (this.shape === 'gardeneel') {
-      this.inSand = true;
-      this.y = HEIGHT - 25;
-      this.vx = 0; this.vy = 0;
+      this.inSand = false;
+      this.targetSandX = Math.floor(this.x);
     }
   }
 
   get shape() { return this.info.shape; }
 
   update() {
+    // 환경 불일치 시 체력 감소
     if (this.info.env !== tankEnv) {
-      this.health -= 0.15;
+      this.health -= 0.1;
+    }
+
+    // 가든일 모래 유무 판정 (모래 없으면 스트레스사 위험)
+    if (this.shape === 'gardeneel' && !this.isDead) {
+      let ix = Math.floor(this.x);
+      let iy = Math.min(HEIGHT - 1, Math.floor(this.y) + 6);
+      let hasSandBelow = false;
+      for (let checkY = iy; checkY < HEIGHT; checkY++) {
+        if ([1, 2].includes(grid[checkY][ix])) {
+          hasSandBelow = true;
+          break;
+        }
+      }
+
+      if (!hasSandBelow) {
+        this.health -= 0.35; // 모래가 없으면 급격히 스트레스 누적
+        this.noSandWarning = true;
+      } else {
+        this.noSandWarning = false;
+        // 모래 속으로 꼬리를 파고 들어가 고정
+        if (!this.inSand && this.y >= HEIGHT - 45) {
+          this.inSand = true;
+          this.vx = 0; this.vy = 0;
+        }
+      }
     }
 
     if (this.health <= 0) {
       this.isDead = true;
       this.vx = 0;
       if (this.y > 15) {
-        this.y -= 0.5; // 사망 시 수면 위로 둥둥
+        this.y -= 0.4; // 사망 시 수면 위로 둥둥
       }
       return;
     }
 
-    // 가든일 특별 움직임 (모래 속에서 쏙 나왔다 들어감)
-    if (this.shape === 'gardeneel') {
-      if (Math.random() < 0.01) {
-        this.inSand = !this.inSand;
+    // 가든일 뿅뿅 움직임
+    if (this.shape === 'gardeneel' && this.inSand) {
+      if (Math.random() < 0.008) {
+        this.inSand = Math.random() < 0.7; // 뿅 하고 나왔다 들어감
       }
-      if (this.inSand) {
-        this.vx = 0; this.vy = 0;
-      } else {
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.2;
-      }
+      this.vx = 0; this.vy = 0;
     }
 
     this.animFrame += 0.15;
-    this.fullness -= 0.003;
+    
+    // 배고픔 속도 늦춤 (0.003 -> 0.0015)
+    this.fullness -= 0.0015;
     if (this.fullness < 0) this.fullness = 0;
 
-    if (this.fullness > 40) {
+    // 배가 차 있을 때 밥 먹은 후 소화 후 똥 싸기 (모래/바닥 위에 쌓임)
+    if (this.fullness > 35) {
       this.digestTimer += 1;
-      if (this.digestTimer > 400) {
+      if (this.digestTimer > 500) {
         this.poop();
         this.digestTimer = 0;
-        this.fullness -= 10;
+        this.fullness -= 15; // 포만감 소모
       }
     }
 
@@ -378,12 +401,12 @@ class Creature {
     if (this.x < 25 || this.x > WIDTH - 25) this.vx *= -1;
     if (this.y < 25 || this.y > HEIGHT - 35) this.vy *= -1;
 
-    // 수초(6) 영역과 충돌 시 살짝 밀려나도록 처리 (낑김 방지)
+    // 수초(6) 충돌 시 끼임 방지
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
       if (grid[curY][curX] === 6) {
-        this.y -= 1.0; // 수초 위로 살짝 뜸
+        this.y -= 1.0; 
       }
     }
 
@@ -409,7 +432,7 @@ class Creature {
             this.vy = dy * 0.03;
             if (Math.abs(dx) <= 5 && Math.abs(dy) <= 5) {
               grid[ny][nx] = 0;
-              this.fullness = Math.min(100, this.fullness + 8);
+              this.fullness = Math.min(100, this.fullness + 12);
             }
             return;
           }
@@ -421,8 +444,12 @@ class Creature {
   poop() {
     let px = Math.floor(this.x);
     let py = Math.floor(this.y) + Math.floor(this.info.size / 2) + 2;
+    // 바닥이나 모래 위에 닿을 때까지 아래로 떨어져서 쌓이게 함
+    while (py < HEIGHT - 1 && grid[py][px] === 0) {
+      py++;
+    }
     if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
-      grid[py][px] = 8;
+      grid[py][px] = 8; // 똥 입자
       poopTypeGrid[py][px] = this.info.poopType;
     }
   }
@@ -445,7 +472,6 @@ class Creature {
     let tailColor = this.isDead ? '#64748b' : (this.info.tailColor || this.info.color);
     let shape = this.shape;
 
-    // 1. 애플스네일 (달팽이 전용 모양)
     if (shape === 'snail') {
       ctx.fillStyle = this.isDead ? '#64748b' : '#eab308';
       ctx.beginPath();
@@ -456,42 +482,36 @@ class Creature {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(dir * (s/3), -s/4, 2, 6); 
     }
-    // 2. 체리새우
     else if (shape === 'shrimp') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/4, s*0.8, s*0.5);
       ctx.fillRect(-s/3, s/4, s*0.4, s*0.3);
     }
-    // 3. 반수생/바다 거북이
     else if (shape === 'turtle' || shape === 'seaturtle') {
       ctx.fillStyle = this.isDead ? '#475569' : (this.info.shellColor || '#78350f');
       ctx.fillRect(-s/2, -s/3, s, s*0.7); 
       ctx.fillStyle = bodyColor;
       ctx.fillRect(dir * (s/2), -s/6, s/3, s/3); 
     }
-    // 4. 베타
     else if (shape === 'betta') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
       ctx.fillStyle = tailColor;
       ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2); 
     }
-    // 5. 해마
     else if (shape === 'seahorse') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/3, -s/2, s*0.5, s);
       ctx.fillRect(-s/2, s/3, s*0.4, s*0.4); 
     }
-    // 6. 복어 (동글동글한 원형 몸체)
     else if (shape === 'puffer') {
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
       ctx.arc(0, 0, s*0.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#000000';
-      ctx.fillRect(dir * (s/4), -s/4, 2, 2); // 눈
+      ctx.fillRect(dir * (s/4), -s/4, 2, 2);
     }
-    // 7. 옐로우탱 (납작하고 날렵한 삼각형 형태의 노란 물고기)
     else if (shape === 'yellowtang') {
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
@@ -502,13 +522,12 @@ class Creature {
       ctx.fillStyle = '#000000';
       ctx.fillRect(s/4, -s/6, 2, 2);
     }
-    // 8. 엔젤피쉬 (위아래로 뾰족하고 세모난 지느러미 형태)
     else if (shape === 'angelfish') {
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
-      ctx.moveTo(0, -s); // 위쪽 뾰족한 등지느러미
+      ctx.moveTo(0, -s); 
       ctx.lineTo(s/2, 0);
-      ctx.lineTo(0, s); // 아래쪽 뾰족한 배지느러미
+      ctx.lineTo(0, s); 
       ctx.lineTo(-s/2, 0);
       ctx.fill();
       if (this.info.stripeColor) {
@@ -516,7 +535,6 @@ class Creature {
         ctx.fillRect(-2, -s*0.6, 3, s*1.2);
       }
     }
-    // 9. 디스커스 & 일반 원형 어종
     else if (shape === 'roundfish') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/2, s*0.8, s);
@@ -525,14 +543,13 @@ class Creature {
         ctx.fillRect(-s/6, -s/2, 3, s);
       }
     }
-    // 10. 가든일 (모래 속에서 쏙 나온 길쭉한 장어 형태)
     else if (shape === 'gardeneel') {
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-2, -s, 4, s); // 길쭉한 몸통
+      let lengthMod = this.inSand ? s * 0.5 : s;
+      ctx.fillRect(-2, -lengthMod, 4, lengthMod); 
       ctx.fillStyle = '#000000';
-      ctx.fillRect(-1, -s + 2, 2, 2); // 눈점
+      ctx.fillRect(-1, -lengthMod + 2, 2, 2); 
     }
-    // 11. 일반 물고기류
     else {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s, s*0.6);
@@ -553,16 +570,18 @@ class Creature {
       ctx.fill();
     }
 
+    // 개체 선택 시 파란색 테두리
     if (selectedCreature === this) {
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
       ctx.strokeRect(-s, -s, s*2, s*2);
     }
 
-    if (!this.isDead && this.info.env !== tankEnv) {
+    // 환경 부적합 또는 가든일 모래 없음 시 빨간색 주의 테두리 깜박임
+    if (!this.isDead && (this.info.env !== tankEnv || this.noSandWarning)) {
       ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(-s*0.8, -s*0.8, s*1.6, s*1.6);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-s*0.9, -s*0.9, s*1.8, s*1.8);
     }
 
     ctx.restore();
@@ -577,7 +596,14 @@ canvas.addEventListener('mousedown', e => {
   const mx = Math.floor((e.clientX - rect.left) / SCALE);
   const my = Math.floor((e.clientY - rect.top) / SCALE);
 
+  // 뜰채 도구일 때: 생물 포획뿐만 아니라 모래 위의 똥 입자(8) 클릭 시 청소(제거) 가능!
   if (currentTool === 'NET') {
+    if (grid[my] && grid[my][mx] === 8) {
+      grid[my][mx] = 0;
+      poopTypeGrid[my][mx] = 0;
+      return;
+    }
+
     let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
     if (targetIdx !== -1) {
       let caught = creatures.splice(targetIdx, 1)[0];
@@ -594,12 +620,25 @@ canvas.addEventListener('mousedown', e => {
   if (currentTool === 'SELECT') {
     selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
     const infoBox = document.getElementById('info-box');
+    const infoAdvice = document.getElementById('info-advice');
+    
     if (selectedCreature) {
       infoBox.style.display = 'flex';
       document.getElementById('info-name').innerText = selectedCreature.info.name;
       document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
       document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
-      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 200 ? '배변 임박' : '양호');
+      document.getElementById('info-poop').innerText = selectedCreature.isDead ? '사망' : (selectedCreature.digestTimer > 350 ? '배변 임박' : '양호');
+      
+      // 문제점 및 해결 방법 처방전 가이드
+      let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
+      if (selectedCreature.isDead) {
+        adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
+      } else if (selectedCreature.noSandWarning) {
+        adviceText = "⚠️ [문제점] 가든일은 모래 구멍 속에 숨어야 하는데 바닥이 맨유리입니다!\n💡 [해결 방법] 왼쪽 툴바에서 '🟨 금사 모래' 또는 '🤎 영양 소일'을 선택해 바닥에 깔아주세요.";
+      } else if (selectedCreature.info.env !== tankEnv) {
+        adviceText = `⚠️ [문제점] ${selectedCreature.info.name}은(는) ${selectedCreature.info.env === 'FRESH' ? '담수' : '해수'} 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.`;
+      }
+      infoAdvice.innerText = adviceText;
     } else {
       infoBox.style.display = 'none';
     }
@@ -646,7 +685,12 @@ function handleInput(e) {
 
   if (SPECIES_DATA[currentTool]) {
     if (e.type === 'mousedown') {
-      creatures.push(new Creature(currentTool, mx, my));
+      let newC = new Creature(currentTool, mx, my);
+      // 만약 가든일이라면 생성 시 바로 아래 모래 바닥으로 자연스럽게 안착 유도
+      if (currentTool === 'GARDENEEL') {
+        newC.y = Math.min(HEIGHT - 30, my);
+      }
+      creatures.push(newC);
     }
     return;
   }
@@ -680,6 +724,7 @@ function updatePhysics() {
     for (let x = 0; x < WIDTH; x++) {
       let type = grid[y][x];
 
+      // 모래(1,2) 및 똥(8) 아래로 낙하 및 쌓임 물리 연산
       if (type === 1 || type === 2 || type === 8) {
         if (grid[y + 1][x] === 0) {
           grid[y + 1][x] = type;
@@ -756,7 +801,7 @@ function loop() {
   ctx.fillStyle = '#ef4444';
   ctx.fillRect((equipPos.heater.x + 1) * SCALE, (equipPos.heater.y + 30) * SCALE, 4 * SCALE, 12 * SCALE);
 
-  // 파우더 그리기
+  // 파우더 및 똥 그리기
   for (let y = 0; y < HEIGHT; y++) {
     for (let x = 0; x < WIDTH; x++) {
       let t = grid[y][x];
