@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="픽셀 파우더 어항 Sandbox", layout="wide")
 
-html_code = r"""
+html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -591,7 +591,7 @@ canvas.addEventListener('mousedown', e => {
       if (selectedCreature.isDead) {
         adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
       } else if (selectedCreature.info.env !== tankEnv) {
-        adviceText = `⚠️ [문제점] ${selectedCreature.info.name}은(는) ${selectedCreature.info.env === 'FRESH' ? '담수' : '해수'} 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.`;
+        adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
       }
       infoAdvice.innerText = adviceText;
     } else {
@@ -767,7 +767,8 @@ function loop() {
         else if (pt === 2) ctx.fillStyle = '#b45309';
         else ctx.fillStyle = '#292524';
       }
-      ctx.fillRect(x * SCALE, y * SCALE, SCALE * (t === 8 ? 1.5 : 1), SCALE * (t === 8 ? 1.5 : 1));
+      let poopSizeScale = (t === 8) ? 1.5 : 1;
+      ctx.fillRect(x * SCALE, y * SCALE, SCALE * poopSizeScale, SCALE * poopSizeScale);
     }
   }
 
@@ -778,3 +779,13 @@ function loop() {
   }
 
   document.getElementById('txt-count').innerText = creatures.length;
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
+"""
+
+components.html(html_code, height=680)
