@@ -29,7 +29,7 @@ html_code = """
   input[type="color"] { height: 24px; border: none; background: transparent; }
 
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
-  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; }
+  canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; outline: none; }
   
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 10; }
   #status-bar:active { cursor: grabbing; }
@@ -42,7 +42,6 @@ html_code = """
   
   .act-btn { padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; width: 100%; }
   .btn-reset { background: #ef4444; }
-  .btn-clean { background: #0284c7; }
 </style>
 </head>
 <body>
@@ -130,7 +129,7 @@ html_code = """
     <input type="color" id="light-color" value="#00b4d8">
   </div>
 
-  <div style="margin-top:auto; display:flex; gap:6px;">
+  <div style="margin-top:auto;">
     <button class="act-btn btn-reset" onclick="clearTank()">🔄 전체 비우기</button>
   </div>
 </div>
@@ -144,7 +143,7 @@ html_code = """
     <span>🥅 뜰채담음: <span id="txt-net-count" style="color:#facc15;">0</span>마리</span>
   </div>
 
-  <canvas id="sandCanvas" width="1000" height="650"></canvas>
+  <canvas id="sandCanvas" width="1000" height="650" tabindex="1"></canvas>
 
   <div id="info-box">
     <div style="display:flex; justify-content:space-around; width:100%;">
@@ -336,12 +335,10 @@ class Creature {
     if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
     if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
 
-    // 수초(6) 영역과 절대 겹치지 않고 앞/뒤로만 우회하도록 충돌 방지 로직
     let curX = Math.floor(this.x);
     let curY = Math.floor(this.y);
     if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
       if (grid[curY][curX] === 6) {
-        // 수초를 만나면 앞/뒤(위쪽이나 좌우 바깥쪽)로 살짝 밀어내어 낑김 방지
         this.y -= 2.0;
         this.vx = (Math.random() < 0.5 ? 1 : -1) * 0.6;
       }
@@ -515,90 +512,88 @@ class Creature {
 
 let isMouseDown = false;
 
-canvas.addEventListener('mousedown', e => {
+// 캔버스 클릭/드래그 이벤트 핸들러 (포커스 및 좌표 정확도 보완)
+canvas.addEventListener('pointerdown', e => {
+  canvas.focus();
   isMouseDown = true;
-  const rect = canvas.getBoundingClientRect();
-  const mx = Math.floor((e.clientX - rect.left) / SCALE);
-  const my = Math.floor((e.clientY - rect.top) / SCALE);
-
-  if (currentTool === 'NET') {
-    let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
-    if (targetIdx !== -1) {
-      let caught = creatures.splice(targetIdx, 1)[0];
-      netBasket.push(caught);
-      document.getElementById('txt-net-count').innerText = netBasket.length;
-      if (selectedCreature === caught) {
-        selectedCreature = null;
-        document.getElementById('info-box').style.display = 'none';
-      }
-    }
-    return;
-  }
-
-  if (currentTool === 'SELECT') {
-    selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
-    const infoBox = document.getElementById('info-box');
-    const infoAdvice = document.getElementById('info-advice');
-    
-    if (selectedCreature) {
-      infoBox.style.display = 'flex';
-      document.getElementById('info-name').innerText = selectedCreature.info.name;
-      document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
-      document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
-      
-      let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
-      if (selectedCreature.isDead) {
-        adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
-      } else if (selectedCreature.info.env !== tankEnv) {
-        adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
-      }
-      infoAdvice.innerText = adviceText;
-    } else {
-      infoBox.style.display = 'none';
-    }
-    return;
-  }
-
-  if (currentTool === 'MOVE') {
-    draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
-    return;
-  }
-
-  handleInput(e);
+  handleCanvasInteraction(e);
 });
 
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = Math.floor((e.clientX - rect.left) / SCALE);
-  const my = Math.floor((e.clientY - rect.top) / SCALE);
-
-  if (draggedCreature && isMouseDown) {
-    draggedCreature.x = mx;
-    draggedCreature.y = my;
-    return;
-  }
-
-  if (isMouseDown && currentTool !== 'NET') handleInput(e);
+window.addEventListener('pointermove', e => {
+  if (!isMouseDown) return;
+  handleCanvasInteraction(e);
 });
 
-canvas.addEventListener('mouseup', () => {
+window.addEventListener('pointerup', () => {
   isMouseDown = false;
   draggedCreature = null;
 });
 
-function handleInput(e) {
+function handleCanvasInteraction(e) {
   const rect = canvas.getBoundingClientRect();
   const mx = Math.floor((e.clientX - rect.left) / SCALE);
   const my = Math.floor((e.clientY - rect.top) / SCALE);
 
   if (mx < 0 || mx >= WIDTH || my < 0 || my >= HEIGHT) return;
 
+  if (currentTool === 'NET') {
+    if (e.type === 'pointerdown') {
+      let targetIdx = creatures.findIndex(c => Math.abs(c.x - mx) < c.info.size + 4 && Math.abs(c.y - my) < c.info.size + 4);
+      if (targetIdx !== -1) {
+        let caught = creatures.splice(targetIdx, 1)[0];
+        netBasket.push(caught);
+        document.getElementById('txt-net-count').innerText = netBasket.length;
+        if (selectedCreature === caught) {
+          selectedCreature = null;
+          document.getElementById('info-box').style.display = 'none';
+        }
+      }
+    }
+    return;
+  }
+
+  if (currentTool === 'SELECT') {
+    if (e.type === 'pointerdown') {
+      selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+      const infoBox = document.getElementById('info-box');
+      const infoAdvice = document.getElementById('info-advice');
+      
+      if (selectedCreature) {
+        infoBox.style.display = 'flex';
+        document.getElementById('info-name').innerText = selectedCreature.info.name;
+        document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
+        document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
+        
+        let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
+        if (selectedCreature.isDead) {
+          adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
+        } else if (selectedCreature.info.env !== tankEnv) {
+          adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
+        }
+        infoAdvice.innerText = adviceText;
+      } else {
+        infoBox.style.display = 'none';
+      }
+    }
+    return;
+  }
+
+  if (currentTool === 'MOVE') {
+    if (e.type === 'pointerdown') {
+      draggedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
+    } else if (draggedCreature) {
+      draggedCreature.x = mx;
+      draggedCreature.y = my;
+    }
+    return;
+  }
+
   if (currentTool === 'BUBBLER_MOVE') { equipPos.bubbler = {x: mx, y: my}; return; }
   if (currentTool === 'FILTER_MOVE') { equipPos.filter = {x: mx, y: my}; return; }
   if (currentTool === 'HEATER_MOVE') { equipPos.heater = {x: mx, y: my}; return; }
 
   if (SPECIES_DATA[currentTool]) {
-    if (e.type === 'mousedown') {
+    if (e.type === 'pointerdown') {
       creatures.push(new Creature(currentTool, mx, my));
     }
     return;
@@ -718,7 +713,6 @@ function loop() {
       else if (t === 5) ctx.fillStyle = '#86efac';
       else if (t === 7) ctx.fillStyle = '#facc15';
       else if (t === 6) {
-        // 수초가 하늘하늘 움직이는 애니메이션 효과 (위치에 따라 좌우로 살짝 흔들림)
         let sway = Math.sin(globalAnimTime + y * 0.2) * 2;
         ctx.fillStyle = '#16a34a';
         ctx.fillRect((x * SCALE) + sway, y * SCALE, SCALE, SCALE);
