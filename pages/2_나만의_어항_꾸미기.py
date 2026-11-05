@@ -70,7 +70,7 @@ html_code = """
       <button class="mode-btn" id="tab-equip" onclick="setCategory('EQUIP')">장비</button>
     </div>
   </div>
-
+<!-- 브러시 크기 조절 영역 -->
   <div class="box-card">
     <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">3 px</span></div>
     <input type="range" id="brush-size" min="1" max="8" value="3" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
