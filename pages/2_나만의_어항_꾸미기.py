@@ -50,7 +50,7 @@ html_code = """
 </style>
 </head>
 <body>
-
+<!-- 왼쪽 메뉴 영역 시작 -->
 <div id="sidebar">
   <div>
     <div class="panel-title">🌊 서식 환경 (담수 / 해수)</div>
