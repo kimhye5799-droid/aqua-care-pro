@@ -123,7 +123,7 @@ html_code = """
       <button class="tool-btn" onclick="setTool('HEATER_MOVE', this)">🔥 히터 이동</button>
     </div>
   </div>
-
+<!-- 조명 및 수온 제어 영역 -->
   <div class="box-card">
     <div class="panel-title">💡 조명 및 수온 제어</div>
     <div class="slider-label"><span>🌡️ 수온</span><span id="temp-val">24°C</span></div>
