@@ -75,7 +75,7 @@ html_code = """
     <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">3 px</span></div>
     <input type="range" id="brush-size" min="1" max="8" value="3" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
   </div>
-
+<!-- 펜 도구 및 바닥재 선택 영역 -->
   <div id="sec-powder">
     <div class="panel-title">🧪 펜 도구 & 바닥재</div>
     <div class="tool-grid">
