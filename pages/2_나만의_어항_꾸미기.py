@@ -46,6 +46,7 @@ html_code = """
   /* 어항 기능 실행 버튼 디자인 설정 */
   .act-btn { padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; width: 100%; }
   .btn-reset { background: #ef4444; }
+  <!-- CSS 디자인 설정 종료 -->
 </style>
 </head>
 <body>
