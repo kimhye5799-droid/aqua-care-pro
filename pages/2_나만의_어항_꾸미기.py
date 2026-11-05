@@ -140,7 +140,7 @@ html_code = """
     <button class="act-btn btn-reset" onclick="clearTank()">🔄 전체 비우기</button>
   </div>
 </div>
-
+<!-- 어항 메인 화면 영역 시작 -->
 <div id="main-container">
   <div id="status-bar" onmousedown="startDragStatus(event)">
     <span id="txt-env" style="color:#38bdf8;">🌿 담수 어항</span>
