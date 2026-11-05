@@ -30,7 +30,7 @@ html_code = """
   .slider-label { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
   input[type="range"], input[type="color"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
   input[type="color"] { height: 24px; border: none; background: transparent; }
-
+/* 어항 메인 화면 영역 설정 */
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
   canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; z-index: 5; }
   
