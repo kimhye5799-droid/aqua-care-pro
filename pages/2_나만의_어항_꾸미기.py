@@ -59,6 +59,7 @@ html_code = """
       <button class="mode-btn active" id="btn-fresh" onclick="setTankEnv('FRESH')">🌿 담수 어항</button>
       <button class="mode-btn" id="btn-salt" onclick="setTankEnv('SALT')">🪸 해수 어항</button>
     </div>
+    <!-- 파우더, 생물, 장비 도구 모드 선택 영역 -->
   </div>
 
   <div>
