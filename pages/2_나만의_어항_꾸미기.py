@@ -114,7 +114,7 @@ html_code = """
       <button class="tool-btn" onclick="setTool('TURTLE_SEA', this)">🐢 바다거북(해수)</button>
     </div>
   </div>
-
+<!-- 어항 장비 선택 영역 -->
   <div id="sec-equip" style="display:none;">
     <div class="panel-title">🫧 어항 장비 설치</div>
     <div class="tool-grid">
