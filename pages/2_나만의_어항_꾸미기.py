@@ -565,7 +565,7 @@ function processInteraction(e) {
         if (selectedCreature.isDead) {
           adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
         } else if (selectedCreature.info.env !== tankEnv) {
-          adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
+adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
         }
         infoAdvice.innerText = adviceText;
       } else {
