@@ -13,7 +13,8 @@ html_code = """
 /* 어항 화면의 전체 디자인과 배치 설정 */
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body { background-color: #060c18; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
-  
+
+  /* 왼쪽 사이드바 메뉴 디자인 설정 */
   #sidebar { width: 300px; background-color: #0f192e; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; border-right: 1px solid #1e2e4a; z-index: 100; }
   .panel-title { font-size: 13px; font-weight: bold; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
   
