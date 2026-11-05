@@ -308,77 +308,124 @@ class Creature {
     this.health = 100;
     this.isDead = false;
     this.animFrame = Math.random() * 10;
+    this.foodTarget = null;
+    this.wanderTimer = 0;
   }
 
   get shape() { return this.info.shape; }
 
-  update() {
-    if (this.info.env !== tankEnv) {
-      this.health -= 0.1;
+  // 암석(3)이 생물의 몸 반경 안에 있는지 검사
+  isRockCollision(x, y) {
+    const radius = Math.max(3, this.info.size * 0.32);
+    const left = Math.max(0, Math.floor(x - radius));
+    const right = Math.min(WIDTH - 1, Math.ceil(x + radius));
+    const top = Math.max(0, Math.floor(y - radius));
+    const bottom = Math.min(HEIGHT - 1, Math.ceil(y + radius));
+    for (let gy = top; gy <= bottom; gy++) {
+      for (let gx = left; gx <= right; gx++) {
+        if (grid[gy][gx] !== 3) continue;
+        const nearestX = Math.max(gx, Math.min(x, gx + 1));
+        const nearestY = Math.max(gy, Math.min(y, gy + 1));
+        const dx = x - nearestX;
+        const dy = y - nearestY;
+        if (dx * dx + dy * dy < radius * radius) return true;
+      }
     }
+    return false;
+  }
 
+  update() {
+    if (this.info.env !== tankEnv) this.health -= 0.1;
     if (this.health <= 0) {
       this.isDead = true;
       this.vx = 0;
-      if (this.y > 15) {
-        this.y -= 0.4;
-      }
+      if (this.y > 15) this.y -= 0.4;
       return;
     }
 
     this.animFrame += 0.15;
-    this.fullness -= 0.0015;
-    if (this.fullness < 0) this.fullness = 0;
+    this.fullness = Math.max(0, this.fullness - 0.0015);
 
-    if (this.shape !== 'snail' && this.fullness < 95) {
-      this.findAndEatFood();
-    }
-
-    this.x += this.vx;
-    this.y += this.vy;
-
-    if (this.x < 30) { this.x = 30; this.vx = Math.abs(this.vx) + 0.2; }
-    if (this.x > WIDTH - 30) { this.x = WIDTH - 30; this.vx = -Math.abs(this.vx) - 0.2; }
-    if (this.y < 30) { this.y = 30; this.vy = Math.abs(this.vy) + 0.2; }
-    if (this.y > HEIGHT - 40) { this.y = HEIGHT - 40; this.vy = -Math.abs(this.vy) - 0.2; }
-
-    let curX = Math.floor(this.x);
-    let curY = Math.floor(this.y);
-    if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH) {
-      if (grid[curY][curX] === 6) {
-        this.y -= 0.5;
+    const seekingFood = this.shape !== 'snail' && this.fullness < 95 && this.findAndEatFood();
+    if (!seekingFood) {
+      // 먹이를 찾지 않을 때만 천천히 방향을 바꿔 자연스럽게 유영
+      if (Math.random() < 0.012) {
+        const m = this.info.speed;
+        this.vx += (Math.random() - 0.5) * m * 0.35;
+        this.vy += (Math.random() - 0.5) * m * 0.2;
       }
+      this.vx *= 0.995;
+      this.vy *= 0.995;
     }
 
-    if (!this.isDead && Math.random() < 0.02) {
-      let m = this.info.speed;
-      this.vx += (Math.random() - 0.5) * m;
-      this.vy += (Math.random() - 0.5) * (m * 0.5);
-      this.vx = Math.max(-0.9, Math.min(0.9, this.vx));
-      this.vy = Math.max(-0.5, Math.min(0.5, this.vy));
+    this.vx = Math.max(-0.85, Math.min(0.85, this.vx));
+    this.vy = Math.max(-0.45, Math.min(0.45, this.vy));
+
+    // 가로와 세로를 따로 이동시켜 암석 모서리에 걸렸을 때도 통과하지 않게 함
+    const nextX = Math.max(20, Math.min(WIDTH - 20, this.x + this.vx));
+    if (!this.isRockCollision(nextX, this.y)) {
+      this.x = nextX;
+    } else {
+      this.vx *= -0.35;
+    }
+
+    const nextY = Math.max(20, Math.min(HEIGHT - 25, this.y + this.vy));
+    if (!this.isRockCollision(this.x, nextY)) {
+      this.y = nextY;
+    } else {
+      this.vy *= -0.35;
+    }
+
+    // 수초 줄기는 지나갈 수 있지만 암석은 위에서 막히도록 유지
+    const curX = Math.floor(this.x);
+    const curY = Math.floor(this.y);
+    if (curY >= 0 && curY < HEIGHT && curX >= 0 && curX < WIDTH && grid[curY][curX] === 6) {
+      this.y -= 0.15;
     }
   }
 
   findAndEatFood() {
-    let cx = Math.floor(this.x);
-    let cy = Math.floor(this.y);
-    for (let dy = -40; dy <= 40; dy += 2) {
-      for (let dx = -40; dx <= 40; dx += 2) {
-        let nx = cx + dx;
-        let ny = cy + dy;
-        if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
-          if (grid[ny][nx] === 7) { 
-            this.vx = dx * 0.04;
-            this.vy = dy * 0.04;
-            if (Math.abs(dx) <= 6 && Math.abs(dy) <= 6) {
-              grid[ny][nx] = 0;
-              this.fullness = Math.min(100, this.fullness + 15);
-            }
-            return;
-          }
+    // 주변 먹이 중 가장 가까운 한 알만 목표로 선택해 목표가 계속 바뀌는 현상 방지
+    let best = null;
+    let bestDistance = 95;
+    const cx = Math.floor(this.x);
+    const cy = Math.floor(this.y);
+    for (let y = Math.max(0, cy - 95); y <= Math.min(HEIGHT - 1, cy + 95); y++) {
+      for (let x = Math.max(0, cx - 95); x <= Math.min(WIDTH - 1, cx + 95); x++) {
+        if (grid[y][x] !== 7) continue;
+        const dx = x - this.x;
+        const dy = y - this.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = { x, y };
         }
       }
     }
+
+    this.foodTarget = best;
+    if (!best) return false;
+
+    const dx = best.x + 0.5 - this.x;
+    const dy = best.y + 0.5 - this.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= Math.max(5, this.info.size * 0.28)) {
+      if (grid[best.y][best.x] === 7) {
+        grid[best.y][best.x] = 0;
+        this.fullness = Math.min(100, this.fullness + 22);
+      }
+      this.vx *= 0.25;
+      this.vy *= 0.25;
+      return true;
+    }
+
+    // 목표 방향으로 부드럽게 가속하고 속도를 제한해 제자리 왕복을 줄임
+    const speed = Math.min(0.72, Math.max(0.28, this.info.speed * 0.9));
+    const desiredVx = (dx / distance) * speed;
+    const desiredVy = (dy / distance) * speed * 0.7;
+    this.vx += (desiredVx - this.vx) * 0.12;
+    this.vy += (desiredVy - this.vy) * 0.12;
+    return true;
   }
 
   draw() {
@@ -657,10 +704,11 @@ function updatePhysics() {
 
       if (type === 5) {
         let under = grid[y + 1] ? grid[y + 1][x] : 0;
+        // 씨앗은 모래/소일/암석/유목 위에 도달했을 때만 뿌리내림
         if ([1, 2, 3, 4, 6].includes(under) || y === HEIGHT - 1) {
           let growthChance = (under === 2) ? 0.45 : 0.25;
           if (Math.random() < growthChance) {
-            grid[y][x] = 6; 
+            grid[y][x] = 6;
             if (y > 5 && grid[y - 1][x] === 0 && Math.random() < 0.9) {
               grid[y - 1][x] = 5;
             }
@@ -718,7 +766,7 @@ function loop() {
       else if (t === 5) ctx.fillStyle = '#86efac';
       else if (t === 7) ctx.fillStyle = '#facc15';
       else if (t === 6) {
-        let sway = Math.sin(globalAnimTime + y * 0.2) * 2;
+        let sway = Math.sin(globalAnimTime + y * 0.2) * Math.min(2, (HEIGHT - 1 - y) * 0.08);
         ctx.fillStyle = '#16a34a';
         ctx.fillRect((x * SCALE) + sway, y * SCALE, SCALE, SCALE);
         continue;
