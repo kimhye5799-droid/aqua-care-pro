@@ -53,6 +53,7 @@ html_code = """
 <!-- 왼쪽 메뉴 영역 시작 -->
 <div id="sidebar">
   <div>
+  <!-- 담수 및 해수 환경 선택 영역 -->
     <div class="panel-title">🌊 서식 환경 (담수 / 해수)</div>
     <div class="mode-btn-group">
       <button class="mode-btn active" id="btn-fresh" onclick="setTankEnv('FRESH')">🌿 담수 어항</button>
