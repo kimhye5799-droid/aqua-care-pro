@@ -40,6 +40,7 @@ html_code = """
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 20; max-width: 600px; text-align: center; }
 /* 오른쪽 어항 도구 패널 디자인 설정 */
   #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
+ /* 뜰채 보관함 디자인 설정 */
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
   .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
   
