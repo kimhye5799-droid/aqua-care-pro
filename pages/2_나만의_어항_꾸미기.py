@@ -10,6 +10,7 @@ html_code = """
 <head>
 <meta charset="UTF-8">
 <style>
+/* 어항 화면의 전체 디자인과 배치 설정 */
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body { background-color: #060c18; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
   
