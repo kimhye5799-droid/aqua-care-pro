@@ -36,7 +36,7 @@ html_code = """
   canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; z-index: 5; }
   /* 어항 상태 표시창 디자인 설정 */
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 20; }
-  
+  /* 어항 안내 정보창 디자인 설정 */
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 20; max-width: 600px; text-align: center; }
 
   #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
