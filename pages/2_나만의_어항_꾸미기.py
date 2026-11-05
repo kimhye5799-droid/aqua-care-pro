@@ -1,3 +1,4 @@
+# Streamlit 어항 앱 실행을 위한 기본 설정
 import streamlit as st
 import streamlit.components.v1 as components
 
