@@ -43,7 +43,7 @@ html_code = """
  /* 뜰채 보관함 디자인 설정 */
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
   .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
-  
+  /* 어항 기능 실행 버튼 디자인 설정 */
   .act-btn { padding: 8px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; width: 100%; }
   .btn-reset { background: #ef4444; }
 </style>
