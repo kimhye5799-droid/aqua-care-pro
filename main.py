@@ -229,7 +229,7 @@ def draw_fish(name):
             <path d="M35 30 L45 65"
             stroke="#fff6a0" stroke-width="3"/>
             """
-
+# 생물 종류에 따라 눈의 위치를 설정
     # 눈 위치 설정
     if name in ["반수생거북", "바다거북"]:
         eye = '<circle cx="108" cy="42" r="3" fill="white"/>'
