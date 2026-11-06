@@ -312,7 +312,7 @@ current_temp = st.sidebar.slider(
 # 8. 환경별 테마 판별
 # ==================================================
 current_env = "기본"
-
+# 선택한 생물들의 염분 환경 정보를 확인
 if selected_fishes:
 
     salinities = {
