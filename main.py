@@ -168,7 +168,7 @@ def draw_fish(name):
             <path d="M35 48 Q55 43 80 48"
             stroke="#35ffff" stroke-width="4" fill="none"/>
             """
-
+# 크라운피쉬의 흰색 줄무늬를 추가
         # 크라운피쉬
         elif name == "크라운피쉬":
             shape += """
