@@ -125,6 +125,7 @@ with tab1:
         # 검색 참고 링크가 존재하는지 확인
         with st.chat_message("assistant"):
             st.markdown(chat["ans"])
+            # 관련 구글 검색 링크를 화면에 표시
             if chat["link"]:
                 st.markdown(f"🔗 [관련 구글 검색 참고 링크 바로가기]({chat['link']})")
 
