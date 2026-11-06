@@ -128,7 +128,7 @@ with tab1:
             # 관련 구글 검색 링크를 화면에 표시
             if chat["link"]:
                 st.markdown(f"🔗 [관련 구글 검색 참고 링크 바로가기]({chat['link']})")
-
+# 대화 기록을 초기 인사말만 남기고 초기화
     # 초기화 버튼
     if st.button("🗑️ 대화 기록 초기화"):
         st.session_state.selected_50_history = [
