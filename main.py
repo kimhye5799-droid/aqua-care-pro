@@ -132,7 +132,7 @@ def draw_fish(name):
         <path d="M50 28 L50 68 M75 28 L75 68"
         stroke="#9b7a32" stroke-width="2"/>
         """
-
+# 복어의 둥근 몸과 무늬를 표현
     # 복어
     elif name == "복어":
         shape = f"""
