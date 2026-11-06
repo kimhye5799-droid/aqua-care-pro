@@ -159,7 +159,7 @@ def draw_fish(name):
         <path d="M55 65 L70 80 L85 65"
         fill="{color}"/>
         """
-
+# 네온테트라의 특징적인 줄무늬를 추가
         # 네온테트라
         if name == "네온테트라":
             shape += """
