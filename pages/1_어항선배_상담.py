@@ -117,6 +117,7 @@ with tab1:
     st.markdown("### 💬 상담 대화 기록")
 # 사용자 메시지 영역을 생성
     # 대화 기록 출력
+    # 어항선배의 답변을 출력할 채팅 영역을 생성
     for chat in st.session_state.selected_50_history:
         if chat["q"] != "어항선배의 첫인사":
             with st.chat_message("user"):
