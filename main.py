@@ -298,7 +298,7 @@ tank_volume_l = st.sidebar.number_input(
     value=50,
     step=5
 )
-
+	# 현재 어항의 수온을 입력받음
 current_temp = st.sidebar.slider(
     "현재 사육 수온 (°C)",
     min_value=5.0,
