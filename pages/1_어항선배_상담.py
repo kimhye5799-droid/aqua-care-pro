@@ -91,7 +91,7 @@ with tab1:
         st.session_state.selected_50_history = [
             {"q": "어항선배의 첫인사", "ans": "어머, 반가워라. 🐟 궁금한 질문을 카테고리별로 골라봐. 팩트로 조져줄 테니까.", "link": ""}
         ]
-
+# 선택한 카테고리의 제목을 화면에 표시
     # 카테고리 선택 셀렉트박스
     selected_category = st.selectbox("📂 궁금한 질문 카테고리를 선택하세요", list(qna_db.keys()))
 
