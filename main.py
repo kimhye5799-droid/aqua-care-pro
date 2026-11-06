@@ -16,6 +16,7 @@ st.set_page_config(
 # 2. 어종별 생태 데이터베이스
 # 어종별 생태 정보와 사육 환경을 저장
 # ==================================================
+# 체리새우의 기본 사육 정보를 등록
 FISH_DATABASE = {
     "체리새우": {"category": "담수어", "salinity": "담수", "emoji": "🦐", "temp": (20, 26), "temperament": "순함", "size_cm": 3},
     "구피": {"category": "열대어", "salinity": "담수", "emoji": "🐟", "temp": (22, 28), "temperament": "순함", "size_cm": 4},
