@@ -112,7 +112,7 @@ with tab1:
                 "ans": answer_text,
                 "link": search_link
             })
-
+# 첫인사 문구가 아닌 실제 질문만 사용자 메시지로 표시
     st.markdown("---")
     st.markdown("### 💬 상담 대화 기록")
 
