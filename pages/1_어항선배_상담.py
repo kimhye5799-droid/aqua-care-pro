@@ -122,7 +122,7 @@ with tab1:
         if chat["q"] != "어항선배의 첫인사":
             with st.chat_message("user"):
                 st.markdown(chat["q"])
-        
+        # 검색 참고 링크가 존재하는지 확인
         with st.chat_message("assistant"):
             st.markdown(chat["ans"])
             if chat["link"]:
