@@ -145,7 +145,7 @@ def draw_fish(name):
         <circle cx="55" cy="55" r="3" fill="#a67c32"/>
         <circle cx="75" cy="60" r="3" fill="#a67c32"/>
         """
-
+# 별도 그림이 없는 생물의 기본 물고기 모양을 생성
     # 기본 물고기 모양
     else:
         shape = f"""
