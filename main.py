@@ -82,7 +82,7 @@ def draw_fish(name):
         <path d="M45 35 L35 15 M55 30 L50 12"
         stroke="{color}" stroke-width="3"/>
         """
-
+# 애플스네일의 껍데기와 몸 모양을 생성
     # 애플스네일
     elif name == "애플스네일":
         shape = f"""
