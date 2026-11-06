@@ -459,7 +459,7 @@ if selected_fishes:
             font-weight: bold;
             margin-top: 3px;
         }}
-
+/* 물고기가 위아래로 움직이는 애니메이션 설정 */
         @keyframes swim {{
             0%, 100% {{
                 transform: translateY(0);
