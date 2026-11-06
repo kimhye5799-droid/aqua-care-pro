@@ -414,7 +414,7 @@ if selected_fishes:
             font-family: Arial, sans-serif;
             background: transparent;
         }}
-
+/* 물고기들이 겹치지 않도록 그리드 형태로 배치 */
         .fish-tank {{
             display: grid;
             grid-template-columns:
