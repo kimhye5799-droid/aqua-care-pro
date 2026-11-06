@@ -1,3 +1,4 @@
+```python
 # Streamlit 어항 앱 실행을 위한 기본 설정
 import streamlit as st
 import streamlit.components.v1 as components
@@ -30,7 +31,8 @@ html_code = """
   .slider-label { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
   input[type="range"], input[type="color"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
   input[type="color"] { height: 24px; border: none; background: transparent; }
-/* 어항 메인 화면 영역 설정 */
+
+  /* 어항 메인 화면 영역 설정 */
   #main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020611; padding: 10px; }
   /* 어항 캔버스 테두리와 표시 설정 */
   canvas { border: 3px solid #0284c7; border-radius: 12px; cursor: crosshair; box-shadow: 0 0 35px rgba(2, 132, 199, 0.35); background: #000; display: block; z-index: 5; }
@@ -38,9 +40,9 @@ html_code = """
   #status-bar { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 6px 18px; border-radius: 20px; border: 1px solid #38bdf8; display: flex; gap: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: grab; z-index: 20; }
   /* 어항 안내 정보창 디자인 설정 */
   #info-box { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(15, 25, 46, 0.95); padding: 10px 20px; border-radius: 10px; border: 1px solid #38bdf8; font-size: 12px; display: none; flex-direction: column; gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 20; max-width: 600px; text-align: center; }
-/* 오른쪽 어항 도구 패널 디자인 설정 */
+  /* 오른쪽 어항 도구 패널 디자인 설정 */
   #right-panel { width: 115px; background-color: #0f192e; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border-left: 1px solid #1e2e4a; z-index: 100; }
- /* 뜰채 보관함 디자인 설정 */
+  /* 뜰채 보관함 디자인 설정 */
   .trash-box { width: 100%; height: 110px; border: 2px dashed #ef4444; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ef4444; font-size: 11px; gap: 4px; cursor: pointer; text-align: center; }
   .trash-box:hover { background: rgba(239, 68, 68, 0.15); }
   /* 어항 기능 실행 버튼 디자인 설정 */
@@ -53,13 +55,12 @@ html_code = """
 <!-- 왼쪽 메뉴 영역 시작 -->
 <div id="sidebar">
   <div>
-  <!-- 담수 및 해수 환경 선택 영역 -->
+    <!-- 담수 및 해수 환경 선택 영역 -->
     <div class="panel-title">🌊 서식 환경 (담수 / 해수)</div>
     <div class="mode-btn-group">
       <button class="mode-btn active" id="btn-fresh" onclick="setTankEnv('FRESH')">🌿 담수 어항</button>
       <button class="mode-btn" id="btn-salt" onclick="setTankEnv('SALT')">🪸 해수 어항</button>
     </div>
-    <!-- 파우더, 생물, 장비 도구 모드 선택 영역 -->
   </div>
 
   <div>
@@ -70,12 +71,14 @@ html_code = """
       <button class="mode-btn" id="tab-equip" onclick="setCategory('EQUIP')">장비</button>
     </div>
   </div>
-<!-- 브러시 크기 조절 영역 -->
+
+  <!-- 브러시 크기 조절 영역 -->
   <div class="box-card">
     <div class="slider-label"><span>🖌️ 브러시 크기</span><span id="brush-val">3 px</span></div>
     <input type="range" id="brush-size" min="1" max="8" value="3" oninput="brushSize=parseInt(this.value); document.getElementById('brush-val').innerText=this.value+' px';">
   </div>
-<!-- 펜 도구 및 바닥재 선택 영역 -->
+
+  <!-- 펜 도구 및 바닥재 선택 영역 -->
   <div id="sec-powder">
     <div class="panel-title">🧪 펜 도구 & 바닥재</div>
     <div class="tool-grid">
@@ -103,7 +106,6 @@ html_code = """
       <button class="tool-btn" onclick="setTool('DISCUS', this)">🔴 디스커스(담수)</button>
       <button class="tool-btn" onclick="setTool('ANGEL', this)">🤍 엔젤피쉬(담수)</button>
       <button class="tool-btn" onclick="setTool('TURTLE_SEMI', this)">🐢 반수생거북(담수)</button>
-      
       <button class="tool-btn" onclick="setTool('CLOWN', this)">🧡 크라운피쉬(해수)</button>
       <button class="tool-btn" onclick="setTool('BLUETANG', this)">💙 블루탱(해수)</button>
       <button class="tool-btn" onclick="setTool('SEAHORSE', this)">✨ 해마 (해수)</button>
@@ -114,7 +116,8 @@ html_code = """
       <button class="tool-btn" onclick="setTool('TURTLE_SEA', this)">🐢 바다거북(해수)</button>
     </div>
   </div>
-<!-- 어항 장비 선택 영역 -->
+
+  <!-- 어항 장비 선택 영역 -->
   <div id="sec-equip" style="display:none;">
     <div class="panel-title">🫧 어항 장비 설치</div>
     <div class="tool-grid">
@@ -123,12 +126,12 @@ html_code = """
       <button class="tool-btn" onclick="setTool('HEATER_MOVE', this)">🔥 히터 이동</button>
     </div>
   </div>
-<!-- 조명 및 수온 제어 영역 -->
+
+  <!-- 조명 및 수온 제어 영역 -->
   <div class="box-card">
     <div class="panel-title">💡 조명 및 수온 제어</div>
     <div class="slider-label"><span>🌡️ 수온</span><span id="temp-val">24°C</span></div>
     <input type="range" min="18" max="32" value="24" oninput="document.getElementById('temp-val').innerText=this.value+'°C'; document.getElementById('txt-temp').innerText=this.value;">
-    
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
       <span style="font-size:11px; color:#94a3b8;">💡 조명 전원</span>
       <button id="btn-light-toggle" onclick="toggleLight()" style="padding:2px 8px; font-size:10px; background:#0284c7; border:none; color:white; border-radius:4px; cursor:pointer;">ON</button>
@@ -140,6 +143,7 @@ html_code = """
     <button class="act-btn btn-reset" onclick="clearTank()">🔄 전체 비우기</button>
   </div>
 </div>
+
 <!-- 어항 메인 화면 영역 시작 -->
 <div id="main-container">
   <div id="status-bar" onmousedown="startDragStatus(event)">
@@ -232,7 +236,7 @@ const SPECIES_DATA = {
   DISCUS: { name: '디스커스', env: 'FRESH', color: '#dc2626', stripeColor: '#38bdf8', size: 32, shape: 'roundfish', speed: 0.4 },
   ANGEL: { name: '엔젤피쉬', env: 'FRESH', color: '#f8fafc', stripeColor: '#0f172a', size: 32, shape: 'angelfish', speed: 0.4 },
   TURTLE_SEMI: { name: '반수생거북', env: 'FRESH', color: '#15803d', shellColor: '#78350f', size: 40, shape: 'turtle', speed: 0.4 },
-  
+
   CLOWN: { name: '크라운피쉬', env: 'SALT', color: '#ea580c', stripeColor: '#ffffff', size: 22, shape: 'fish', speed: 0.6 },
   BLUETANG: { name: '블루탱', env: 'SALT', color: '#1d4ed8', tailColor: '#facc15', size: 24, shape: 'roundfish', speed: 0.5 },
   SEAHORSE: { name: '해마', env: 'SALT', color: '#db2777', size: 22, shape: 'seahorse', speed: 0.4 },
@@ -346,9 +350,10 @@ class Creature {
     this.animFrame += 0.15;
     this.fullness = Math.max(0, this.fullness - 0.0015);
 
+    // 배고픈 생물은 먹이를 먼저 찾고, 먹이를 찾지 못하면 자연스럽게 유영
     const seekingFood = this.shape !== 'snail' && this.fullness < 95 && this.findAndEatFood();
+
     if (!seekingFood) {
-      // 먹이를 찾지 않을 때만 천천히 방향을 바꿔 자연스럽게 유영
       if (Math.random() < 0.012) {
         const m = this.info.speed;
         this.vx += (Math.random() - 0.5) * m * 0.35;
@@ -358,10 +363,10 @@ class Creature {
       this.vy *= 0.995;
     }
 
-    this.vx = Math.max(-0.85, Math.min(0.85, this.vx));
-    this.vy = Math.max(-0.45, Math.min(0.45, this.vy));
+    // 먹이를 향해 이동할 때 필요한 속도 범위를 넓힘
+    this.vx = Math.max(-1.2, Math.min(1.2, this.vx));
+    this.vy = Math.max(-0.75, Math.min(0.75, this.vy));
 
-    // 가로와 세로를 따로 이동시켜 암석 모서리에 걸렸을 때도 통과하지 않게 함
     const nextX = Math.max(20, Math.min(WIDTH - 20, this.x + this.vx));
     if (!this.isRockCollision(nextX, this.y)) {
       this.x = nextX;
@@ -385,17 +390,21 @@ class Creature {
   }
 
   findAndEatFood() {
-    // 주변 먹이 중 가장 가까운 한 알만 목표로 선택해 목표가 계속 바뀌는 현상 방지
+    // 먹이 탐색 범위를 넓혀 멀리 떨어진 먹이도 발견하도록 설정
     let best = null;
-    let bestDistance = 95;
+    let bestDistance = 150;
     const cx = Math.floor(this.x);
     const cy = Math.floor(this.y);
-    for (let y = Math.max(0, cy - 95); y <= Math.min(HEIGHT - 1, cy + 95); y++) {
-      for (let x = Math.max(0, cx - 95); x <= Math.min(WIDTH - 1, cx + 95); x++) {
+
+    for (let y = Math.max(0, cy - 150); y <= Math.min(HEIGHT - 1, cy + 150); y++) {
+      for (let x = Math.max(0, cx - 150); x <= Math.min(WIDTH - 1, cx + 150); x++) {
         if (grid[y][x] !== 7) continue;
-        const dx = x - this.x;
-        const dy = y - this.y;
+
+        const dx = x + 0.5 - this.x;
+        const dy = y + 0.5 - this.y;
         const distance = Math.hypot(dx, dy);
+
+        // 가장 가까운 먹이를 우선적으로 목표로 지정
         if (distance < bestDistance) {
           bestDistance = distance;
           best = { x, y };
@@ -409,22 +418,28 @@ class Creature {
     const dx = best.x + 0.5 - this.x;
     const dy = best.y + 0.5 - this.y;
     const distance = Math.hypot(dx, dy);
-    if (distance <= Math.max(5, this.info.size * 0.28)) {
+
+    // 먹이에 가까워지면 먹이를 제거하고 포만감을 회복
+    if (distance <= Math.max(8, this.info.size * 0.45)) {
       if (grid[best.y][best.x] === 7) {
         grid[best.y][best.x] = 0;
         this.fullness = Math.min(100, this.fullness + 22);
       }
-      this.vx *= 0.25;
-      this.vy *= 0.25;
+
+      this.vx *= 0.2;
+      this.vy *= 0.2;
+      this.foodTarget = null;
       return true;
     }
 
-    // 목표 방향으로 부드럽게 가속하고 속도를 제한해 제자리 왕복을 줄임
-    const speed = Math.min(0.72, Math.max(0.28, this.info.speed * 0.9));
+    // 먹이 방향으로 더 빠르고 부드럽게 이동하도록 가속
+    const speed = Math.min(1.0, Math.max(0.4, this.info.speed * 1.5));
     const desiredVx = (dx / distance) * speed;
-    const desiredVy = (dy / distance) * speed * 0.7;
-    this.vx += (desiredVx - this.vx) * 0.12;
-    this.vy += (desiredVy - this.vy) * 0.12;
+    const desiredVy = (dy / distance) * speed;
+
+    this.vx += (desiredVx - this.vx) * 0.22;
+    this.vy += (desiredVy - this.vy) * 0.22;
+
     return true;
   }
 
@@ -450,11 +465,11 @@ class Creature {
       ctx.fillStyle = this.isDead ? '#64748b' : '#eab308';
       ctx.beginPath();
       ctx.arc(0, -s/4, s/2, 0, Math.PI * 2);
-      ctx.fill(); 
+      ctx.fill();
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(-s/2, 0, s*0.9, s*0.35); 
+      ctx.fillRect(-s/2, 0, s*0.9, s*0.35);
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/3), -s/4, 2, 6); 
+      ctx.fillRect(dir * (s/3), -s/4, 2, 6);
     }
     else if (shape === 'shrimp') {
       ctx.fillStyle = bodyColor;
@@ -463,20 +478,20 @@ class Creature {
     }
     else if (shape === 'turtle' || shape === 'seaturtle') {
       ctx.fillStyle = this.isDead ? '#475569' : (this.info.shellColor || '#78350f');
-      ctx.fillRect(-s/2, -s/3, s, s*0.7); 
+      ctx.fillRect(-s/2, -s/3, s, s*0.7);
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3); 
+      ctx.fillRect(dir * (s/2), -s/6, s/3, s/3);
     }
     else if (shape === 'betta') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/2, -s/3, s*0.8, s*0.6);
       ctx.fillStyle = tailColor;
-      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2); 
+      ctx.fillRect(-dir * s, -s/1.2, s*0.8, s*1.2);
     }
     else if (shape === 'seahorse') {
       ctx.fillStyle = bodyColor;
       ctx.fillRect(-s/3, -s/2, s*0.5, s);
-      ctx.fillRect(-s/2, s/3, s*0.4, s*0.4); 
+      ctx.fillRect(-s/2, s/3, s*0.4, s*0.4);
     }
     else if (shape === 'puffer') {
       ctx.fillStyle = bodyColor;
@@ -509,9 +524,9 @@ class Creature {
     else if (shape === 'angelfish') {
       ctx.fillStyle = bodyColor;
       ctx.beginPath();
-      ctx.moveTo(0, -s); 
+      ctx.moveTo(0, -s);
       ctx.lineTo(s/2, 0);
-      ctx.lineTo(0, s); 
+      ctx.lineTo(0, s);
       ctx.lineTo(-s/2, 0);
       ctx.fill();
       if (this.info.stripeColor) {
@@ -536,8 +551,10 @@ class Creature {
         ctx.fillRect(-s/6, -s/3, 3, s*0.6);
       }
 
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(dir * (s/3), -s/5, 3, 3);
-      ctx.fillStyle = '#000000'; ctx.fillRect(dir * (s/3) + (dir > 0 ? 1 : 0), -s/5 + 1, 1, 1);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(dir * (s/3), -s/5, 3, 3);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(dir * (s/3) + (dir > 0 ? 1 : 0), -s/5 + 1, 1, 1);
 
       ctx.fillStyle = tailColor;
       ctx.beginPath();
@@ -609,18 +626,18 @@ function processInteraction(e) {
       selectedCreature = creatures.find(c => Math.abs(c.x - mx) < c.info.size && Math.abs(c.y - my) < c.info.size);
       const infoBox = document.getElementById('info-box');
       const infoAdvice = document.getElementById('info-advice');
-      
+
       if (selectedCreature) {
         infoBox.style.display = 'flex';
         document.getElementById('info-name').innerText = selectedCreature.info.name;
         document.getElementById('info-hp').innerText = Math.max(0, Math.floor(selectedCreature.health)) + '%';
         document.getElementById('info-food').innerText = Math.floor(selectedCreature.fullness) + '%';
-        
+
         let adviceText = "💡 건강 상태 양호함! 편안하게 지내는 중입니다.";
         if (selectedCreature.isDead) {
           adviceText = "⚠️ 사망 원인: 체력 소진 및 환경 부적응. (전체 비우기 후 다시 세팅해 주세요)";
         } else if (selectedCreature.info.env !== tankEnv) {
-adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
+          adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + (selectedCreature.info.env === 'FRESH' ? '담수' : '해수') + " 환경이 필요합니다!\\n💡 [해결 방법] 상단의 서식 환경 버튼을 올바른 환경으로 변경해 주세요.";
         }
         infoAdvice.innerText = adviceText;
       } else {
@@ -662,7 +679,7 @@ adviceText = "⚠️ [문제점] " + selectedCreature.info.name + "은(는) " + 
         else if (currentTool === 'WOOD') grid[ny][nx] = 4;
         else if (currentTool === 'SEED') {
           if (grid[ny][nx] === 0 || grid[ny][nx] === 1 || grid[ny][nx] === 2) {
-            grid[ny][nx] = 5; 
+            grid[ny][nx] = 5;
           }
         }
         else if (currentTool === 'FOOD') grid[ny][nx] = 7;
@@ -792,3 +809,4 @@ loop();
 """
 
 components.html(html_code, height=680)
+```
