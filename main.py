@@ -291,7 +291,7 @@ count = st.sidebar.number_input(
     value=7,
     step=1
 )
-
+# 어항의 전체 물 용량을 입력
 tank_volume_l = st.sidebar.number_input(
     "어항/수조 용량 (L)",
     min_value=1,
