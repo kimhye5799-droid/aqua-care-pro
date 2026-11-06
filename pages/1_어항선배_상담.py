@@ -105,7 +105,7 @@ with tab1:
         question_text = q_item[0]
         answer_text = q_item[1]
         search_link = q_item[2]
-        
+        # 선택한 질문과 답변 및 링크를 대화 기록에 추가
         if st.button(f"✨ {question_text}", use_container_width=True):
             st.session_state.selected_50_history.append({
                 "q": question_text,
