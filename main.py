@@ -242,7 +242,7 @@ def draw_fish(name):
         <circle cx="87" cy="42" r="3.5" fill="white"/>
         <circle cx="88" cy="42" r="1.8" fill="#172033"/>
         """
-
+# 완성된 SVG 그림을 문자열로 반환
     return f"""
     <svg width="130" height="90" viewBox="0 0 120 90"
     xmlns="http://www.w3.org/2000/svg">
