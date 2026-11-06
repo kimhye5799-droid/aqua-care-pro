@@ -121,7 +121,7 @@ def draw_fish(name):
         stroke-linecap="round"/>
         <path d="M76 30 L105 25 L78 40" fill="{color}"/>
         """
-
+# 박스피쉬의 네모난 몸 모양을 생성
     # 박스피쉬
     elif name == "박스피쉬":
         shape = f"""
