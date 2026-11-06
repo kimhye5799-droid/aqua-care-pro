@@ -68,6 +68,7 @@ FISH_COLORS = {
 def draw_fish(name):
 
     color = FISH_COLORS[name]
+    # 체리새우의 그림 모양을 생성
 
     # 체리새우
     if name == "체리새우":
