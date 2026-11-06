@@ -381,7 +381,7 @@ st.markdown("---")
 if selected_fishes:
 
     tank_html = ""
-
+# 입력된 개체 수만큼 생물 배치를 반복
     # 선택한 생물을 개체 수만큼 배치
     for idx in range(int(count)):
 
