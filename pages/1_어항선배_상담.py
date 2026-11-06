@@ -115,7 +115,7 @@ with tab1:
 # 첫인사 문구가 아닌 실제 질문만 사용자 메시지로 표시
     st.markdown("---")
     st.markdown("### 💬 상담 대화 기록")
-
+# 사용자 메시지 영역을 생성
     # 대화 기록 출력
     for chat in st.session_state.selected_50_history:
         if chat["q"] != "어항선배의 첫인사":
