@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 # ==================================================
 # 1. 페이지 기본 설정
 # ==================================================
+# Streamlit 페이지의 제목과 화면 레이아웃을 설정
 st.set_page_config(
     page_title="AquaCare Pro",
     page_icon="🐠",
