@@ -100,6 +100,7 @@ with tab1:
     st.caption("아래 질문 버튼을 누르면 어항선배의 시크한 답변과 구글 검색 참고 링크가 대화창에 추가됩니다!")
 # 질문 데이터에서 질문 내용을 가져옴
     # 선택된 카테고리의 질문들을 버튼으로 나열
+    # 질문별 버튼을 생성하고 클릭 여부를 확인
     for q_item in qna_db[selected_category]:
         question_text = q_item[0]
         answer_text = q_item[1]
