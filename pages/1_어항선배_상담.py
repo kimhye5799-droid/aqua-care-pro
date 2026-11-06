@@ -85,7 +85,7 @@ with tab1:
             ("2거치대(어항 받침대)는 왜 튼튼한 걸 써야 할까요?", "물 60리터짜리 어항 하나만 해도 무게가 모래랑 합치면 80kg이 넘어가! 수평이 안 맞거나 약하면 유리 어항이 터져서 대홍수 난다?", "https://www.google.com/search?q=어항+받침대+수평+중요성")
         ]
     }
-
+# 첫 상담 인사말을 대화 기록에 기본값으로 저장
     # 세션 스테이트 초기화 (선택된 Q&A 기록 유지)
     if "selected_50_history" not in st.session_state:
         st.session_state.selected_50_history = [
