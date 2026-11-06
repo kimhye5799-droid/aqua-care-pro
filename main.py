@@ -110,7 +110,7 @@ def draw_fish(name):
         <path d="M45 48 L62 27 L80 48 L62 68 Z"
         fill="none" stroke="#235e43" stroke-width="2"/>
         """
-
+# 해마의 특징적인 곡선 모양을 표현
     # 해마
     elif name == "해마":
         shape = f"""
