@@ -95,7 +95,7 @@ def draw_fish(name):
         <path d="M85 20 L90 8 M95 20 L103 10"
         stroke="{color}" stroke-width="3"/>
         """
-
+# 거북이의 몸과 다리 모양을 생성
     # 거북이
     elif name in ["반수생거북", "바다거북"]:
         shape = f"""
